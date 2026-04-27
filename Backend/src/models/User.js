@@ -56,6 +56,35 @@ const userSchema = new mongoose.Schema(
       type: String,
       select: false,
     },
+    
+    // ── Profile fields (add these to your existing userSchema) ──
+    phone: { type: String, default: "" },
+    location: { type: String, default: "" },
+    linkedin: { type: String, default: "" },
+    github: { type: String, default: "" },
+    bio: { type: String, default: "" },
+    skills: { type: [String], default: [] },
+    profilePhoto: { type: String, default: "" }, // local path or URL
+    resumeUrl: { type: String, default: "" },
+    resumeOriginalName: { type: String, default: "" },
+    education: [
+      {
+        degree: { type: String, default: "" },
+        institution: { type: String, default: "" },
+        university: { type: String, default: "" },
+        year: { type: String, default: "" },
+        cgpa: { type: String, default: "" },
+        current: { type: Boolean, default: false },
+        docs: [
+          {
+            name: { type: String },
+            path: { type: String },
+            size: { type: String },
+          }
+        ],
+      }
+    ],
+
   },
   { timestamps: true }
 );
