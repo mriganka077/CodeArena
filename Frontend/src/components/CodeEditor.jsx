@@ -1,26 +1,58 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
+import Editor from "@monaco-editor/react";
+import * as monaco from "monaco-editor";
 // import { useAuth } from '../context/AuthContext'; // adjust path if needed
 
 const CodeEditor = ({ currentQuestion }) => {
+  const starterCodes = {
+    python3: `print("Hello World")`,
+
+    nodejs: `console.log("Hello World");`,
+
+    java: `public class Main {
+    public static void main(String[] args) {
+      System.out.println("Hello World");
+    }
+  }`,
+
+    cpp17: `#include <iostream>
+  using namespace std;
+  
+  int main() {
+    cout << "Hello World";
+    return 0;
+  }`,
+
+    c: `#include <stdio.h>
+  
+  int main() {
+    printf("Hello World");
+    return 0;
+  }`,
+
+    sql: `SELECT * FROM employees;`
+
+
+  };
+
   const token = localStorage.getItem('token');          // pull JWT from your auth context
-  const [code, setCode] = useState(`# Write your solution here\n\n`);
+  const [code, setCode] = useState(starterCodes.python3);
   const [output, setOutput] = useState('Run code to see output here...');
   const [status, setStatus] = useState('idle');
   const [metaText, setMetaText] = useState('');
   const [submitState, setSubmitState] = useState('idle'); // idle | loading | done | error
   const [aiReview, setAiReview] = useState('');
-  const editorRef = useRef(null);
-  const lineNumbersRef = useRef(null);
-  const skulptLoaded = useRef(false);
   const outputRef = useRef('');   // track output for submit
 
+  const [language, setLanguage] = useState("python3");
   // keep outputRef in sync
   useEffect(() => { outputRef.current = output; }, [output]);
 
   // reset editor when question changes
+  // reset editor when question changes
   useEffect(() => {
-    setCode(`# Write your solution here\n\n`);
+    setCode(starterCodes[language]);
     setOutput('Run code to see output here...');
     setStatus('idle');
     setMetaText('');
@@ -28,76 +60,58 @@ const CodeEditor = ({ currentQuestion }) => {
     setAiReview('');
   }, [currentQuestion?.id]);
 
-  // Load Skulpt
+  // ADD HERE
   useEffect(() => {
-    const loadSkulpt = async () => {
-      if (!skulptLoaded.current) {
-        const [skulpt, stdlib] = await Promise.all([
-          import('https://cdn.skypack.dev/skulpt'),
-          import('https://cdn.skypack.dev/skulpt-stdlib')
-        ]);
-        window.Sk = skulpt.Sk;
-        window.Sk.builtinFiles = stdlib.builtinFiles;
-        skulptLoaded.current = true;
-      }
-    };
-    loadSkulpt();
-  }, []);
+    setCode(starterCodes[language]);
+  }, [language]);
 
-  const renderLineNumbers = useCallback(() => {
-    if (!editorRef.current || !lineNumbersRef.current) return;
-    const count = Math.max(1, code.split('\n').length);
-    lineNumbersRef.current.innerHTML = Array.from(
-      { length: count },
-      (_, i) => `<div class="pr-4">${i + 1}</div>`
-    ).join('');
-  }, [code]);
 
-  useEffect(() => { renderLineNumbers(); }, [code, renderLineNumbers]);
 
-  const syncScroll = useCallback(() => {
-    if (lineNumbersRef.current && editorRef.current) {
-      lineNumbersRef.current.scrollTop = editorRef.current.scrollTop;
-    }
-  }, []);
 
-  const runCode = useCallback(async () => {
-    if (!window.Sk) return;
-    setOutput('');
-    setStatus('running');
-    setMetaText('Running...');
-    const start = performance.now();
-    let collected = '';
 
-    window.Sk.configure({
-      output: (text) => {
-        collected += text;
-        setOutput((prev) => prev + text);
-      },
-      read: (file) => {
-        if (window.Sk.builtinFiles?.files[file] === undefined)
-          throw `File not found: '${file}'`;
-        return window.Sk.builtinFiles.files[file];
-      },
-      __future__: window.Sk.python3
-    });
-
+  const runCode = async () => {
     try {
-      await window.Sk.misceval.asyncToPromise(() =>
-        window.Sk.importMainWithBody('<stdin>', false, code, true)
+      setStatus("running");
+      setOutput("Running...");
+
+      const response = await axios.post(
+        "http://localhost:4000/api/compiler/run",
+        {
+          source_code: code,
+          language
+        }
       );
-      setStatus('success');
-      setMetaText(((performance.now() - start) / 1000).toFixed(3) + 's');
-      if (!collected.trim()) setOutput('Code executed successfully with no output.');
+
+      const data = response.data;
+
+      const finalOutput =
+        data.output ||
+        data.error ||
+        "No output";
+
+      setOutput(finalOutput);
+
+      outputRef.current = finalOutput;
+
+      setMetaText(
+        `${data.cpuTime || 0}s • ${data.memory || 0}`
+      );
+
+      setStatus("success");
+
     } catch (err) {
-      setStatus('error');
-      setMetaText(((performance.now() - start) / 1000).toFixed(3) + 's');
-      const errMsg = err.toString();
-      setOutput(errMsg);
-      collected = errMsg;
+      setStatus("error");
+
+      const errorData = err.response?.data?.error;
+
+      const errorMessage =
+        typeof errorData === "object"
+          ? JSON.stringify(errorData, null, 2)
+          : errorData || err.message || "Execution failed";
+
+      setOutput(errorMessage);
     }
-    outputRef.current = collected;
-  }, [code]);
+  };
 
   const handleSubmit = async () => {
     if (!currentQuestion) return;
@@ -135,25 +149,22 @@ const CodeEditor = ({ currentQuestion }) => {
     setStatus('idle');
     setSubmitState('idle');
     setAiReview('');
-    editorRef.current?.focus();
   };
 
-  const handleKeyDown = useCallback((e) => {
-    if (e.key === 'Tab') {
-      e.preventDefault();
-      const start = editorRef.current.selectionStart;
-      const end = editorRef.current.selectionEnd;
-      const newCode = code.slice(0, start) + '    ' + code.slice(end);
-      setCode(newCode);
-      setTimeout(() => {
-        editorRef.current.selectionStart = editorRef.current.selectionEnd = start + 4;
-      }, 0);
-    }
-    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-      e.preventDefault();
-      runCode();
-    }
-  }, [code, runCode]);
+  function handleEditorWillMount(monaco) {
+    monaco.editor.defineTheme("codearena-dark", {
+      base: "vs-dark",
+      inherit: true,
+      rules: [],
+      colors: {
+        "editor.background": "#000814",
+        "editor.lineHighlightBackground": "#111111",
+        "editorCursor.foreground": "#ffffff",
+        "editorLineNumber.foreground": "#666666",
+        "editor.selectionBackground": "#264F78",
+      },
+    });
+  }
 
   return (
     <main className="h-full min-h-0 flex flex-col bg-[#0b1220]/70 overflow-hidden">
@@ -166,6 +177,18 @@ const CodeEditor = ({ currentQuestion }) => {
             {currentQuestion ? `Q${currentQuestion.id}: ${currentQuestion.title}` : 'Code Playground'}
           </h2>
         </div>
+        <select
+          value={language}
+          onChange={(e) => setLanguage(e.target.value)}
+          className="rounded-xl border border-white/10 bg-[#111827] px-3 py-2 text-sm text-white outline-none"
+        >
+          <option value="python3">Python</option>
+          <option value="nodejs">JavaScript</option>
+          <option value="java">Java</option>
+          <option value="cpp17">C++</option>
+          <option value="c">C</option>
+          <option value="sql">SQL</option>
+        </select>
         <div className="flex items-center gap-2">
           <button
             onClick={clearEditor}
@@ -194,20 +217,33 @@ const CodeEditor = ({ currentQuestion }) => {
       <div className="flex-1 min-h-0 overflow-hidden grid grid-rows-[minmax(0,1fr)_180px]">
 
         {/* Code area */}
-        <div className="min-h-0 grid grid-cols-[56px_minmax(0,1fr)] bg-[#07101d] overflow-hidden">
-          <div
-            ref={lineNumbersRef}
-            className="overflow-hidden border-r border-white/10 bg-navy/50 py-4 text-right text-[13px] leading-7 font-mono text-muted/50 select-none"
-          />
-          <textarea
-            ref={editorRef}
+        <div className="min-h-0 bg-[#07101d] overflow-hidden">
+          <Editor
+            height="100%"
+            beforeMount={handleEditorWillMount}
+            theme="codearena-dark"
+            language={
+              language === "python3"
+                ? "python"
+                : language === "nodejs"
+                  ? "javascript"
+                  : language === "cpp17"
+                    ? "cpp"
+                    : language
+            }
             value={code}
-            onChange={(e) => setCode(e.target.value)}
-            onScroll={syncScroll}
-            onKeyDown={handleKeyDown}
-            spellCheck="false"
-            className="min-h-0 h-full w-full resize-none overflow-auto scrollbar-thin bg-transparent p-4 font-mono text-[13px] leading-7 text-slate-100 outline-none"
-            placeholder="# Write Python code here"
+            onChange={(value) => setCode(value || "")}
+            options={{
+              minimap: { enabled: false },
+              fontSize: 14,
+              automaticLayout: true,
+              autoClosingBrackets: "always",
+              autoClosingQuotes: "always",
+              suggestOnTriggerCharacters: true,
+              quickSuggestions: true,
+              tabSize: 4,
+              wordWrap: "on"
+            }}
           />
         </div>
 
@@ -216,12 +252,11 @@ const CodeEditor = ({ currentQuestion }) => {
           <div className="h-11 shrink-0 px-4 border-b border-white/10 flex items-center justify-between">
             <div className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-[#A1A1AA]">
               <span
-                className={`h-2.5 w-2.5 rounded-full transition-all ${
-                  status === 'running' ? 'bg-yellow-400 animate-pulseDot' :
-                  status === 'success' ? 'bg-[#22C55E]' :
-                  status === 'error'   ? 'bg-red-400' :
-                  'bg-white/30'
-                }`}
+                className={`h-2.5 w-2.5 rounded-full transition-all ${status === 'running' ? 'bg-yellow-400 animate-pulseDot' :
+                    status === 'success' ? 'bg-[#22C55E]' :
+                      status === 'error' ? 'bg-red-400' :
+                        'bg-white/30'
+                  }`}
               />
               Output
             </div>

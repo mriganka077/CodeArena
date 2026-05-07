@@ -13,6 +13,7 @@ import adminRoutes from "./routes/admin.js";
 
 import profileRoutes from "./routes/profile.js";
 import practiceRoutes from './routes/practice.js';
+import compilerRoute from "./routes/compiler.js";
 
 dotenv.config();
 initGoogleStrategy();
@@ -57,6 +58,8 @@ app.use("/api/2fa", authLimiter, twoFactorRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/profile", profileRoutes);
 app.use('/api/practice', practiceRoutes);
+
+app.use("/api/compiler", compilerRoute);
 
 app.get("/", (req, res) => res.json({ status: "API is running 🚀" }));
 app.get("/api/test", (req, res) => res.json({ message: "Frontend + Backend Connected" }));
