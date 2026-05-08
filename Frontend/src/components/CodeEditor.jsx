@@ -3,6 +3,8 @@ import axios from 'axios';
 import Editor from "@monaco-editor/react";
 import * as monaco from "monaco-editor";
 import LanguageDropdown from "./LanguageDropdown";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 // import { useAuth } from '../context/AuthContext'; // adjust path if needed
 
 const CodeEditor = ({ currentQuestion }) => {
@@ -47,6 +49,36 @@ const CodeEditor = ({ currentQuestion }) => {
   const outputRef = useRef('');   // track output for submit
 
   const [language, setLanguage] = useState("python3");
+
+  const [reviewHeight, setReviewHeight] = useState(260);
+  const isDragging = useRef(false);
+
+  useEffect(() => {
+
+    const handleMouseMove = (e) => {
+  
+      if (!isDragging.current) return;
+  
+      const newHeight = window.innerHeight - e.clientY;
+  
+      if (newHeight > 150 && newHeight < 600) {
+        setReviewHeight(newHeight);
+      }
+    };
+  
+    const stopDragging = () => {
+      isDragging.current = false;
+    };
+  
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", stopDragging);
+  
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", stopDragging);
+    };
+  
+  }, []);
   // keep outputRef in sync
   useEffect(() => { outputRef.current = output; }, [output]);
 
@@ -117,30 +149,76 @@ const CodeEditor = ({ currentQuestion }) => {
   };
 
   const handleSubmit = async () => {
+
     if (!currentQuestion) return;
+  
     setSubmitState('loading');
     setAiReview('');
+  
     try {
+  
       const res = await axios.post(
         '/api/practice/submit',
         {
-          questionId: currentQuestion.id,
-          questionTitle: currentQuestion.title,
+          questionId: currentQuestion._id,
+      
+          type: currentQuestion.type || "MCQ",
+      
+          questionTitle:
+            currentQuestion.title ||
+            currentQuestion.question,
+      
+          question:
+            currentQuestion.question,
+      
+          options:
+            currentQuestion.options || [],
+      
+          correctAnswer:
+            currentQuestion.answer,
+      
+          selectedAnswer:
+            currentQuestion.selectedAnswer || null,
+      
           code,
+          language,
           output: outputRef.current
+      
         },
-        { headers: { Authorization: `Bearer ${token}` } }
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
       );
+  
       setAiReview(res.data.submission.aiReview);
+  
       setSubmitState('done');
+  
     } catch (err) {
+  
       setSubmitState('error');
-      // TEMPORARY: log full error details
-      console.error('Submit error status:', err.response?.status);
-      console.error('Submit error data:', err.response?.data);
-      console.error('Submit error message:', err.message);
+  
+      console.error(
+        'Submit error status:',
+        err.response?.status
+      );
+  
+      console.error(
+        'Submit error data:',
+        err.response?.data
+      );
+  
+      console.error(
+        'Submit error message:',
+        err.message
+      );
+  
       setAiReview(
-        `Error ${err.response?.status}: ${JSON.stringify(err.response?.data) || err.message}`
+        `Error ${err.response?.status}: ${
+          JSON.stringify(err.response?.data) || err.message
+        }`
       );
     }
   };
@@ -175,10 +253,10 @@ const CodeEditor = ({ currentQuestion }) => {
       {/* Toolbar */}
       <div className="relative z-50 h-16 shrink-0 border-b border-white/10 bg-[#050816]/70 backdrop-blur-xl px-5 flex items-center justify-between gap-4 overflow-visible">
         <div>
-          <p className="text-[11px] uppercase tracking-[0.24em] text-[#A1A1AA] font-semibold">Editor</p>
-          <h2 className="mt-1 text-lg font-semibold text-white">
+          <p className="text-[11px] uppercase tracking-[0.24em] text-[#A1A1AA] font-semibold">Code Editor</p>
+          {/* <h2 className="mt-1 text-lg font-semibold text-white">
             {currentQuestion ? `Q${currentQuestion.id}: ${currentQuestion.title}` : 'Code Playground'}
-          </h2>
+          </h2> */}
         </div>
         <div className="relative group">
           {/* Glow Border */}
@@ -216,76 +294,114 @@ const CodeEditor = ({ currentQuestion }) => {
       </div>
 
       {/* Editor + Output + AI Review */}
-      <div className="flex-1 min-h-0 overflow-hidden grid grid-rows-[minmax(0,1fr)_180px]">
+      <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
 
-        {/* Code area */}
-        <div className="min-h-0 bg-[#07101d] overflow-hidden">
-          <Editor
-            height="100%"
-            beforeMount={handleEditorWillMount}
-            theme="codearena-dark"
-            language={
-              language === "python3"
-                ? "python"
-                : language === "nodejs"
-                  ? "javascript"
-                  : language === "cpp17"
-                    ? "cpp"
-                    : language
-            }
-            value={code}
-            onChange={(value) => setCode(value || "")}
-            options={{
-              minimap: { enabled: false },
-              fontSize: 14,
-              automaticLayout: true,
-              autoClosingBrackets: "always",
-              autoClosingQuotes: "always",
-              suggestOnTriggerCharacters: true,
-              quickSuggestions: true,
-              tabSize: 4,
-              wordWrap: "on"
-            }}
-          />
-        </div>
+        {/* Editor + Output */}
+        <div className="flex-1 min-h-0 overflow-hidden grid grid-rows-[minmax(0,1fr)_180px]">
 
-        {/* Output panel */}
-        <div className="border-t border-white/10 bg-[#050816]/80 flex flex-col min-h-0 overflow-hidden">
-          <div className="h-11 shrink-0 px-4 border-b border-white/10 flex items-center justify-between">
-            <div className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-[#A1A1AA]">
-              <span
-                className={`h-2.5 w-2.5 rounded-full transition-all ${status === 'running' ? 'bg-yellow-400 animate-pulseDot' :
-                    status === 'success' ? 'bg-[#22C55E]' :
-                      status === 'error' ? 'bg-red-400' :
-                        'bg-white/30'
-                  }`}
-              />
-              Output
-            </div>
-            <div className="text-xs text-[#A1A1AA] font-mono">{metaText}</div>
+          {/* Code area */}
+          <div className="min-h-0 bg-[#07101d] overflow-hidden">
+            <Editor
+              height="100%"
+              beforeMount={handleEditorWillMount}
+              theme="codearena-dark"
+              language={
+                language === "python3"
+                  ? "python"
+                  : language === "nodejs"
+                    ? "javascript"
+                    : language === "cpp17"
+                      ? "cpp"
+                      : language
+              }
+              value={code}
+              onChange={(value) => setCode(value || "")}
+              options={{
+                minimap: { enabled: false },
+                fontSize: 14,
+                automaticLayout: true,
+                autoClosingBrackets: "always",
+                autoClosingQuotes: "always",
+                suggestOnTriggerCharacters: true,
+                quickSuggestions: true,
+                tabSize: 4,
+                wordWrap: "on"
+              }}
+            />
           </div>
-          <pre className="min-h-0 flex-1 overflow-auto scrollbar-thin p-4 font-mono text-[13px] leading-7 text-slate-200 whitespace-pre-wrap">
-            {output}
-          </pre>
+
+          {/* Output panel */}
+          <div className="border-t border-white/10 bg-[#050816]/80 flex flex-col min-h-0 overflow-hidden">
+
+            <div className="h-11 shrink-0 px-4 border-b border-white/10 flex items-center justify-between">
+
+              <div className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-[#A1A1AA]">
+
+                <span
+                  className={`h-2.5 w-2.5 rounded-full transition-all ${status === 'running'
+                      ? 'bg-yellow-400 animate-pulseDot'
+                      : status === 'success'
+                        ? 'bg-[#22C55E]'
+                        : status === 'error'
+                          ? 'bg-red-400'
+                          : 'bg-white/30'
+                    }`}
+                />
+
+                Output
+              </div>
+
+              <div className="text-xs text-[#A1A1AA] font-mono">
+                {metaText}
+              </div>
+
+            </div>
+
+            <pre className="min-h-0 flex-1 overflow-auto scrollbar-thin p-4 font-mono text-[13px] leading-7 text-slate-200 whitespace-pre-wrap">
+              {output}
+            </pre>
+
+          </div>
         </div>
+
+        {/* AI Review Panel Here */}
+
       </div>
 
       {/* AI Review Panel — slides in after submit */}
       {(submitState === 'done' || submitState === 'error') && (
-        <div className="shrink-0 border-t border-[#6C63FF]/30 bg-[#0d0d2b]/90 backdrop-blur-xl">
-          <div className="px-5 py-3 flex items-center gap-2 border-b border-white/10">
-            <span className="text-[11px] uppercase tracking-[0.2em] font-semibold text-[#6C63FF]">
-              🐇 CodeRabbit Review
-            </span>
-            {submitState === 'done' && (
-              <span className="ml-auto text-[11px] text-[#22C55E] font-mono">Saved to DB ✓</span>
-            )}
-          </div>
-          <div className="px-5 py-4 max-h-48 overflow-y-auto scrollbar-thin">
-            <p className="text-sm text-slate-300 leading-relaxed whitespace-pre-wrap font-mono">
-              {aiReview}
-            </p>
-          </div>
+        <div
+          className="border-t border-white/10 bg-[#050816] overflow-hidden flex flex-col"
+          style={{ height: `${reviewHeight}px` }}
+        >
+
+          {/* Resize Handle */}
+          <div
+            onMouseDown={() => (isDragging.current = true)}
+            className="h-2 cursor-row-resize bg-white/5 hover:bg-[#6C63FF]/40 transition-all"
+          />
+
+          {aiReview && (
+            <div className="flex-1 overflow-auto mt-2 ml-4 mb-4 pr-4 scrollbar-thin">
+
+              <h3 className="text-xs text-[#6C63FF] font-semibold mb-3">
+                🐇 AI Review
+              </h3>
+
+              <div className="prose prose-invert max-w-none prose-headings:text-white prose-p:text-slate-300 prose-strong:text-white text-sm leading-7">
+
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {aiReview
+                    .replace(/^Correctness/gm, "# Correctness")
+                    .replace(/^Code Quality/gm, "# Code Quality")
+                    .replace(/^Optimization/gm, "# Optimization")
+                    .replace(/^Verdict/gm, "# Verdict")
+                  }
+                </ReactMarkdown>
+
+              </div>
+            </div>
+          )}
         </div>
       )}
     </main>

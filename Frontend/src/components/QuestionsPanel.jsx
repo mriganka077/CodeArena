@@ -45,7 +45,10 @@ const QuestionsPanel = ({ onQuestionChange }) => {
 
         setQuestions(data.questions);
 
-        onQuestionChange?.(data.questions[0]);
+        onQuestionChange?.({
+          ...data.questions[0],
+          selectedAnswer: answers[0]
+        });
 
       } else {
 
@@ -67,10 +70,20 @@ const QuestionsPanel = ({ onQuestionChange }) => {
   // Store Answers
   const handleAnswer = (questionIndex, option) => {
 
-    setAnswers((prev) => ({
-      ...prev,
-      [questionIndex]: option,
-    }));
+    setAnswers((prev) => {
+
+      const updated = {
+        ...prev,
+        [questionIndex]: option,
+      };
+    
+      onQuestionChange?.({
+        ...questions[questionIndex],
+        selectedAnswer: option
+      });
+    
+      return updated;
+    });
   };
 
   useEffect(() => {
@@ -84,7 +97,10 @@ const QuestionsPanel = ({ onQuestionChange }) => {
 
     setCurrent(idx);
 
-    onQuestionChange?.(questions[idx]);
+    onQuestionChange?.({
+      ...questions[idx],
+      selectedAnswer: answers[idx]
+    });
   };
 
   // Loading State
