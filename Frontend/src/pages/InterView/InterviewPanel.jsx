@@ -577,8 +577,10 @@ const InterviewPanel = () => {
   }
 
   return (
-    <div className="min-h-screen text-white font-sans selection:bg-indigo-500/30 overflow-hidden bg-[#050816]">
-      <SoftBackdrop />
+    <div className="min-h-screen text-white font-sans selection:bg-indigo-500/30 overflow-hidden relative bg-[#050816]">
+      <div className="absolute inset-0 z-0 opacity-70">
+        <SoftBackdrop />
+      </div>
       <LenisScroll />
       <CustomModal {...modalConfig} onClose={closeModal} />
 
@@ -615,7 +617,7 @@ const InterviewPanel = () => {
         </div>
       </div>
 
-      <main className="p-4 lg:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 h-[calc(100vh-170px)] max-w-[1600px] mx-auto">
+      <main className="relative z-10 p-4 lg:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 h-[calc(100vh-170px)] max-w-[1600px] mx-auto">
         <motion.section initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} className="lg:col-span-8 bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl overflow-hidden flex flex-col shadow-2xl">
           <div className="p-4 border-b border-white/10 bg-white/5 flex justify-between items-center">
             <div className="flex items-center gap-3">

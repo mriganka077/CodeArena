@@ -149,6 +149,7 @@ const Interview = () => {
     const videoRef = useRef(null);
     const streamRef = useRef(null);
     const [status, setStatus] = useState("idle");
+    const isEndingInterview = useRef(false);
     const [isModelsLoaded, setIsModelsLoaded] = useState(false);
 
     const [isSetupModalOpen, setIsSetupModalOpen] = useState(true);
@@ -184,6 +185,7 @@ const Interview = () => {
         tab: 0,
         keyboard: 0,
         noFace: 0,
+        fullscreen: 0,
     });
     const startActualInterview = async () => {
 
@@ -241,13 +243,44 @@ const Interview = () => {
 
         const handleFullscreen = () => {
 
+            // Ignore intentional exit
+            if (isEndingInterview.current) return;
+        
+            // User manually exited fullscreen
             if (!document.fullscreenElement) {
-
-                document.documentElement
-                    .requestFullscreen()
-                    .catch(() => { });
-
-                handleViolation("Fullscreen exit detected");
+        
+                violations.current.fullscreen += 1;
+        
+                // Terminate after 2 warnings
+                if (violations.current.fullscreen >= 3) {
+        
+                    triggerAlert(
+                        "Interview Terminated",
+                        "Multiple fullscreen violations detected.",
+                        "danger",
+                        () => navigate("/")
+                    );
+        
+                    return;
+                }
+        
+                triggerAlert(
+                    "Warning",
+                    `Fullscreen exit detected. Warning ${violations.current.fullscreen}/2. Click Continue to resume interview.`,
+                    "danger",
+                    async () => {
+        
+                        try {
+        
+                            await document.documentElement.requestFullscreen();
+        
+                        } catch (err) {
+        
+                            console.error("Failed to re-enter fullscreen");
+        
+                        }
+                    }
+                );
             }
         };
 
@@ -345,13 +378,41 @@ const Interview = () => {
         return () => clearInterval(cycle);
     }, []);
 
+    const endInterview = async () => {
+
+        try {
+    
+            isEndingInterview.current = true;
+    
+            setStatus("ended");
+    
+            if (streamRef.current) {
+                streamRef.current.getTracks().forEach(track => track.stop());
+            }
+    
+            if (document.fullscreenElement) {
+                await document.exitFullscreen();
+            }
+    
+        } catch (err) {
+    
+            console.error("Failed to exit fullscreen", err);
+    
+        } finally {
+    
+            navigate("/drive");
+        }
+    };
+
     const formatTime = (s) => {
         const m = String(Math.floor(s / 60)).padStart(2, "0");
         const sec = String(s % 60).padStart(2, "0");
         return `${m}:${sec}`;
     };
 
-    const candidateName = user?.displayName || user?.name || "Adhip Halder";
+    const candidateName = user
+    ? `${user.firstName} ${user.lastName}`
+    : "Candidate";
 
     useEffect(() => {
 
@@ -681,7 +742,7 @@ const Interview = () => {
                     {/* End call */}
                     <motion.button
                         whileTap={{ scale: 0.91 }}
-                        onClick={() => navigate("/")}
+                        onClick={endInterview}
                         aria-label="End interview call"
                         className="w-14 h-14 rounded-full bg-red-500 hover:bg-red-600 transition-colors flex items-center justify-center outline-none shadow-[0_4px_22px_rgba(239,68,68,0.45)]"
                     >
