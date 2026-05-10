@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import * as faceapi from "face-api.js";
+import axios from "axios";
 
 const CustomModal = ({ isOpen, title, message, type, onClose, onConfirm }) => {
     return (
@@ -79,6 +80,8 @@ const DeviceSetupModal = ({ isOpen, onClose, onConfirm, isModelsLoaded }) => {
         };
     }, [isOpen]);
 
+
+
     return (
         <AnimatePresence>
             {isOpen && (
@@ -138,21 +141,273 @@ const WaveBar = ({ color = "bg-violet-400" }) => (
     </div>
 );
 
+
 const Interview = () => {
     const { user } = useAuth();
     const navigate = useNavigate();
     const [elapsed, setElapsed] = useState(0);
     const [isMuted, setIsMuted] = useState(false);
-    const [aiSpeaking, setAiSpeaking] = useState(true);
+    const [aiSpeaking, setAiSpeaking] = useState(false);
     const [candidateSpeaking, setCandidateSpeaking] = useState(false);
+    const [currentQuestion, setCurrentQuestion] = useState("");
+    const [candidateAnswer, setCandidateAnswer] = useState("");
+    const [evaluation, setEvaluation] = useState(null);
+    const [isEvaluating, setIsEvaluating] = useState(false);
+    const recognitionRef = useRef(null);
     const [sessionStarted, setSessionStarted] = useState(false);
     const videoRef = useRef(null);
     const streamRef = useRef(null);
     const [status, setStatus] = useState("idle");
     const isEndingInterview = useRef(false);
     const [isModelsLoaded, setIsModelsLoaded] = useState(false);
+    const [cameraError, setCameraError] = useState("");
 
     const [isSetupModalOpen, setIsSetupModalOpen] = useState(true);
+
+    const generateFirstQuestion = async () => {
+
+        try {
+
+            const res = await axios.post(
+                "http://localhost:4000/api/ai-interview/start",
+                {
+                    role: "Frontend Developer",
+                    difficulty: "Medium",
+                    techStack:
+                        "React, JavaScript, Tailwind CSS",
+                }
+            );
+            console.log(res.data);
+
+            const question =
+                res.data?.question ||
+                "Tell me about yourself.";
+
+            setCurrentQuestion(question);
+
+            speakText(question);
+
+        } catch (error) {
+
+            console.log(error);
+        }
+    };
+
+    const speakText = async (text) => {
+
+        console.log("AI SPEAKING:", text);
+    
+        if (!text || isMuted) return;
+    
+        const synth = window.speechSynthesis;
+    
+        synth.cancel();
+    
+        const loadVoices = () => {
+    
+            return new Promise((resolve) => {
+    
+                let voices = synth.getVoices();
+    
+                if (voices.length) {
+    
+                    resolve(voices);
+    
+                    return;
+                }
+    
+                synth.onvoiceschanged = () => {
+    
+                    voices = synth.getVoices();
+    
+                    resolve(voices);
+                };
+            });
+        };
+    
+        const voices = await loadVoices();
+    
+        const utterance =
+            new SpeechSynthesisUtterance(text);
+    
+        utterance.lang = "en-US";
+    
+        utterance.rate = 1;
+    
+        utterance.pitch = 1;
+    
+        utterance.volume = 1;
+    
+        const englishVoice =
+            voices.find(
+                (v) =>
+                    v.lang.includes("en")
+            ) || voices[0];
+    
+        if (englishVoice) {
+            utterance.voice = englishVoice;
+        }
+    
+        utterance.onstart = () => {
+    
+            console.log("Speech started");
+    
+            setAiSpeaking(true);
+        };
+    
+        utterance.onend = () => {
+    
+            console.log("Speech ended");
+    
+            setAiSpeaking(false);
+    
+            startSpeechRecognition();
+        };
+    
+        utterance.onerror = (e) => {
+    
+            console.log(
+                "Speech error:",
+                e
+            );
+    
+            setAiSpeaking(false);
+        };
+        console.log(
+            "Available voices:",
+            voices
+         );
+    
+        synth.speak(utterance);
+    };
+
+
+
+    const startSpeechRecognition = () => {
+
+        if (recognitionRef.current) {
+            recognitionRef.current.stop();
+        }
+
+        const SpeechRecognition =
+            window.SpeechRecognition ||
+            window.webkitSpeechRecognition;
+
+        if (!SpeechRecognition) {
+
+            alert(
+                "Speech Recognition not supported"
+            );
+
+            return;
+        }
+
+        const recognition = new SpeechRecognition();
+
+        recognitionRef.current = recognition;
+
+        recognition.continuous = false;
+
+        recognition.interimResults = true;
+
+        recognition.lang = "en-US";
+
+        recognition.onstart = () => {
+            setCandidateSpeaking(true);
+        };
+
+        let finalTranscript = "";
+
+        recognition.onresult = (event) => {
+
+            let transcript = "";
+
+            for (
+                let i = event.resultIndex;
+                i < event.results.length;
+                i++
+            ) {
+
+                transcript +=
+                    event.results[i][0].transcript;
+
+                if (event.results[i].isFinal) {
+                    finalTranscript = transcript;
+                }
+            }
+
+            setCandidateAnswer(transcript);
+        };
+
+        recognition.onerror = (err) => {
+            console.log(err);
+        };
+
+        recognition.onend = () => {
+
+            setCandidateSpeaking(false);
+
+            if (
+                finalTranscript.trim().length > 10
+            ) {
+                submitAnswer(finalTranscript);
+            }
+        };
+
+        recognition.start();
+    };
+
+    const submitAnswer = async (
+        transcriptAnswer
+    ) => {
+
+        try {
+
+            setIsEvaluating(true);
+
+            const res = await axios.post(
+                "http://localhost:4000/api/ai-interview/evaluate",
+                {
+                    question: currentQuestion,
+                    answer:
+                        transcriptAnswer?.trim() ||
+                        candidateAnswer.trim(),
+                    role: "Frontend Developer",
+                }
+            );
+
+            const result = res.data?.result;
+
+            if (!result) return;
+
+            setEvaluation(result);
+
+            if (result.followUpQuestion) {
+
+                setCurrentQuestion(
+                    result.followUpQuestion
+                );
+
+                setCandidateAnswer("");
+
+                setTimeout(() => {
+
+                    speakText(
+                        result.followUpQuestion
+                    );
+
+                }, 1500);
+            }
+
+        } catch (error) {
+
+            console.log(error);
+
+        } finally {
+
+            setIsEvaluating(false);
+        }
+    };
 
     const [modalConfig, setModalConfig] = useState({
         isOpen: false,
@@ -194,6 +449,25 @@ const Interview = () => {
         setSessionStarted(true);
 
         setStatus("active");
+
+        const synth = window.speechSynthesis;
+
+        synth.cancel();
+
+        synth.resume();
+
+        const unlockUtterance =
+            new SpeechSynthesisUtterance(" ");
+
+        unlockUtterance.volume = 0;
+
+        synth.speak(unlockUtterance);
+
+        setTimeout(() => {
+
+            generateFirstQuestion();
+
+        }, 500);
 
         try {
 
@@ -245,39 +519,39 @@ const Interview = () => {
 
             // Ignore intentional exit
             if (isEndingInterview.current) return;
-        
+
             // User manually exited fullscreen
             if (!document.fullscreenElement) {
-        
+
                 violations.current.fullscreen += 1;
-        
+
                 // Terminate after 2 warnings
                 if (violations.current.fullscreen >= 3) {
-        
+
                     triggerAlert(
                         "Interview Terminated",
                         "Multiple fullscreen violations detected.",
                         "danger",
                         () => navigate("/")
                     );
-        
+
                     return;
                 }
-        
+
                 triggerAlert(
                     "Warning",
                     `Fullscreen exit detected. Warning ${violations.current.fullscreen}/2. Click Continue to resume interview.`,
                     "danger",
                     async () => {
-        
+
                         try {
-        
+
                             await document.documentElement.requestFullscreen();
-        
+
                         } catch (err) {
-        
+
                             console.error("Failed to re-enter fullscreen");
-        
+
                         }
                     }
                 );
@@ -369,37 +643,35 @@ const Interview = () => {
 
     }, []);
 
-    // Demo speaking toggle — replace with real audio detection / WebRTC events
-    useEffect(() => {
-        const cycle = setInterval(() => {
-            setAiSpeaking((a) => !a);
-            setCandidateSpeaking((c) => !c);
-        }, 4000);
-        return () => clearInterval(cycle);
-    }, []);
+
 
     const endInterview = async () => {
 
         try {
-    
+
             isEndingInterview.current = true;
-    
+
+            if (recognitionRef.current) {
+                recognitionRef.current.stop();
+            }
+
             setStatus("ended");
-    
+
             if (streamRef.current) {
                 streamRef.current.getTracks().forEach(track => track.stop());
             }
-    
+
             if (document.fullscreenElement) {
                 await document.exitFullscreen();
             }
-    
+
         } catch (err) {
-    
+
             console.error("Failed to exit fullscreen", err);
-    
+
         } finally {
-    
+            window.speechSynthesis.cancel();
+
             navigate("/drive");
         }
     };
@@ -411,8 +683,8 @@ const Interview = () => {
     };
 
     const candidateName = user
-    ? `${user.firstName} ${user.lastName}`
-    : "Candidate";
+        ? `${user.firstName} ${user.lastName}`
+        : "Candidate";
 
     useEffect(() => {
 
@@ -508,6 +780,7 @@ const Interview = () => {
     }, [status, isModelsLoaded]);
 
     return (
+
         <>
             <SoftBackdrop />
             <LenisScroll />
@@ -525,7 +798,7 @@ const Interview = () => {
             {/* <Header /> */}
 
             {/* <div className="relative min-h-screen flex flex-col items-start px-8 pt-10 pb-10"> */}
-            <div className="relative h-screen overflow-hidden flex flex-col items-start px-8 pt-8 pb-6">
+            <div className="relative h-screen overflow-hidden flex flex-col items-start px-8 pt-8 pb-16">
 
                 {/* ── Top heading ── */}
                 <div className="w-full flex items-center justify-between mb-6">
@@ -554,6 +827,7 @@ const Interview = () => {
                         </h1>
                     </div>
 
+
                     {/* Timer */}
                     <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-2">
 
@@ -575,9 +849,57 @@ const Interview = () => {
                 </div>
 
                 {/* ── Session subtitle ── */}
-                <p className="text-sm text-white/35 tracking-wide mb-30">
-                    AI Interview in Sessions...
-                </p>
+                <div className="w-full">
+
+                    <p className="text-sm text-white/35 tracking-wide mb-25">
+                        AI Interview in Sessions...
+                    </p>
+
+
+                    {
+                        isEvaluating && (
+
+                            <div className="w-full max-w-4xl self-center mb-8">
+
+                                <div className="rounded-3xl border border-indigo-500/20 bg-white/[0.04] backdrop-blur-xl p-6">
+
+                                    <p className="text-indigo-300 animate-pulse">
+                                        AI is evaluating your answer...
+                                    </p>
+
+                                </div>
+
+                            </div>
+                        )
+                    }
+
+                    {/* Evaluation */}
+                    {
+                        evaluation && (
+
+                            <div className="w-full max-w-4xl self-center mb-8">
+
+                                <div className="rounded-3xl border border-violet-500/20 bg-white/[0.04] backdrop-blur-xl p-6">
+
+                                    <p className="text-xs uppercase tracking-[0.2em] text-violet-300 mb-3">
+                                        AI Evaluation
+                                    </p>
+
+                                    <p className="text-lg font-semibold mb-3">
+                                        Score: {evaluation.score}/10
+                                    </p>
+
+                                    <p className="text-white/70">
+                                        {evaluation.feedback}
+                                    </p>
+
+                                </div>
+
+                            </div>
+                        )
+                    }
+
+                </div>
 
                 {/* ── Interview panels ── */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10 w-full max-w-4xl self-center">
@@ -629,9 +951,17 @@ const Interview = () => {
                             </span>
                         </div>
 
-                        <p className="text-[15px] font-semibold text-white/90 tracking-wide">
-                            AI Recruiter
-                        </p>
+                        <div className="flex flex-col items-center">
+
+                            <p className="text-[15px] font-semibold text-white/90 tracking-wide">
+                                AI Recruiter
+                            </p>
+
+                            <p className="text-xs text-white/60 text-center mt-3 max-w-[240px] leading-relaxed">
+                                {currentQuestion}
+                            </p>
+
+                        </div>
 
                         {aiSpeaking ? (
                             <WaveBar color="bg-violet-400" />

@@ -15,6 +15,7 @@ import profileRoutes from "./routes/profile.js";
 import practiceRoutes from "./routes/practice.js";
 import compilerRoutes from "./routes/compiler.js";
 import aiQuestionRoutes from "./routes/aiQuestions.js";
+import aiInterviewRoutes from "./routes/aiInterview.js";
 
 dotenv.config();
 initGoogleStrategy();
@@ -68,6 +69,7 @@ app.use("/api/practice", practiceRoutes);
 app.use("/api/compiler", compilerRoutes);
 
 app.use("/api/ai", aiQuestionRoutes);
+app.use("/api/ai-interview", aiInterviewRoutes);
 
 app.get("/", (req, res) => {
   res.json({

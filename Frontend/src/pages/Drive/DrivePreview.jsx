@@ -209,7 +209,7 @@ const DrivePreview = () => {
 
   const confirmStartInterview = (drive) => {
     closeInstructionsModal();
-    navigate("/interviewPanel", { state: { drive } });
+    navigate("/assessment", { state: { drive } });
   };
 
   const getDriveStatus = (driveData) => {

@@ -131,7 +131,7 @@ const formatTime = (seconds) => {
   return `${h > 0 ? h + ':' : ''}${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 };
 
-const InterviewPanel = () => {
+const Assessment = () => {
   const { user } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -333,12 +333,12 @@ const InterviewPanel = () => {
     const performAnalysis = async () => {
       if (!isRunning || isAnalyzing.current || modalConfig.isOpen) return;
       isAnalyzing.current = true;
-      
+
       try {
         const video = videoRef.current;
-        if (!video || video.readyState < 2 || video.paused || video.ended) { 
-          isAnalyzing.current = false; 
-          return; 
+        if (!video || video.readyState < 2 || video.paused || video.ended) {
+          isAnalyzing.current = false;
+          return;
         }
 
         const now = Date.now();
@@ -359,21 +359,21 @@ const InterviewPanel = () => {
             if (violations.current.brightness >= 4) terminateSession("Environment too dark.");
             else triggerAlert("Lighting Warning", `Warning ${violations.current.brightness}/3: Lighting is too dark. Please turn on a light.`, "danger");
           }
-          isAnalyzing.current = false; 
+          isAnalyzing.current = false;
           return;
         }
 
         const detections = await faceapi.detectAllFaces(
-          video, 
+          video,
           new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.2 })
         ).withFaceLandmarks();
 
         if (detections.length === 0) {
           missingFaceFrames.current += 1;
-          
+
           const allowedMissingFrames = isCoding ? 7 : 2;
 
-          if (missingFaceFrames.current >= allowedMissingFrames) { 
+          if (missingFaceFrames.current >= allowedMissingFrames) {
             if (!isCooldown) {
               violations.current.noFace += 1;
               lastViolationTime.current = Date.now();
@@ -385,7 +385,7 @@ const InterviewPanel = () => {
               }
             }
           }
-        } 
+        }
         else if (detections.length > 1) {
           missingFaceFrames.current = 0;
           if (!isCooldown) {
@@ -397,15 +397,15 @@ const InterviewPanel = () => {
               triggerAlert("Security Violation", `Warning ${violations.current.multiPerson}/2: Multiple faces detected! You must take this assessment alone.`, "danger");
             }
           }
-        } 
+        }
         else {
-          missingFaceFrames.current = 0; 
+          missingFaceFrames.current = 0;
         }
 
-      } catch (err) { 
-        console.error("Analysis Error:", err); 
-      } finally { 
-        isAnalyzing.current = false; 
+      } catch (err) {
+        console.error("Analysis Error:", err);
+      } finally {
+        isAnalyzing.current = false;
       }
     };
 
@@ -414,12 +414,12 @@ const InterviewPanel = () => {
       await performAnalysis();
       analysisTimeoutRef.current = setTimeout(loop, 1500);
     };
-    
+
     loop();
-    
-    return () => { 
-      isRunning = false; 
-      if (analysisTimeoutRef.current) clearTimeout(analysisTimeoutRef.current); 
+
+    return () => {
+      isRunning = false;
+      if (analysisTimeoutRef.current) clearTimeout(analysisTimeoutRef.current);
     };
   }, [status, isModelsLoaded, modalConfig.isOpen, isCoding]);
 
@@ -547,7 +547,7 @@ const InterviewPanel = () => {
           </div>
 
           <div className="flex-1 p-6 flex flex-col min-h-0">
-            
+
             {status === "active" && questions.length === 0 && (
               <div className="h-full flex flex-col justify-center items-center text-center">
                 <h2 className="text-xl font-bold text-red-400">Failed to load questions</h2>
@@ -580,7 +580,10 @@ const InterviewPanel = () => {
             {status === "active" && isCoding && questions.length > 0 && (
               <div className="h-full flex flex-col gap-4 min-h-0">
                 <div className="flex-1 min-h-0 flex flex-col rounded-xl overflow-hidden border border-white/10 shadow-inner">
-                  <CodeEditor currentQuestion={questions[currentQ]} />
+                  <CodeEditor
+                    currentQuestion={questions[currentQ]}
+                    fixedLanguage={true}
+                  />
                 </div>
 
                 <div className="flex justify-between items-center shrink-0 pt-2 pb-1">
@@ -623,42 +626,90 @@ const InterviewPanel = () => {
           </div>
 
           <div className="flex-1 min-h-0 bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6 lg:p-8 flex flex-col shadow-2xl">
-            <h3 className="text-[10px] font-black text-indigo-400 mb-4 lg:mb-6 uppercase tracking-[0.3em] flex items-center gap-2 shrink-0"><span className={`h-1.5 w-1.5 rounded-full ${status === "active" ? "bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.8)]" : "bg-gray-600"}`} /> AI Interviewer</h3>
 
+            {/* Question Number Navigation */}
+            {status === "active" && (
+              <div className="flex gap-2 flex-wrap mb-6 shrink-0">
+                {questions.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setCurrentQ(idx)}
+                    className={`w-9 h-9 rounded-xl text-xs font-black transition-all
+            ${idx === currentQ
+                        ? "bg-[#6C63FF] text-white shadow-[0_0_12px_rgba(108,99,255,0.45)] scale-105"
+                        : questions[idx]?.submitted
+                          ? "bg-green-500/20 text-green-400 border border-green-500/30"
+                          : "bg-white/5 text-[#A1A1AA] border border-white/10 hover:bg-white/10"
+                      }`}
+                  >
+                    {questions[idx]?.submitted ? "✓" : idx + 1}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Main Content */}
             <div className="flex-1 overflow-y-auto mb-4 lg:mb-6 pr-2 scrollbar-thin">
+
               {status === "active" && isCoding ? (
+
                 <div className="space-y-4">
+
+                  {/* Current Question */}
                   <div className="p-5 bg-indigo-500/10 border border-indigo-500/20 rounded-2xl shadow-inner">
-                    <span className="text-xs font-black text-indigo-400 uppercase tracking-wider mb-3 block">Current Task (Q{currentQ + 1})</span>
+                    <span className="text-xs font-black text-indigo-400 uppercase tracking-wider mb-3 block">
+                      Current Task (Q{currentQ + 1})
+                    </span>
+
                     <p className="text-sm text-indigo-50 leading-relaxed font-medium whitespace-pre-wrap">
                       {questions[currentQ]?.question || "Loading question..."}
                     </p>
                   </div>
+
+                  {/* Execution Status */}
                   <div className="px-4 py-3 bg-black/20 rounded-xl text-xs text-gray-400 border border-white/5">
-                    <span className="font-bold text-gray-300 block mb-1">Live Execution Active:</span>
+                    <span className="font-bold text-gray-300 block mb-1">
+                      Live Execution Active:
+                    </span>
+
                     Code execution is isolated within your browser. All inputs and outputs are monitored for academic integrity.
                   </div>
+
                 </div>
+
               ) : (
+
                 <div className="p-5 bg-indigo-500/10 border border-indigo-500/20 rounded-2xl text-sm text-indigo-50 leading-relaxed shadow-inner">
+
                   {status === "active"
                     ? "System active. AI proctoring is continuously monitoring face visibility, attention, and environment integrity."
                     : isModelsLoaded
                       ? "Authentication pending. Please complete the device setup to authorize access."
                       : "Initializing AI Proctoring Subsystems. Please wait..."}
+
                 </div>
+
               )}
+
             </div>
 
+            {/* Submit Button */}
             <div className="flex justify-center shrink-0">
+
               <button
                 onClick={toggleInterview}
                 disabled={status === "idle"}
-                className={`w-full max-w-[300px] flex items-center justify-center gap-3 py-4 rounded-2xl border transition-all active:scale-95 text-[10px] font-black uppercase tracking-[0.2em] ${status === "idle" ? "bg-gray-800/50 border-gray-700 text-gray-500 cursor-not-allowed" : "bg-red-500/10 border-red-500/20 text-red-400 hover:bg-red-500 hover:text-white"}`}
+                className={`w-full max-w-[300px] flex items-center justify-center gap-3 py-4 rounded-2xl border transition-all active:scale-95 text-[10px] font-black uppercase tracking-[0.2em]
+        ${status === "idle"
+                    ? "bg-gray-800/50 border-gray-700 text-gray-500 cursor-not-allowed"
+                    : "bg-red-500/10 border-red-500/20 text-red-400 hover:bg-red-500 hover:text-white"
+                  }`}
               >
                 {status === "idle" ? "Awaiting Setup" : "Submit & End"}
               </button>
+
             </div>
+
           </div>
         </motion.section>
       </main>
@@ -666,4 +717,4 @@ const InterviewPanel = () => {
   );
 };
 
-export default InterviewPanel;
+export default Assessment;
