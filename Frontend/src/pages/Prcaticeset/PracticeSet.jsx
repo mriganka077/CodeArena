@@ -2,7 +2,7 @@ import { useState } from 'react';
 import QuestionsPanel from '../../components/QuestionsPanel';
 import CodeEditor from '../../components/CodeEditor';
 
-const PythonPracticeApp = () => {
+const PracticeSet = () => {
 
   const [currentQuestion, setCurrentQuestion] = useState(null);
 
@@ -19,10 +19,12 @@ const PythonPracticeApp = () => {
 
       <QuestionsPanel onQuestionChange={setCurrentQuestion} />
 
-      <CodeEditor currentQuestion={currentQuestion} />
+      <CodeEditor
+        currentQuestion={currentQuestion}
+      />
 
     </div>
   );
 };
 
-export default PythonPracticeApp;
+export default PracticeSet;

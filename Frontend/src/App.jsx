@@ -1,22 +1,15 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Home from "./pages/Homepage/Home";
 import DrivePreview from "./pages/Drive/DrivePreview";
-import InterviewPanel from "./pages/InterView/InterviewPanel";
+import Assessment from "./pages/InterView/Assessment.jsx";
 
-import PythonPracticeApp from "./pages/Prcaticeset/PythonPracticeApp";
+import PracticeSet from "./pages/Prcaticeset/PracticeSet.jsx";
 import DomainSelectorPage from "./pages/Prcaticeset/DomainSelectorPage";
-import PracticeSetPage from "./pages/Prcaticeset/PracticeSetPage";
-// import Dashboard from "./pages/Dashboard/Dashboard";
+
 import ProfileDashboard from "./pages/LoginProfile/ProfileDashboard";
 import AuthPage from "./pages/LoginProfile/AuthPage";
 import ForgotPassword from "./pages/LoginProfile/ForgotPassword";
 import "./App.css";
-
-// import PythonPracticeApp from './pages/Prcaticeset/PythonPracticeApp';
-// import DomainSelectorPage from './pages/Prcaticeset/DomainSelectorPage';
-// import PracticeSetPage from './pages/Prcaticeset/PracticeSetPage';
-// import Dashboard from "./pages/Dashboard/Dashboard";
-// import './App.css';
 import SignUp from "./pages/SignUp/SignUp";
 
 
@@ -32,7 +25,7 @@ import Interview from "./pages/InterView/Interview.jsx";
 function App() {
   const { isLoggedIn, loading } = useAuth();
 
-  if (loading) return null; // wait for auth check before rendering routes
+  if (loading) return null;
 
   return (
 
@@ -48,7 +41,7 @@ function App() {
       <Route path="/verify-email/:token" element={<VerifyEmail />} />
       <Route path="/" element={<Home />} />
       <Route path="/drive" element={<DrivePreview />} />
-      <Route path="/interviewPanel" element={<InterviewPanel />} />
+      <Route path="/assessment" element={<Assessment />} />
       <Route path="/domainselector" element={<DomainSelectorPage />} />
       {/* <Route path="/dashboard" element={<Dashboard />} /> */}
       <Route path="/profile" element={<ProfileDashboard />} />
@@ -73,7 +66,7 @@ function App() {
         path="/practiceset" 
         element={
           <ProtectedRoute>
-            <PythonPracticeApp />
+            <PracticeSet />
           </ProtectedRoute>
         } 
       />
@@ -86,19 +79,6 @@ function App() {
       />
 
     </Routes>
-
-    // <BrowserRouter>
-    //   <Routes>
-    //     <Route path="/" element={<Home />} />
-    //     <Route path="/drive_name" element={<DrivePreview />} />
-    //     <Route path="/interviewPanel" element={<InterviewPanel />} />
-    //     <Route path="/practiceset" element={<PythonPracticeApp />} />
-    //     <Route path="/domainselector" element={<DomainSelectorPage />} />
-    //     <Route path="/dashboard" element={<Dashboard />} />
-    //     <Route path="/signup" element={<SignUp />} />
-    //   </Routes>
-    // </BrowserRouter>
-
   );
 }
 

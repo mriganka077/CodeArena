@@ -7,7 +7,10 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 // import { useAuth } from '../context/AuthContext'; // adjust path if needed
 
-const CodeEditor = ({ currentQuestion }) => {
+const CodeEditor = ({
+  currentQuestion,
+  fixedLanguage = false
+}) => {
   const starterCodes = {
     python3: `print("Hello World")`,
 
@@ -48,7 +51,52 @@ const CodeEditor = ({ currentQuestion }) => {
   const [aiReview, setAiReview] = useState('');
   const outputRef = useRef('');   // track output for submit
 
-  const [language, setLanguage] = useState("python3");
+  const mapQuestionLanguage = (lang) => {
+    switch ((lang || "").toLowerCase()) {
+      case "python":
+        return "python3";
+  
+      case "javascript":
+        return "nodejs";
+  
+      case "java":
+        return "java";
+  
+      case "c++":
+        return "cpp17";
+  
+      case "c":
+        return "c";
+  
+      case "php":
+        return "php";
+  
+      case "typescript":
+        return "typescript";
+  
+      case "go":
+        return "go";
+  
+      default:
+        return "python3";
+    }
+  };
+  
+  const [language, setLanguage] = useState(
+    mapQuestionLanguage(currentQuestion?.language)
+  );
+
+  useEffect(() => {
+
+    // Don't override interview panel fixed language
+    if (fixedLanguage) return;
+  
+    // Load hello world starter code
+    setCode(
+      starterCodes[language] || ""
+    );
+  
+  }, [language]);
 
   const [reviewHeight, setReviewHeight] = useState(260);
   const isDragging = useRef(false);
@@ -84,19 +132,43 @@ const CodeEditor = ({ currentQuestion }) => {
 
   // reset editor when question changes
   // reset editor when question changes
+
+
   useEffect(() => {
-    setCode(starterCodes[language]);
+
+    if (!currentQuestion) return;
+  
+    const fixedLang = mapQuestionLanguage(
+      currentQuestion.language
+    );
+  
+    setLanguage(fixedLang);
+  
+    // Interview Panel
+    // Interview Panel
+    if (fixedLanguage) {
+
+      // Always start with blank editor
+      setCode("");
+
+    }
+  
+    // Practice / Playground
+    else {
+  
+      setCode(
+        starterCodes[fixedLang]
+      );
+  
+    }
+  
     setOutput('Run code to see output here...');
     setStatus('idle');
     setMetaText('');
     setSubmitState('idle');
     setAiReview('');
-  }, [currentQuestion?.id]);
-
-  // ADD HERE
-  useEffect(() => {
-    setCode(starterCodes[language]);
-  }, [language]);
+  
+  }, [currentQuestion, fixedLanguage]);
 
 
 
@@ -262,10 +334,27 @@ const CodeEditor = ({ currentQuestion }) => {
           {/* Glow Border */}
           <div className="absolute -inset-[1px] rounded-2xl bg-gradient-to-r from-violet-600/40 via-fuchsia-500/30 to-indigo-500/30 blur-md opacity-0 transition-all duration-300 group-hover:opacity-100" />
 
-          <LanguageDropdown
-            language={language}
-            setLanguage={setLanguage}
-          />
+          {fixedLanguage ? (
+
+            <div className="px-5 py-2 rounded-2xl border border-indigo-500/30 bg-[#111827] text-white font-semibold text-sm shadow-inner">
+              {language === "python3" && "Python"}
+              {language === "nodejs" && "JavaScript"}
+              {language === "java" && "Java"}
+              {language === "cpp17" && "C++"}
+              {language === "c" && "C"}
+              {language === "php" && "PHP"}
+              {language === "typescript" && "TypeScript"}
+              {language === "go" && "Go"}
+            </div>
+
+          ) : (
+
+            <LanguageDropdown
+              language={language}
+              setLanguage={setLanguage}
+            />
+
+          )}
 
 
         </div>
