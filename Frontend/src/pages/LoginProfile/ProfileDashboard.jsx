@@ -558,7 +558,8 @@ function calcCompletion(profile) {
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export default function ProfilePage() {
-  const { user: authUser } = useAuth();
+  // const { user: authUser } = useAuth();
+  const { user: authUser, login } = useAuth();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("personal");
@@ -595,8 +596,12 @@ export default function ProfilePage() {
         body: form,
       });
       const json = await res.json();
-      // if (json.success) setProfile(p => ({ ...p, profilePhoto: json.photoUrl }));
-      if (json.success) setProfile(p => ({ ...p, picture: json.photoUrl }));
+      if (json.success) {
+        setProfile(p => ({ ...p, picture: json.photoUrl }));
+
+        const token = localStorage.getItem("token");
+        login({ ...(authUser || {}), picture: json.photoUrl }, token);
+      }
     } catch (err) { console.error(err); }
     finally { setPhotoUploading(false); }
   };

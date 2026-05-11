@@ -52,7 +52,7 @@ const Header = () => {
                                 <div className="w-9 h-9 rounded-full overflow-hidden bg-[#0f172a] flex items-center justify-center text-sm text-white">
                                     {user?.picture ? (
                                         <img
-                                            src={user.picture}
+                                            src={user.picture.startsWith('http') ? user.picture : `http://localhost:4000${user.picture}`}
                                             alt="Profile"
                                             referrerPolicy="no-referrer"
                                             className="w-full h-full object-cover"
