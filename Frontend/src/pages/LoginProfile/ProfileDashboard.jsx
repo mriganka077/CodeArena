@@ -595,7 +595,8 @@ export default function ProfilePage() {
         body: form,
       });
       const json = await res.json();
-      if (json.success) setProfile(p => ({ ...p, profilePhoto: json.photoUrl }));
+      // if (json.success) setProfile(p => ({ ...p, profilePhoto: json.photoUrl }));
+      if (json.success) setProfile(p => ({ ...p, picture: json.photoUrl }));
     } catch (err) { console.error(err); }
     finally { setPhotoUploading(false); }
   };
@@ -620,9 +621,11 @@ export default function ProfilePage() {
   const pctColor = profilePct >= 80 ? COLORS.green : profilePct >= 50 ? COLORS.accent : "#f59e0b";
 
   // Photo source priority: uploaded photo > Google picture > initials
-  const photoSrc = profile?.profilePhoto
-    ? `http://localhost:4000${profile.profilePhoto}`
-    : profile?.picture || null;
+  const photoSrc = profile?.picture
+    ? profile.picture.startsWith('http')
+      ? profile.picture                               // Google OAuth URL
+      : `http://localhost:4000${profile.picture}`     // local upload
+    : null;
 
   const initials = `${profile?.firstName?.[0] || ""}${profile?.lastName?.[0] || ""}`.toUpperCase() || "?";
 
