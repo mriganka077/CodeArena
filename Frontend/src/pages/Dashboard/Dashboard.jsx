@@ -70,7 +70,7 @@ const ScrollReveal = ({ children, delay = 0, direction = 'up', className = '' })
 };
 
 // ─── Animated Collapsible Section ───
-const CollapsibleSection = ({ isOpen, children }) => {
+const CollapsibleSection = ({ isOpen, children, className = '' }) => {
   const contentRef = useRef(null);
   const [height, setHeight] = useState(0);
   const [shouldRender, setShouldRender] = useState(isOpen);
@@ -99,7 +99,7 @@ const CollapsibleSection = ({ isOpen, children }) => {
   };
 
   return (
-    <div
+    <div className={className}
       style={{
         height: `${height}px`,
         overflow: 'hidden',
@@ -517,7 +517,7 @@ const Dashboard = () => {
           )}
 
           {/* ─── Collapsible Analytics Content ─── */}
-          <CollapsibleSection isOpen={analyticsOpen}>
+          <CollapsibleSection isOpen={analyticsOpen} className="mb-8">
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 sm:gap-8 mb-14 pt-2">
 
               {/* ──── Box 1: Pie Chart ──── */}
