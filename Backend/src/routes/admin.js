@@ -4,6 +4,8 @@ import Drive from "../models/Drive.js";
 import Interview from "../models/Interview.js";
 import InterviewResult from "../models/InterviewResult.js";
 import Domain from "../models/Domain.js";
+import { adminLogin, adminVerifyOtp } from "../controllers/adminAuth.js";
+import { adminProtect } from "../middleware/adminProtect.js";
 
 const router = express.Router();
 
@@ -220,6 +222,16 @@ router.delete("/domains/:id/domain", async (req, res) => {
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
   }
+});
+
+// ── ADMIN LOGIN ───────────────────────────────────────────────────────────────────
+
+router.post("/login",      adminLogin);
+router.post("/verify-otp", adminVerifyOtp);
+
+// Example protected admin route
+router.get("/me", adminProtect, (req, res) => {
+  res.json({ success: true, admin: req.admin });
 });
 
 export default router;
