@@ -651,10 +651,10 @@ const Dashboard = () => {
                           </span>
                         </div>
                       </div>
-                      <div className="absolute top-1/2 left-1/2 pointer-events-none">
+                      {/* <div className="absolute top-1/2 left-1/2 pointer-events-none">
                         <div className="ring-1 absolute border border-indigo-500/15 rounded-full" />
                         <div className="ring-2 absolute border border-indigo-500/10 rounded-full" />
-                      </div>
+                      </div> */}
                     </div>
 
                     <div className="flex flex-col gap-3 w-full">
