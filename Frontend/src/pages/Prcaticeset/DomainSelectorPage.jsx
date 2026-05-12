@@ -2,6 +2,8 @@ import React, { useMemo, useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import SoftBackdropNew from "../../components/SoftBackdropNew";
 import LenisScroll from "../../components/lenis";
+import Header from "../../components/Header";
+
 
 const API_URL = "http://localhost:4000/api/admin";
 
@@ -481,6 +483,7 @@ export default function DomainSelectorPage() {
 
   return (
     <>
+      <Header />
       <SoftBackdropNew />
       <LenisScroll />
 

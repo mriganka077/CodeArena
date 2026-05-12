@@ -170,3 +170,17 @@ body,
 #root {
     height: 100%;
 }
+
+
+
+
+/* MRIGANKA --> FEEDBACKPANEL */
+
+@keyframes borderGlow {
+  0%, 100% { box-shadow: 0 0 30px rgba(108,99,255,0.12), 0 0 80px rgba(108,99,255,0.05), 0 24px 48px rgba(5,8,22,0.6); }
+  50%       { box-shadow: 0 0 50px rgba(108,99,255,0.22), 0 0 100px rgba(108,99,255,0.09), 0 24px 48px rgba(5,8,22,0.6); }
+}
+
+.card-glow {
+  animation: borderGlow 4s ease-in-out infinite;
+}
