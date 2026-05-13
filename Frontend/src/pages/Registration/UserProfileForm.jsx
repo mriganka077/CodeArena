@@ -16,6 +16,7 @@ import {
   MapPin,
   LocateFixed,
 } from "lucide-react";
+import SoftBackdropNew from "../../components/SoftBackdropNew";
 
 export default function UserProfileForm() {
   const [step, setStep] = useState(1);
@@ -188,7 +189,9 @@ export default function UserProfileForm() {
   };
 
   return (
-    <div className="min-h-screen bg-[#020617] flex items-center justify-center px-4 py-10 relative overflow-hidden">
+    <>
+    <SoftBackdropNew />
+    <div className="min-h-screen flex items-center justify-center px-4 py-10 relative overflow-hidden">
       {/* Background Glow */}
       <div className="absolute top-[-120px] left-[-120px] w-[400px] h-[400px] bg-violet-700/30 blur-[140px] rounded-full"></div>
 
@@ -267,7 +270,7 @@ export default function UserProfileForm() {
                   First Name
                 </label>
 
-                <div className="h-14 bg-[#050816] border border-violet-500/20 rounded-xl flex items-center px-4">
+                <div className="h-14 bg-violet-500/30 border border-violet-500/20 rounded-xl flex items-center px-4">
                   <User className="text-violet-400 mr-3" size={18} />
 
                   <input
@@ -287,7 +290,7 @@ export default function UserProfileForm() {
                   Last Name
                 </label>
 
-                <div className="h-14 bg-[#050816] border border-violet-500/20 rounded-xl flex items-center px-4">
+                <div className="h-14 bg-violet-500/30 border border-violet-500/20 rounded-xl flex items-center px-4">
                   <User className="text-violet-400 mr-3" size={18} />
 
                   <input
@@ -307,7 +310,7 @@ export default function UserProfileForm() {
                   Email Address
                 </label>
 
-                <div className="h-14 bg-[#050816] border border-violet-500/20 rounded-xl flex items-center px-4">
+                <div className="h-14 bg-violet-500/30 border border-violet-500/20 rounded-xl flex items-center px-4">
                   <Mail className="text-violet-400 mr-3" size={18} />
 
                   <input
@@ -327,7 +330,7 @@ export default function UserProfileForm() {
                   Phone Number
                 </label>
 
-                <div className="h-14 bg-[#050816] border border-violet-500/20 rounded-xl flex items-center px-4">
+                <div className="h-14 bg-violet-500/30 border border-violet-500/20 rounded-xl flex items-center px-4">
                   <Phone className="text-violet-400 mr-3" size={18} />
 
                   <input
@@ -348,7 +351,7 @@ export default function UserProfileForm() {
                   Date of Birth
                 </label>
 
-                <div className="h-14 bg-[#050816] border border-violet-500/20 rounded-xl flex items-center px-4">
+                <div className="h-14 bg-violet-500/30 border border-violet-500/20 rounded-xl flex items-center px-4">
                   <Calendar className="text-violet-400 mr-3" size={18} />
 
                   <input
@@ -382,7 +385,7 @@ export default function UserProfileForm() {
                   name="nationality"
                   value={formData.nationality}
                   onChange={handleChange}
-                  className="w-full h-14 bg-[#050816] border border-violet-500/20 rounded-xl px-4 text-white outline-none"
+                  className="w-full h-14 bg-violet-500/30 border border-violet-500/20 rounded-xl px-4 text-white outline-none"
                 >
                   <option value="">Select Nationality</option>
                   <option value="India">Indian</option>
@@ -400,7 +403,7 @@ export default function UserProfileForm() {
                     name="state"
                     value={formData.state}
                     onChange={handleChange}
-                    className="w-full h-14 bg-[#050816] border border-violet-500/20 rounded-xl px-4 text-white outline-none"
+                    className="w-full h-14 bg-violet-500/30 border border-violet-500/20 rounded-xl px-4 text-white outline-none"
                   >
                     <option value="">Select State</option>
 
@@ -424,7 +427,7 @@ export default function UserProfileForm() {
                     name="district"
                     value={formData.district}
                     onChange={handleChange}
-                    className="w-full h-14 bg-[#050816] border border-violet-500/20 rounded-xl px-4 text-white outline-none"
+                    className="w-full h-14 bg-violet-500/30 border border-violet-500/20 rounded-xl px-4 text-white outline-none"
                   >
                     <option value="">Select District</option>
 
@@ -454,7 +457,7 @@ export default function UserProfileForm() {
                       fetchLocationByPin(e.target.value);
                     }}
                     placeholder="712410"
-                    className="w-full h-14 bg-[#050816] border border-violet-500/20 rounded-xl px-4 text-white outline-none"
+                    className="w-full h-14 bg-violet-500/30 border border-violet-500/20 rounded-xl px-4 text-white outline-none"
                   />
 
                   <button
@@ -484,7 +487,7 @@ export default function UserProfileForm() {
                   value={formData.locality}
                   onChange={handleChange}
                   placeholder="Village / Town"
-                  className="w-full h-14 bg-[#050816] border border-violet-500/20 rounded-xl px-4 text-white outline-none"
+                  className="w-full h-14 bg-violet-500/30 border border-violet-500/20 rounded-xl px-4 text-white outline-none"
                 />
               </div>
 
@@ -500,7 +503,7 @@ export default function UserProfileForm() {
                   value={formData.postOffice}
                   onChange={handleChange}
                   placeholder="Post Office"
-                  className="w-full h-14 bg-[#050816] border border-violet-500/20 rounded-xl px-4 text-white outline-none"
+                  className="w-full h-14 bg-violet-500/30 border border-violet-500/20 rounded-xl px-4 text-white outline-none"
                 />
               </div>
             </>
@@ -521,7 +524,7 @@ export default function UserProfileForm() {
                   School / College Name
                 </label>
 
-                <div className="h-14 bg-[#050816] border border-violet-500/20 rounded-xl flex items-center px-4">
+                <div className="h-14 bg-violet-500/30 border border-violet-500/20 rounded-xl flex items-center px-4">
                   <GraduationCap
                     className="text-violet-400 mr-3"
                     size={18}
@@ -550,7 +553,7 @@ export default function UserProfileForm() {
                   value={formData.qualification}
                   onChange={handleChange}
                   placeholder="BCA / HS / Diploma"
-                  className="w-full h-14 bg-[#050816] border border-violet-500/20 rounded-xl px-4 text-white outline-none"
+                  className="w-full h-14 bg-violet-500/30 border border-violet-500/20 rounded-xl px-4 text-white outline-none"
                 />
               </div>
 
@@ -566,7 +569,7 @@ export default function UserProfileForm() {
                   value={formData.passingYear}
                   onChange={handleChange}
                   placeholder="2025"
-                  className="w-full h-14 bg-[#050816] border border-violet-500/20 rounded-xl px-4 text-white outline-none"
+                  className="w-full h-14 bg-violet-500/30 border border-violet-500/20 rounded-xl px-4 text-white outline-none"
                 />
               </div>
             </>
@@ -587,7 +590,7 @@ export default function UserProfileForm() {
                   Aadhaar Number
                 </label>
 
-                <div className="h-14 bg-[#050816] border border-violet-500/20 rounded-xl flex items-center px-4 mb-4">
+                <div className="h-14 bg-violet-500/30 border border-violet-500/20 rounded-xl flex items-center px-4 mb-4">
                   <input
                     type="text"
                     name="aadhaarNumber"
@@ -617,7 +620,7 @@ export default function UserProfileForm() {
                   Upload Aadhaar
                 </label>
 
-                <label className="w-full h-40 bg-[#050816] border border-dashed border-violet-500/30 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:border-violet-500 transition">
+                <label className="w-full h-40 bg-violet-500/30 border border-dashed border-violet-500/30 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:border-violet-500 transition">
                   <Upload className="text-violet-400 mb-2" size={28} />
 
                   <span className="text-gray-400 text-sm">
@@ -662,7 +665,7 @@ export default function UserProfileForm() {
                   PAN Number
                 </label>
 
-                <div className="h-14 bg-[#050816] border border-violet-500/20 rounded-xl flex items-center px-4 mb-4">
+                <div className="h-14 bg-violet-500/30 border border-violet-500/20 rounded-xl flex items-center px-4 mb-4">
                   <input
                     type="text"
                     name="panNumber"
@@ -687,7 +690,7 @@ export default function UserProfileForm() {
                   Upload PAN
                 </label>
 
-                <label className="w-full h-40 bg-[#050816] border border-dashed border-violet-500/30 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:border-violet-500 transition">
+                <label className="w-full h-40 bg-violet-500/30 border border-dashed border-violet-500/30 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:border-violet-500 transition">
                   <Upload className="text-violet-400 mb-2" size={28} />
 
                   <span className="text-gray-400 text-sm">
@@ -786,6 +789,6 @@ export default function UserProfileForm() {
           </p>
         </div>
       </div>
-    </div>
+    </div></>
   );
 }
