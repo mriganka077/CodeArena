@@ -80,6 +80,9 @@ export default function UserProfileForm() {
     qualification: "",
     passingYear: "",
 
+    aadhaarNumber: "",
+    panNumber: "",
+
     aadhaar: null,
     profile: null,
   });
@@ -574,12 +577,42 @@ export default function UserProfileForm() {
             <>
               <div className="md:col-span-2">
                 <h2 className="text-2xl text-white font-semibold">
-                  Upload Documents
+                  Documents
                 </h2>
               </div>
 
-              {/* Aadhaar Upload */}
+              {/* Aadhaar Section */}
               <div>
+                <label className="text-sm text-gray-300 mb-2 block">
+                  Aadhaar Number
+                </label>
+
+                <div className="h-14 bg-[#050816] border border-violet-500/20 rounded-xl flex items-center px-4 mb-4">
+                  <input
+                    type="text"
+                    name="aadhaarNumber"
+                    value={formData.aadhaarNumber}
+                    onChange={(e) => {
+                      let value = e.target.value
+                        .replace(/\D/g, "")
+                        .slice(0, 12);
+
+                      value = value.replace(
+                        /(\d{4})(\d{4})(\d{0,4})/,
+                        (_, p1, p2, p3) =>
+                          [p1, p2, p3].filter(Boolean).join(" ")
+                      );
+
+                      setFormData({
+                        ...formData,
+                        aadhaarNumber: value,
+                      });
+                    }}
+                    placeholder="1234 5678 9012"
+                    className="w-full bg-transparent outline-none text-white tracking-widest"
+                  />
+                </div>
+
                 <label className="text-sm text-gray-300 mb-2 block">
                   Upload Aadhaar
                 </label>
@@ -623,8 +656,33 @@ export default function UserProfileForm() {
                 )}
               </div>
 
-              {/* Profile Upload */}
+              {/* PAN Section */}
               <div>
+                <label className="text-sm text-gray-300 mb-2 block">
+                  PAN Number
+                </label>
+
+                <div className="h-14 bg-[#050816] border border-violet-500/20 rounded-xl flex items-center px-4 mb-4">
+                  <input
+                    type="text"
+                    name="panNumber"
+                    value={formData.panNumber}
+                    onChange={(e) => {
+                      let value = e.target.value
+                        .toUpperCase()
+                        .replace(/[^A-Z0-9]/g, "")
+                        .slice(0, 10);
+
+                      setFormData({
+                        ...formData,
+                        panNumber: value,
+                      });
+                    }}
+                    placeholder="ABCDE1234F"
+                    className="w-full bg-transparent outline-none text-white tracking-widest"
+                  />
+                </div>
+
                 <label className="text-sm text-gray-300 mb-2 block">
                   Upload PAN
                 </label>
@@ -686,15 +744,15 @@ export default function UserProfileForm() {
               {/* Skip Button Only Step 1 */}
               {step === 1 && (
                 <a href="/" >
-                <button
-                  type="button"
-                  onClick={() => navigate("/")}
-                  className="px-6 h-12 rounded-xl border border-gray-500/20 text-gray-300 hover:bg-white/5 transition"
-                >
-                  Skip Now
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => navigate("/")}
+                    className="px-6 h-12 rounded-xl border border-gray-500/20 text-gray-300 hover:bg-white/5 transition"
+                  >
+                    Skip Now
+                  </button>
                 </a>
-                
+
               )}
             </div>
 
