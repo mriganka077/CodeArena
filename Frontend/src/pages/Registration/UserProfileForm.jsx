@@ -18,11 +18,19 @@ import {
 } from "lucide-react";
 import SoftBackdropNew from "../../components/SoftBackdropNew";
 
-export default function UserProfileForm() {
+export default function UserpanForm() {
   const [step, setStep] = useState(1);
 
   const [uploadPopup, setUploadPopup] = useState(false);
   const [uploadedFileName, setUploadedFileName] = useState("");
+
+  const [previewFiles, setPreviewFiles] = useState({
+    aadhaar: null,
+    pan: null,
+  });
+
+  const [previewFile, setPreviewFile] = useState(null);
+  const [previewType, setPreviewType] = useState("");
 
   const indianStates = {
     "Andhra Pradesh": ["Anantapur", "Chittoor", "East Godavari", "Guntur", "Krishna", "Kurnool", "Prakasam", "Srikakulam", "Visakhapatnam", "Vizianagaram", "West Godavari", "YSR Kadapa"],
@@ -85,19 +93,21 @@ export default function UserProfileForm() {
     panNumber: "",
 
     aadhaar: null,
-    profile: null,
+    pan: null,
   });
 
   const handleChange = (e) => {
-    const { name, value, files } = e.target;
+    const { name, files, value } = e.target;
 
-    if (files) {
-      setFormData({
-        ...formData,
-        [name]: files[0],
-      });
+    if (files && files[0]) {
+      const file = files[0];
 
-      setUploadedFileName(files[0].name);
+      setFormData((prev) => ({
+        ...prev,
+        [name]: file,
+      }));
+
+      setUploadedFileName(file.name);
       setUploadPopup(true);
 
       setTimeout(() => {
@@ -190,457 +200,503 @@ export default function UserProfileForm() {
 
   return (
     <>
-    <SoftBackdropNew />
-    <div className="min-h-screen flex items-center justify-center px-4 py-10 relative overflow-hidden">
-      {/* Background Glow */}
-      <div className="absolute top-[-120px] left-[-120px] w-[400px] h-[400px] bg-violet-700/30 blur-[140px] rounded-full"></div>
+      <SoftBackdropNew />
+      <div className="min-h-screen flex items-center justify-center px-4 py-10 relative overflow-hidden">
+        {/* Background Glow */}
+        <div className="absolute top-[-120px] left-[-120px] w-[400px] h-[400px] bg-violet-700/30 blur-[140px] rounded-full"></div>
 
-      {/* Upload Popup */}
-      {uploadPopup && (
-        <div className="fixed top-6 right-6 z-50 animate-bounce">
-          <div className="bg-[#0b1220] border border-violet-500/30 shadow-2xl rounded-2xl px-5 py-4 flex items-start gap-4 min-w-[320px]">
-            <CheckCircle2
-              className="text-green-400 mt-1"
-              size={24}
-            />
+        {/* Upload Popup */}
+        {uploadPopup && (
+          <div className="fixed top-6 right-6 z-50 animate-[fadeIn_.4s_ease-out]">
+            <div className="bg-[#0b1220] border border-violet-500/30 shadow-2xl rounded-2xl px-5 py-4 flex items-start gap-4 min-w-[320px]">
+              <CheckCircle2
+                className="text-green-400 mt-1"
+                size={24}
+              />
 
-            <div className="flex-1">
-              <h3 className="text-white font-semibold">
-                Upload Successful
-              </h3>
+              <div className="flex-1">
+                <h3 className="text-white font-semibold">
+                  Upload Successful
+                </h3>
 
-              <p className="text-gray-400 text-sm mt-1">
-                {uploadedFileName}
-              </p>
-            </div>
-
-            <button
-              onClick={() => setUploadPopup(false)}
-              className="text-gray-400 hover:text-white"
-            >
-              <X size={18} />
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Main Card */}
-      <div className="relative w-full max-w-3xl bg-white/5 backdrop-blur-xl border border-violet-500/20 rounded-3xl p-8 shadow-2xl">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-white">
-            Code<span className="text-violet-400">Arena</span>
-          </h1>
-
-          <p className="text-gray-400 mt-2">
-            Complete your account setup
-          </p>
-        </div>
-
-        {/* Progress Bar */}
-        <div className="flex justify-between mb-10">
-          {[1, 2, 3, 4].map((item) => (
-            <div
-              key={item}
-              className={`w-full h-2 mx-1 rounded-full transition-all duration-300 ${step >= item
-                ? "bg-violet-500"
-                : "bg-white/10"
-                }`}
-            ></div>
-          ))}
-        </div>
-
-        {/* FORM */}
-        <form
-          onSubmit={(e) => e.preventDefault()}
-          className="grid grid-cols-1 md:grid-cols-2 gap-5"
-        >
-          {/* ================= BASIC DETAILS ================= */}
-          {step === 1 && (
-            <>
-              <div className="md:col-span-2">
-                <h2 className="text-2xl text-white font-semibold">
-                  Basic Details
-                </h2>
-              </div>
-
-              {/* First Name */}
-              <div>
-                <label className="text-sm text-gray-300 mb-2 block">
-                  First Name
-                </label>
-
-                <div className="h-14 bg-violet-500/30 border border-violet-500/20 rounded-xl flex items-center px-4">
-                  <User className="text-violet-400 mr-3" size={18} />
-
-                  <input
-                    type="text"
-                    name="firstName"
-                    value={formData.firstName}
-                    onChange={handleChange}
-                    placeholder="John"
-                    className="w-full bg-transparent outline-none text-white"
-                  />
-                </div>
-              </div>
-
-              {/* Last Name */}
-              <div>
-                <label className="text-sm text-gray-300 mb-2 block">
-                  Last Name
-                </label>
-
-                <div className="h-14 bg-violet-500/30 border border-violet-500/20 rounded-xl flex items-center px-4">
-                  <User className="text-violet-400 mr-3" size={18} />
-
-                  <input
-                    type="text"
-                    name="lastName"
-                    value={formData.lastName}
-                    onChange={handleChange}
-                    placeholder="Singh"
-                    className="w-full bg-transparent outline-none text-white"
-                  />
-                </div>
-              </div>
-
-              {/* Email */}
-              <div className="md:col-span-2">
-                <label className="text-sm text-gray-300 mb-2 block">
-                  Email Address
-                </label>
-
-                <div className="h-14 bg-violet-500/30 border border-violet-500/20 rounded-xl flex items-center px-4">
-                  <Mail className="text-violet-400 mr-3" size={18} />
-
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    placeholder="you@example.com"
-                    className="w-full bg-transparent outline-none text-white"
-                  />
-                </div>
-              </div>
-
-              {/* Phone */}
-              <div>
-                <label className="text-sm text-gray-300 mb-2 block">
-                  Phone Number
-                </label>
-
-                <div className="h-14 bg-violet-500/30 border border-violet-500/20 rounded-xl flex items-center px-4">
-                  <Phone className="text-violet-400 mr-3" size={18} />
-
-                  <input
-                    type="tel"
-                    name="phone"
-                    maxLength="10"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    placeholder="9876543210"
-                    className="w-full bg-transparent outline-none text-white"
-                  />
-                </div>
-              </div>
-
-              {/* DOB */}
-              <div>
-                <label className="text-sm text-gray-300 mb-2 block">
-                  Date of Birth
-                </label>
-
-                <div className="h-14 bg-violet-500/30 border border-violet-500/20 rounded-xl flex items-center px-4">
-                  <Calendar className="text-violet-400 mr-3" size={18} />
-
-                  <input
-                    type="date"
-                    name="dob"
-                    value={formData.dob}
-                    onChange={handleChange}
-                    className="w-full bg-transparent outline-none text-white"
-                  />
-                </div>
-              </div>
-            </>
-          )}
-
-          {/* ================= ADDRESS DETAILS ================= */}
-          {step === 2 && (
-            <>
-              <div className="md:col-span-2">
-                <h2 className="text-2xl text-white font-semibold">
-                  Address Details
-                </h2>
-              </div>
-
-              {/* Nationality */}
-              <div>
-                <label className="text-sm text-gray-300 mb-2 block">
-                  Nationality
-                </label>
-
-                <select
-                  name="nationality"
-                  value={formData.nationality}
-                  onChange={handleChange}
-                  className="w-full h-14 bg-violet-500/30 border border-violet-500/20 rounded-xl px-4 text-white outline-none"
-                >
-                  <option value="">Select Nationality</option>
-                  <option value="India">Indian</option>
-                </select>
-              </div>
-
-              {/* State */}
-              {formData.nationality === "India" && (
-                <div>
-                  <label className="text-sm text-gray-300 mb-2 block">
-                    State
-                  </label>
-
-                  <select
-                    name="state"
-                    value={formData.state}
-                    onChange={handleChange}
-                    className="w-full h-14 bg-violet-500/30 border border-violet-500/20 rounded-xl px-4 text-white outline-none"
-                  >
-                    <option value="">Select State</option>
-
-                    {Object.keys(indianStates).map((state) => (
-                      <option key={state} value={state}>
-                        {state}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              {/* District */}
-              {formData.state && (
-                <div>
-                  <label className="text-sm text-gray-300 mb-2 block">
-                    District
-                  </label>
-
-                  <select
-                    name="district"
-                    value={formData.district}
-                    onChange={handleChange}
-                    className="w-full h-14 bg-violet-500/30 border border-violet-500/20 rounded-xl px-4 text-white outline-none"
-                  >
-                    <option value="">Select District</option>
-
-                    {indianStates[formData.state].map((district) => (
-                      <option key={district} value={district}>
-                        {district}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              {/* PIN */}
-              <div>
-                <label className="text-sm text-gray-300 mb-2 block">
-                  PIN Code
-                </label>
-
-                <div className="relative">
-                  <input
-                    type="text"
-                    name="pin"
-                    maxLength="6"
-                    value={formData.pin}
-                    onChange={(e) => {
-                      handleChange(e);
-                      fetchLocationByPin(e.target.value);
-                    }}
-                    placeholder="712410"
-                    className="w-full h-14 bg-violet-500/30 border border-violet-500/20 rounded-xl px-4 text-white outline-none"
-                  />
-
-                  <button
-                    type="button"
-                    onClick={detectLocation}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-violet-400 hover:text-violet-300"
-                  >
-                    <LocateFixed size={20} />
-                  </button>
-                </div>
-
-                <p className="text-gray-500 text-xs mt-2 flex items-center gap-1">
-                  <MapPin size={14} />
-                  Enter PIN or use GPS location
+                <p className="text-gray-400 text-sm mt-1">
+                  {uploadedFileName}
                 </p>
               </div>
 
-              {/* Locality */}
-              <div>
-                <label className="text-sm text-gray-300 mb-2 block">
-                  Locality
-                </label>
+              <button
+                onClick={() => setUploadPopup(false)}
+                className="text-gray-400 hover:text-white"
+              >
+                <X size={18} />
+              </button>
+            </div>
+          </div>
+        )}
 
-                <input
-                  type="text"
-                  name="locality"
-                  value={formData.locality}
-                  onChange={handleChange}
-                  placeholder="Village / Town"
-                  className="w-full h-14 bg-violet-500/30 border border-violet-500/20 rounded-xl px-4 text-white outline-none"
-                />
-              </div>
+        {/* Main Card */}
+        <div className="relative w-full max-w-3xl bg-white/5 backdrop-blur-xl border border-violet-500/20 rounded-3xl p-8 shadow-2xl">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-bold text-white">
+              Code<span className="text-violet-400">Arena</span>
+            </h1>
 
-              {/* Post Office */}
-              <div className="md:col-span-2">
-                <label className="text-sm text-gray-300 mb-2 block">
-                  Post Office
-                </label>
+            <p className="text-gray-400 mt-2">
+              Complete your account setup
+            </p>
+          </div>
 
-                <input
-                  type="text"
-                  name="postOffice"
-                  value={formData.postOffice}
-                  onChange={handleChange}
-                  placeholder="Post Office"
-                  className="w-full h-14 bg-violet-500/30 border border-violet-500/20 rounded-xl px-4 text-white outline-none"
-                />
-              </div>
-            </>
-          )}
+          {/* Progress Bar */}
+          <div className="flex justify-between mb-10">
+            {[1, 2, 3, 4].map((item) => (
+              <div
+                key={item}
+                className={`w-full h-2 mx-1 rounded-full transition-all duration-300 ${step >= item
+                  ? "bg-violet-500"
+                  : "bg-white/10"
+                  }`}
+              ></div>
+            ))}
+          </div>
 
-          {/* ================= EDUCATION DETAILS ================= */}
-          {step === 3 && (
-            <>
-              <div className="md:col-span-2">
-                <h2 className="text-2xl text-white font-semibold">
-                  Education Details
-                </h2>
-              </div>
+          {/* FORM */}
+          <form
+            onSubmit={(e) => e.preventDefault()}
+            className="grid grid-cols-1 md:grid-cols-2 gap-5"
+          >
+            {/* ================= BASIC DETAILS ================= */}
+            {step === 1 && (
+              <>
+                <div className="md:col-span-2">
+                  <h2 className="text-2xl text-white font-semibold">
+                    Basic Details
+                  </h2>
+                </div>
 
-              {/* School */}
-              <div className="md:col-span-2">
-                <label className="text-sm text-gray-300 mb-2 block">
-                  School / College Name
-                </label>
+                {/* First Name */}
+                <div>
+                  <label className="text-sm text-gray-300 mb-2 block">
+                    First Name
+                  </label>
 
-                <div className="h-14 bg-violet-500/30 border border-violet-500/20 rounded-xl flex items-center px-4">
-                  <GraduationCap
-                    className="text-violet-400 mr-3"
-                    size={18}
-                  />
+                  <div className="h-14 bg-violet-500/30 border border-violet-500/20 rounded-xl flex items-center px-4">
+                    <User className="text-violet-400 mr-3" size={18} />
+
+                    <input
+                      type="text"
+                      name="firstName"
+                      value={formData.firstName}
+                      onChange={handleChange}
+                      placeholder="John"
+                      className="w-full bg-transparent outline-none text-white"
+                    />
+                  </div>
+                </div>
+
+                {/* Last Name */}
+                <div>
+                  <label className="text-sm text-gray-300 mb-2 block">
+                    Last Name
+                  </label>
+
+                  <div className="h-14 bg-violet-500/30 border border-violet-500/20 rounded-xl flex items-center px-4">
+                    <User className="text-violet-400 mr-3" size={18} />
+
+                    <input
+                      type="text"
+                      name="lastName"
+                      value={formData.lastName}
+                      onChange={handleChange}
+                      placeholder="Singh"
+                      className="w-full bg-transparent outline-none text-white"
+                    />
+                  </div>
+                </div>
+
+                {/* Email */}
+                <div className="md:col-span-2">
+                  <label className="text-sm text-gray-300 mb-2 block">
+                    Email Address
+                  </label>
+
+                  <div className="h-14 bg-violet-500/30 border border-violet-500/20 rounded-xl flex items-center px-4">
+                    <Mail className="text-violet-400 mr-3" size={18} />
+
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      placeholder="you@example.com"
+                      className="w-full bg-transparent outline-none text-white"
+                    />
+                  </div>
+                </div>
+
+                {/* Phone */}
+                <div>
+                  <label className="text-sm text-gray-300 mb-2 block">
+                    Phone Number
+                  </label>
+
+                  <div className="h-14 bg-violet-500/30 border border-violet-500/20 rounded-xl flex items-center px-4">
+                    <Phone className="text-violet-400 mr-3" size={18} />
+
+                    <input
+                      type="tel"
+                      name="phone"
+                      maxLength="10"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      placeholder="9876543210"
+                      className="w-full bg-transparent outline-none text-white"
+                    />
+                  </div>
+                </div>
+
+                {/* DOB */}
+                <div>
+                  <label className="text-sm text-gray-300 mb-2 block">
+                    Date of Birth
+                  </label>
+
+                  <div className="h-14 bg-violet-500/30 border border-violet-500/20 rounded-xl flex items-center px-4">
+                    <Calendar className="text-violet-400 mr-3" size={18} />
+
+                    <input
+                      type="date"
+                      name="dob"
+                      value={formData.dob}
+                      onChange={handleChange}
+                      className="w-full bg-transparent outline-none text-white"
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* ================= ADDRESS DETAILS ================= */}
+            {step === 2 && (
+              <>
+                <div className="md:col-span-2">
+                  <h2 className="text-2xl text-white font-semibold">
+                    Address Details
+                  </h2>
+                </div>
+
+                {/* Nationality */}
+                <div>
+                  <label className="text-sm text-gray-300 mb-2 block">
+                    Nationality
+                  </label>
+
+                  <select
+                    name="nationality"
+                    value={formData.nationality}
+                    onChange={handleChange}
+                    className="w-full h-14 bg-violet-500/30 border border-violet-500/20 rounded-xl px-4 text-white outline-none"
+                  >
+                    <option value="">Select Nationality</option>
+                    <option value="India">Indian</option>
+                  </select>
+                </div>
+
+                {/* State */}
+                {formData.nationality === "India" && (
+                  <div>
+                    <label className="text-sm text-gray-300 mb-2 block">
+                      State
+                    </label>
+
+                    <select
+                      name="state"
+                      value={formData.state}
+                      onChange={handleChange}
+                      className="w-full h-14 bg-violet-500/30 border border-violet-500/20 rounded-xl px-4 text-white outline-none"
+                    >
+                      <option value="">Select State</option>
+
+                      {Object.keys(indianStates).map((state) => (
+                        <option key={state} value={state}>
+                          {state}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* District */}
+                {formData.state && (
+                  <div>
+                    <label className="text-sm text-gray-300 mb-2 block">
+                      District
+                    </label>
+
+                    <select
+                      name="district"
+                      value={formData.district}
+                      onChange={handleChange}
+                      className="w-full h-14 bg-violet-500/30 border border-violet-500/20 rounded-xl px-4 text-white outline-none"
+                    >
+                      <option value="">Select District</option>
+
+                      {indianStates[formData.state].map((district) => (
+                        <option key={district} value={district}>
+                          {district}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* PIN */}
+                <div>
+                  <label className="text-sm text-gray-300 mb-2 block">
+                    PIN Code
+                  </label>
+
+                  <div className="relative">
+                    <input
+                      type="text"
+                      name="pin"
+                      maxLength="6"
+                      value={formData.pin}
+                      onChange={(e) => {
+                        handleChange(e);
+                        fetchLocationByPin(e.target.value);
+                      }}
+                      placeholder="712410"
+                      className="w-full h-14 bg-violet-500/30 border border-violet-500/20 rounded-xl px-4 text-white outline-none"
+                    />
+
+                    <button
+                      type="button"
+                      onClick={detectLocation}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-violet-400 hover:text-violet-300"
+                    >
+                      <LocateFixed size={20} />
+                    </button>
+                  </div>
+
+                  <p className="text-gray-500 text-xs mt-2 flex items-center gap-1">
+                    <MapPin size={14} />
+                    Enter PIN or use GPS location
+                  </p>
+                </div>
+
+                {/* Locality */}
+                <div>
+                  <label className="text-sm text-gray-300 mb-2 block">
+                    Locality
+                  </label>
 
                   <input
                     type="text"
-                    name="school"
-                    value={formData.school}
+                    name="locality"
+                    value={formData.locality}
                     onChange={handleChange}
-                    placeholder="Your Institution"
-                    className="w-full bg-transparent outline-none text-white"
+                    placeholder="Village / Town"
+                    className="w-full h-14 bg-violet-500/30 border border-violet-500/20 rounded-xl px-4 text-white outline-none"
                   />
                 </div>
-              </div>
 
-              {/* Qualification */}
-              <div>
-                <label className="text-sm text-gray-300 mb-2 block">
-                  Qualification
-                </label>
+                {/* Post Office */}
+                <div className="md:col-span-2">
+                  <label className="text-sm text-gray-300 mb-2 block">
+                    Post Office
+                  </label>
 
-                <input
-                  type="text"
-                  name="qualification"
-                  value={formData.qualification}
-                  onChange={handleChange}
-                  placeholder="BCA / HS / Diploma"
-                  className="w-full h-14 bg-violet-500/30 border border-violet-500/20 rounded-xl px-4 text-white outline-none"
-                />
-              </div>
-
-              {/* Passing Year */}
-              <div>
-                <label className="text-sm text-gray-300 mb-2 block">
-                  Passing Year
-                </label>
-
-                <input
-                  type="text"
-                  name="passingYear"
-                  value={formData.passingYear}
-                  onChange={handleChange}
-                  placeholder="2025"
-                  className="w-full h-14 bg-violet-500/30 border border-violet-500/20 rounded-xl px-4 text-white outline-none"
-                />
-              </div>
-            </>
-          )}
-
-          {/* ================= DOCUMENT UPLOAD ================= */}
-          {step === 4 && (
-            <>
-              <div className="md:col-span-2">
-                <h2 className="text-2xl text-white font-semibold">
-                  Documents
-                </h2>
-              </div>
-
-              {/* Aadhaar Section */}
-              <div>
-                <label className="text-sm text-gray-300 mb-2 block">
-                  Aadhaar Number
-                </label>
-
-                <div className="h-14 bg-violet-500/30 border border-violet-500/20 rounded-xl flex items-center px-4 mb-4">
                   <input
                     type="text"
-                    name="aadhaarNumber"
-                    value={formData.aadhaarNumber}
-                    onChange={(e) => {
-                      let value = e.target.value
-                        .replace(/\D/g, "")
-                        .slice(0, 12);
+                    name="postOffice"
+                    value={formData.postOffice}
+                    onChange={handleChange}
+                    placeholder="Post Office"
+                    className="w-full h-14 bg-violet-500/30 border border-violet-500/20 rounded-xl px-4 text-white outline-none"
+                  />
+                </div>
+              </>
+            )}
 
-                      value = value.replace(
-                        /(\d{4})(\d{4})(\d{0,4})/,
-                        (_, p1, p2, p3) =>
-                          [p1, p2, p3].filter(Boolean).join(" ")
-                      );
+            {/* ================= EDUCATION DETAILS ================= */}
+            {step === 3 && (
+              <>
+                <div className="md:col-span-2">
+                  <h2 className="text-2xl text-white font-semibold">
+                    Education Details
+                  </h2>
+                </div>
 
-                      setFormData({
-                        ...formData,
-                        aadhaarNumber: value,
-                      });
-                    }}
-                    placeholder="1234 5678 9012"
-                    className="w-full bg-transparent outline-none text-white tracking-widest"
+                {/* School */}
+                <div className="md:col-span-2">
+                  <label className="text-sm text-gray-300 mb-2 block">
+                    School / College Name
+                  </label>
+
+                  <div className="h-14 bg-violet-500/30 border border-violet-500/20 rounded-xl flex items-center px-4">
+                    <GraduationCap
+                      className="text-violet-400 mr-3"
+                      size={18}
+                    />
+
+                    <input
+                      type="text"
+                      name="school"
+                      value={formData.school}
+                      onChange={handleChange}
+                      placeholder="Your Institution"
+                      className="w-full bg-transparent outline-none text-white"
+                    />
+                  </div>
+                </div>
+
+                {/* Qualification */}
+                <div>
+                  <label className="text-sm text-gray-300 mb-2 block">
+                    Qualification
+                  </label>
+
+                  <input
+                    type="text"
+                    name="qualification"
+                    value={formData.qualification}
+                    onChange={handleChange}
+                    placeholder="BCA / HS / Diploma"
+                    className="w-full h-14 bg-violet-500/30 border border-violet-500/20 rounded-xl px-4 text-white outline-none"
                   />
                 </div>
 
-                <label className="text-sm text-gray-300 mb-2 block">
-                  Upload Aadhaar
-                </label>
-
-                <label className="w-full h-40 bg-violet-500/30 border border-dashed border-violet-500/30 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:border-violet-500 transition">
-                  <Upload className="text-violet-400 mb-2" size={28} />
-
-                  <span className="text-gray-400 text-sm">
-                    Click to upload
-                  </span>
+                {/* Passing Year */}
+                <div>
+                  <label className="text-sm text-gray-300 mb-2 block">
+                    Passing Year
+                  </label>
 
                   <input
-                    type="file"
-                    name="aadhaar"
+                    type="text"
+                    name="passingYear"
+                    value={formData.passingYear}
                     onChange={handleChange}
-                    hidden
+                    placeholder="2025"
+                    className="w-full h-14 bg-violet-500/30 border border-violet-500/20 rounded-xl px-4 text-white outline-none"
                   />
-                </label>
+                </div>
+              </>
+            )}
 
-                {formData.aadhaar && (
-                  <div className="mt-3 bg-violet-500/10 border border-violet-500/20 rounded-xl p-3 flex items-center justify-between animate-pulse">
-                    <div className="flex items-center gap-3">
-                      <FileText
-                        className="text-violet-400"
-                        size={20}
+            {/* ================= DOCUMENT UPLOAD ================= */}
+            {step === 4 && (
+              <>
+                <div className="md:col-span-2">
+                  <h2 className="text-2xl text-white font-semibold">
+                    Documents
+                  </h2>
+                </div>
+
+                {/* Aadhaar Section */}
+                <div>
+                  <label className="text-sm text-gray-300 mb-2 block">
+                    Aadhaar Number
+                  </label>
+
+                  <div className="h-14 bg-violet-500/20 border border-violet-500/20 rounded-xl flex items-center px-4 mb-4 backdrop-blur-md">
+                    <input
+                      type="text"
+                      name="aadhaarNumber"
+                      value={formData.aadhaarNumber}
+                      onChange={(e) => {
+                        let value = e.target.value
+                          .replace(/\D/g, "")
+                          .slice(0, 12);
+
+                        value = value.replace(
+                          /(\d{4})(\d{4})(\d{0,4})/,
+                          (_, p1, p2, p3) =>
+                            [p1, p2, p3].filter(Boolean).join(" ")
+                        );
+
+                        setFormData({
+                          ...formData,
+                          aadhaarNumber: value,
+                        });
+                      }}
+                      placeholder="1234 5678 9012"
+                      className="w-full bg-transparent outline-none text-white tracking-[3px] placeholder:text-gray-400"
+                    />
+                  </div>
+
+                  <label className="text-sm text-gray-300 mb-2 block">
+                    Upload Aadhaar
+                  </label>
+
+                  <label className="relative overflow-hidden w-full h-44 bg-violet-500/10 border border-dashed border-violet-500/30 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:border-violet-400 hover:bg-violet-500/20 transition-all duration-300">
+
+                    {formData.aadhaar ? (
+                      <>
+                        {formData.aadhaar.type.startsWith("image/") ? (
+                          <img
+                            src={URL.createObjectURL(formData.aadhaar)}
+                            alt="aadhaar"
+                            className="absolute inset-0 w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="flex flex-col items-center">
+                            <FileText
+                              className="text-violet-300 mb-2"
+                              size={45}
+                            />
+
+                            <p className="text-white text-sm text-center px-3">
+                              {formData.aadhaar.name}
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Overlay */}
+                        <div className="absolute inset-0 bg-black/60 opacity-0 hover:opacity-100 transition-all duration-300 flex items-center justify-center">
+
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+
+                              setPreviewFile(
+                                URL.createObjectURL(formData.aadhaar)
+                              );
+
+                              setPreviewType(formData.aadhaar.type);
+                            }}
+                            className="px-6 py-3 rounded-2xl bg-gradient-to-r from-violet-500 to-indigo-500 text-white font-semibold shadow-lg shadow-violet-500/30 hover:scale-105 transition-all duration-300"
+                          >
+                            Preview
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="text-violet-400 mb-2" size={28} />
+
+                        <span className="text-gray-300 text-sm">
+                          Click to upload
+                        </span>
+                      </>
+                    )}
+
+                    <input
+                      type="file"
+                      name="aadhaar"
+                      accept="image/*,.pdf"
+                      onChange={handleChange}
+                      hidden
+                    />
+                  </label>
+
+                  {formData.aadhaar && (
+                    <div className="mt-3 bg-green-500/10 border border-green-500/20 rounded-xl p-3 flex items-center gap-3 animate-[fadeIn_0.4s_ease]">
+                      <CheckCircle2
+                        className="text-green-400"
+                        size={22}
                       />
 
                       <div>
@@ -648,147 +704,226 @@ export default function UserProfileForm() {
                           {formData.aadhaar.name}
                         </p>
 
-                        <p className="text-gray-400 text-xs">
-                          Document Uploaded
+                        <p className="text-green-300 text-xs">
+                          Document Uploaded Successfully
                         </p>
                       </div>
                     </div>
-
-                    <CheckCircle2 className="text-green-400" />
-                  </div>
-                )}
-              </div>
-
-              {/* PAN Section */}
-              <div>
-                <label className="text-sm text-gray-300 mb-2 block">
-                  PAN Number
-                </label>
-
-                <div className="h-14 bg-violet-500/30 border border-violet-500/20 rounded-xl flex items-center px-4 mb-4">
-                  <input
-                    type="text"
-                    name="panNumber"
-                    value={formData.panNumber}
-                    onChange={(e) => {
-                      let value = e.target.value
-                        .toUpperCase()
-                        .replace(/[^A-Z0-9]/g, "")
-                        .slice(0, 10);
-
-                      setFormData({
-                        ...formData,
-                        panNumber: value,
-                      });
-                    }}
-                    placeholder="ABCDE1234F"
-                    className="w-full bg-transparent outline-none text-white tracking-widest"
-                  />
+                  )}
                 </div>
 
-                <label className="text-sm text-gray-300 mb-2 block">
-                  Upload PAN
-                </label>
+                {/* PAN Section */}
+                <div>
+                  <label className="text-sm text-gray-300 mb-2 block">
+                    PAN Number
+                  </label>
 
-                <label className="w-full h-40 bg-violet-500/30 border border-dashed border-violet-500/30 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:border-violet-500 transition">
-                  <Upload className="text-violet-400 mb-2" size={28} />
+                  <div className="h-14 bg-violet-500/20 border border-violet-500/20 rounded-xl flex items-center px-4 mb-4 backdrop-blur-md">
+                    <input
+                      type="text"
+                      name="panNumber"
+                      value={formData.panNumber}
+                      onChange={(e) => {
+                        let value = e.target.value
+                          .toUpperCase()
+                          .replace(/[^A-Z0-9]/g, "")
+                          .slice(0, 10);
 
-                  <span className="text-gray-400 text-sm">
-                    Click to upload
-                  </span>
+                        setFormData({
+                          ...formData,
+                          panNumber: value,
+                        });
+                      }}
+                      placeholder="ABCDE1234F"
+                      className="w-full bg-transparent outline-none text-white tracking-[3px] placeholder:text-gray-400"
+                    />
+                  </div>
 
-                  <input
-                    type="file"
-                    name="profile"
-                    onChange={handleChange}
-                    hidden
-                  />
-                </label>
+                  <label className="text-sm text-gray-300 mb-2 block">
+                    Upload PAN
+                  </label>
 
-                {formData.profile && (
-                  <div className="mt-3 bg-violet-500/10 border border-violet-500/20 rounded-xl p-3 flex items-center justify-between animate-pulse">
-                    <div className="flex items-center gap-3">
-                      <ImageIcon
-                        className="text-violet-400"
-                        size={20}
+                  <label className="relative overflow-hidden w-full h-44 bg-violet-500/10 border border-dashed border-violet-500/30 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:border-violet-400 hover:bg-violet-500/20 transition-all duration-300">
+
+                    {formData.pan ? (
+                      <>
+                        {formData.pan.type.startsWith("image/") ? (
+                          <img
+                            src={URL.createObjectURL(formData.pan)}
+                            alt="pan"
+                            className="absolute inset-0 w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="flex flex-col items-center">
+                            <FileText
+                              className="text-violet-300 mb-2"
+                              size={45}
+                            />
+
+                            <p className="text-white text-sm text-center px-3">
+                              {formData.pan.name}
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Overlay */}
+                        <div className="absolute inset-0 bg-black/60 opacity-0 hover:opacity-100 transition-all duration-300 flex items-center justify-center">
+
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+
+                              setPreviewFile(
+                                URL.createObjectURL(formData.pan)
+                              );
+
+                              setPreviewType(formData.pan.type);
+                            }}
+                            className="px-6 py-3 rounded-2xl bg-gradient-to-r from-violet-500 to-indigo-500 text-white font-semibold shadow-lg shadow-violet-500/30 hover:scale-105 transition-all duration-300"
+                          >
+                            Preview
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="text-violet-400 mb-2" size={28} />
+
+                        <span className="text-gray-300 text-sm">
+                          Click to upload
+                        </span>
+                      </>
+                    )}
+
+                    <input
+                      type="file"
+                      name="pan"
+                      accept="image/*,.pdf"
+                      onChange={handleChange}
+                      hidden
+                    />
+                  </label>
+
+                  {formData.pan && (
+                    <div className="mt-3 bg-green-500/10 border border-green-500/20 rounded-xl p-3 flex items-center gap-3 animate-[fadeIn_0.4s_ease]">
+                      <CheckCircle2
+                        className="text-green-400"
+                        size={22}
                       />
 
                       <div>
                         <p className="text-white text-sm font-medium">
-                          {formData.profile.name}
+                          {formData.pan.name}
                         </p>
 
-                        <p className="text-gray-400 text-xs">
-                          Image Uploaded
+                        <p className="text-green-300 text-xs">
+                          Document Uploaded Successfully
                         </p>
                       </div>
                     </div>
+                  )}
+                </div>
 
-                    <CheckCircle2 className="text-green-400" />
+                {/* Preview Modal */}
+                {previewFile && (
+                  <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+
+                    <div className="relative w-full max-w-5xl h-[90vh] bg-[#0f172a] rounded-3xl overflow-hidden border border-violet-500/30 shadow-2xl">
+
+                      {/* Close Button */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPreviewFile(null);
+                          setPreviewType("");
+                        }}
+                        className="absolute top-4 right-4 z-50 bg-black/50 hover:bg-red-500 text-white p-2 rounded-full transition-all"
+                      >
+                        <X size={22} />
+                      </button>
+
+                      {/* Preview Content */}
+                      <div className="w-full h-full flex items-center justify-center bg-black">
+
+                        {previewType.includes("pdf") ? (
+                          <iframe
+                            src={previewFile}
+                            title="Document Preview"
+                            className="w-full h-full"
+                          />
+                        ) : (
+                          <img
+                            src={previewFile}
+                            alt="Preview"
+                            className="max-w-full max-h-full object-contain"
+                          />
+                        )}
+                      </div>
+                    </div>
                   </div>
                 )}
-              </div>
-            </>
-          )}
+              </>
+            )}
 
-          {/* Buttons */}
-          <div className="md:col-span-2 flex justify-between mt-4">
-            <div className="flex gap-3">
-              {step > 1 && (
-                <button
-                  type="button"
-                  onClick={() => setStep(step - 1)}
-                  className="px-6 h-12 rounded-xl border border-violet-500/20 text-white hover:bg-violet-500/10 transition"
-                >
-                  Back
-                </button>
-              )}
-
-              {/* Skip Button Only Step 1 */}
-              {step === 1 && (
-                <a href="/" >
+            {/* Buttons */}
+            <div className="md:col-span-2 flex justify-between mt-4">
+              <div className="flex gap-3">
+                {step > 1 && (
                   <button
                     type="button"
-                    onClick={() => navigate("/")}
-                    className="px-6 h-12 rounded-xl border border-gray-500/20 text-gray-300 hover:bg-white/5 transition"
+                    onClick={() => setStep(step - 1)}
+                    className="px-6 h-12 rounded-xl border border-violet-500/20 text-white hover:bg-violet-500/10 transition"
                   >
-                    Skip Now
+                    Back
                   </button>
-                </a>
+                )}
 
+                {/* Skip Button Only Step 1 */}
+                {step === 1 && (
+                  <a href="/" >
+                    <button
+                      type="button"
+                      onClick={() => navigate("/")}
+                      className="px-6 h-12 rounded-xl border border-gray-500/20 text-gray-300 hover:bg-white/5 transition"
+                    >
+                      Skip Now
+                    </button>
+                  </a>
+
+                )}
+              </div>
+
+              {step < 4 ? (
+                <button
+                  type="button"
+                  onClick={() => setStep((prev) => prev + 1)}
+                  className="ml-auto px-8 h-12 rounded-xl bg-gradient-to-r from-violet-500 to-indigo-500 text-white font-semibold shadow-lg shadow-violet-500/20"
+                >
+                  Next →
+                </button>
+              ) : (
+                <button
+                  type="submit"
+                  className="ml-auto px-8 h-12 rounded-xl bg-gradient-to-r from-violet-500 to-indigo-500 text-white font-semibold shadow-lg shadow-violet-500/20"
+                >
+                  Complete Registration →
+                </button>
               )}
             </div>
+          </form>
 
-            {step < 4 ? (
-              <button
-                type="button"
-                onClick={() => setStep((prev) => prev + 1)}
-                className="ml-auto px-8 h-12 rounded-xl bg-gradient-to-r from-violet-500 to-indigo-500 text-white font-semibold shadow-lg shadow-violet-500/20"
-              >
-                Next →
-              </button>
-            ) : (
-              <button
-                type="submit"
-                className="ml-auto px-8 h-12 rounded-xl bg-gradient-to-r from-violet-500 to-indigo-500 text-white font-semibold shadow-lg shadow-violet-500/20"
-              >
-                Complete Registration →
-              </button>
-            )}
+          {/* Footer */}
+          <div className="mt-8 bg-violet-500/5 border border-violet-500/20 rounded-2xl p-4">
+            <p className="text-violet-400 font-medium mb-1">
+              Secure Registration
+            </p>
+
+            <p className="text-gray-400 text-sm">
+              Your information is encrypted and securely stored.
+            </p>
           </div>
-        </form>
-
-        {/* Footer */}
-        <div className="mt-8 bg-violet-500/5 border border-violet-500/20 rounded-2xl p-4">
-          <p className="text-violet-400 font-medium mb-1">
-            Secure Registration
-          </p>
-
-          <p className="text-gray-400 text-sm">
-            Your information is encrypted and securely stored.
-          </p>
         </div>
-      </div>
-    </div></>
+      </div></>
   );
 }
