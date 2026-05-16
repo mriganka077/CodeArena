@@ -455,10 +455,13 @@ function EducationSection({ initialData, onSaved }) {
 }
 
 // ── Resume Section ────────────────────────────────────────────────────────────
+// ── Resume Section ────────────────────────────────────────────────────────────
 function ResumeSection({ initialData, onSaved }) {
   const [resume, setResume] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [toast, setToast] = useState(null);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [analysis, setAnalysis] = useState(null);
 
   useEffect(() => {
     if (initialData?.resumeUrl) {
@@ -470,6 +473,7 @@ function ResumeSection({ initialData, onSaved }) {
     const f = e.target.files[0];
     if (!f) return;
     setUploading(true);
+    setAnalysis(null);
     try {
       const form = new FormData();
       form.append("resume", f);
@@ -494,62 +498,206 @@ function ResumeSection({ initialData, onSaved }) {
     try {
       await fetch(`${API}/profile/resume`, { method: "DELETE", headers: authHeader() });
       setResume(null);
+      setAnalysis(null);
       onSaved && onSaved();
     } catch { /* silent */ }
   };
 
+  const handleAnalyze = async () => {
+    setAnalyzing(true);
+    setAnalysis(null);
+    try {
+      const res = await fetch(`${API}/profile/resume/analyze`, {
+        method: "POST",
+        headers: authHeader(),
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.message);
+      setAnalysis(json.analysis);
+    } catch (err) {
+      setToast({ msg: err.message || "Analysis failed", type: "error" });
+    } finally {
+      setAnalyzing(false);
+    }
+  };
+
+  const ScoreRing = ({ score, size = 64, label }) => {
+    const r = (size / 2) - 6;
+    const circ = 2 * Math.PI * r;
+    const dash = (score / 100) * circ;
+    const color = score >= 75 ? COLORS.green : score >= 50 ? COLORS.accent : "#f59e0b";
+    return (
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+        <svg width={size} height={size}>
+          <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={`${color}22`} strokeWidth={5} />
+          <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth={5}
+            strokeDasharray={`${dash} ${circ}`} strokeLinecap="round"
+            transform={`rotate(-90 ${size/2} ${size/2})`} />
+          <text x="50%" y="50%" dominantBaseline="central" textAnchor="middle"
+            fill={color} fontSize={size * 0.22} fontFamily="'Space Mono',monospace" fontWeight="700">
+            {score}
+          </text>
+        </svg>
+        {label && <span style={{ fontSize: 10, color: COLORS.grayMuted, fontFamily: "'Space Mono',monospace" }}>{label}</span>}
+      </div>
+    );
+  };
+
   return (
     <>
-      <SectionCard>
-        <div style={{ marginBottom: 20 }}>
-          <h2 style={{ fontFamily: "'Space Mono',monospace", fontSize: 16, fontWeight: 700, margin: 0 }}>Resume</h2>
-          <p style={{ fontSize: 12, color: COLORS.grayMuted, marginTop: 4 }}>Upload your latest resume for interviewers to review</p>
-        </div>
-
-        {!resume ? (
-          <label style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", border: `2px dashed ${COLORS.midPurple}`, borderRadius: 16, padding: "48px 24px", cursor: uploading ? "not-allowed" : "pointer", transition: "all 0.2s", opacity: uploading ? 0.7 : 1 }}
-            onMouseEnter={e => { if (!uploading) { e.currentTarget.style.borderColor = COLORS.accent; e.currentTarget.style.background = `${COLORS.accent}08`; } }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = COLORS.midPurple; e.currentTarget.style.background = "transparent"; }}>
-            {uploading
-              ? <><Spinner /><p style={{ fontFamily: "'Space Mono',monospace", fontSize: 12, color: COLORS.accent, marginTop: 12 }}>Uploading...</p></>
-              : <>
-                <div style={{ width: 56, height: 56, borderRadius: 14, background: `${COLORS.midPurple}88`, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16, fontSize: 24 }}>📄</div>
-                <p style={{ fontFamily: "'Space Mono',monospace", fontSize: 13, color: "#fff", margin: 0 }}>Drag & drop your resume</p>
-                <p style={{ fontSize: 12, color: COLORS.grayMuted, marginTop: 6 }}>or <span style={{ color: COLORS.accent }}>browse to upload</span></p>
-                <p style={{ fontSize: 10, color: COLORS.grayMuted, marginTop: 10, fontFamily: "'Space Mono',monospace" }}>PDF, DOCX up to 5MB</p>
-              </>
-            }
-            <input type="file" style={{ display: "none" }} accept=".pdf,.docx" onChange={handleFile} disabled={uploading} />
-          </label>
-        ) : (
-          <div style={{ border: `1px solid ${COLORS.green}44`, borderRadius: 14, padding: 16, background: `${COLORS.cardDark}88`, display: "flex", alignItems: "center", gap: 14 }}>
-            <div style={{ width: 42, height: 42, borderRadius: 10, background: `${COLORS.green}22`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}>📄</div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <p style={{ fontFamily: "'Space Mono',monospace", fontSize: 12, color: "#fff", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{resume.name}</p>
-              {resume.size && <p style={{ fontSize: 11, color: COLORS.grayMuted, marginTop: 3 }}>{resume.size}</p>}
-            </div>
-            <div style={{ display: "flex", gap: 8 }}>
-              <label style={{ fontSize: 11, color: COLORS.accent, fontFamily: "'Space Mono',monospace", border: `1px solid ${COLORS.accent}44`, padding: "4px 12px", borderRadius: 8, cursor: "pointer" }}>
-                Replace <input type="file" style={{ display: "none" }} accept=".pdf,.docx" onChange={handleFile} />
-              </label>
-              <button onClick={handleDelete} style={{ fontSize: 11, color: "#f87171", fontFamily: "'Space Mono',monospace", border: "1px solid #f8717144", padding: "4px 12px", borderRadius: 8, background: "none", cursor: "pointer" }}>Remove</button>
-            </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        <SectionCard>
+          <div style={{ marginBottom: 20 }}>
+            <h2 style={{ fontFamily: "'Space Mono',monospace", fontSize: 16, fontWeight: 700, margin: 0 }}>Resume</h2>
+            <p style={{ fontSize: 12, color: COLORS.grayMuted, marginTop: 4 }}>Upload your latest resume for interviewers to review</p>
           </div>
+
+          {!resume ? (
+            <label style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", border: `2px dashed ${COLORS.midPurple}`, borderRadius: 16, padding: "48px 24px", cursor: uploading ? "not-allowed" : "pointer", transition: "all 0.2s", opacity: uploading ? 0.7 : 1 }}
+              onMouseEnter={e => { if (!uploading) { e.currentTarget.style.borderColor = COLORS.accent; e.currentTarget.style.background = `${COLORS.accent}08`; } }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = COLORS.midPurple; e.currentTarget.style.background = "transparent"; }}>
+              {uploading
+                ? <><Spinner /><p style={{ fontFamily: "'Space Mono',monospace", fontSize: 12, color: COLORS.accent, marginTop: 12 }}>Uploading...</p></>
+                : <>
+                  <div style={{ width: 56, height: 56, borderRadius: 14, background: `${COLORS.midPurple}88`, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16, fontSize: 24 }}>📄</div>
+                  <p style={{ fontFamily: "'Space Mono',monospace", fontSize: 13, color: "#fff", margin: 0 }}>Drag & drop your resume</p>
+                  <p style={{ fontSize: 12, color: COLORS.grayMuted, marginTop: 6 }}>or <span style={{ color: COLORS.accent }}>browse to upload</span></p>
+                  <p style={{ fontSize: 10, color: COLORS.grayMuted, marginTop: 10, fontFamily: "'Space Mono',monospace" }}>PDF, DOCX up to 5MB</p>
+                </>
+              }
+              <input type="file" style={{ display: "none" }} accept=".pdf,.docx" onChange={handleFile} disabled={uploading} />
+            </label>
+          ) : (
+            <div style={{ border: `1px solid ${COLORS.green}44`, borderRadius: 14, padding: 16, background: `${COLORS.cardDark}88`, display: "flex", alignItems: "center", gap: 14 }}>
+              <div style={{ width: 42, height: 42, borderRadius: 10, background: `${COLORS.green}22`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}>📄</div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{ fontFamily: "'Space Mono',monospace", fontSize: 12, color: "#fff", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{resume.name}</p>
+                {resume.size && <p style={{ fontSize: 11, color: COLORS.grayMuted, marginTop: 3 }}>{resume.size}</p>}
+              </div>
+              <div style={{ display: "flex", gap: 8 }}>
+                <label style={{ fontSize: 11, color: COLORS.accent, fontFamily: "'Space Mono',monospace", border: `1px solid ${COLORS.accent}44`, padding: "4px 12px", borderRadius: 8, cursor: "pointer" }}>
+                  Replace <input type="file" style={{ display: "none" }} accept=".pdf,.docx" onChange={handleFile} />
+                </label>
+                <button onClick={handleDelete} style={{ fontSize: 11, color: "#f87171", fontFamily: "'Space Mono',monospace", border: "1px solid #f8717144", padding: "4px 12px", borderRadius: 8, background: "none", cursor: "pointer" }}>Remove</button>
+              </div>
+            </div>
+          )}
+
+          <div style={{ marginTop: 20, padding: 16, borderRadius: 12, background: `${COLORS.accent}0D`, border: `1px solid ${COLORS.accent}22` }}>
+            <p style={{ fontSize: 10, color: COLORS.accent, fontFamily: "'Space Mono',monospace", letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Resume Tips</p>
+            {["Keep your resume to 1–2 pages maximum", "Highlight projects, GitHub links, and measurable results", "Use consistent formatting and clear section headers", "Our AI will analyze your resume and suggest improvements"].map((tip, i) => (
+              <p key={i} style={{ fontSize: 12, color: COLORS.grayMuted, margin: "0 0 6px" }}>
+                <span style={{ color: COLORS.accent }}>▸ </span>{tip}
+              </p>
+            ))}
+          </div>
+
+          <button
+            onClick={handleAnalyze}
+            disabled={!resume || analyzing}
+            style={{
+              width: "100%", marginTop: 16, padding: "13px 0", borderRadius: 12,
+              background: !resume
+                ? `${COLORS.midPurple}55`
+                : `linear-gradient(90deg, ${COLORS.accent}, ${COLORS.midPurple})`,
+              color: !resume ? COLORS.grayMuted : "#fff",
+              fontFamily: "'Space Mono',monospace", fontSize: 13, fontWeight: 700,
+              border: "none", cursor: !resume ? "not-allowed" : analyzing ? "wait" : "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+              opacity: analyzing ? 0.8 : 1, transition: "all 0.2s",
+            }}>
+            {analyzing ? <><Spinner /> Analyzing with Gemini AI...</> : "✦ Analyze Resume with AI"}
+          </button>
+        </SectionCard>
+
+        {/* ── Analysis Results ── */}
+        {analysis && (
+          <SectionCard>
+            <div style={{ marginBottom: 20 }}>
+              <h2 style={{ fontFamily: "'Space Mono',monospace", fontSize: 16, fontWeight: 700, margin: 0 }}>AI Analysis Results</h2>
+              <p style={{ fontSize: 12, color: COLORS.grayMuted, marginTop: 4 }}>Powered by Gemini — tap Analyze again to refresh</p>
+            </div>
+
+            {/* Score row */}
+            <div style={{ display: "flex", gap: 20, justifyContent: "center", marginBottom: 24, padding: 20, background: `${COLORS.midPurple}33`, borderRadius: 14 }}>
+              <ScoreRing score={analysis.overallScore} size={80} label="Overall" />
+              <ScoreRing score={analysis.atsScore} size={80} label="ATS Score" />
+            </div>
+
+            {/* Summary */}
+            <div style={{ marginBottom: 20, padding: 14, background: `${COLORS.accent}0D`, border: `1px solid ${COLORS.accent}22`, borderRadius: 12 }}>
+              <p style={{ fontSize: 12, color: "#e2e8f0", lineHeight: 1.7, margin: 0 }}>{analysis.summary}</p>
+            </div>
+
+            {/* Section scores */}
+            <div style={{ marginBottom: 20 }}>
+              <p style={{ fontSize: 10, color: COLORS.accent, fontFamily: "'Space Mono',monospace", letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>Section Breakdown</p>
+              {Object.entries(analysis.sections || {}).map(([key, score]) => {
+                const color = score >= 75 ? COLORS.green : score >= 50 ? COLORS.accent : "#f59e0b";
+                return (
+                  <div key={key} style={{ marginBottom: 10 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                      <span style={{ fontSize: 12, color: "#e2e8f0", textTransform: "capitalize" }}>{key}</span>
+                      <span style={{ fontSize: 11, color, fontFamily: "'Space Mono',monospace", fontWeight: 700 }}>{score}/100</span>
+                    </div>
+                    <div style={{ height: 4, borderRadius: 99, background: COLORS.midPurple }}>
+                      <div style={{ width: `${score}%`, height: "100%", background: color, borderRadius: 99, transition: "width 0.5s ease" }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Strengths + Improvements side by side */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 20 }}>
+              <div style={{ padding: 14, background: `${COLORS.green}0D`, border: `1px solid ${COLORS.green}22`, borderRadius: 12 }}>
+                <p style={{ fontSize: 10, color: COLORS.green, fontFamily: "'Space Mono',monospace", letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Strengths</p>
+                {(analysis.strengths || []).map((s, i) => (
+                  <p key={i} style={{ fontSize: 12, color: "#e2e8f0", margin: "0 0 6px" }}>
+                    <span style={{ color: COLORS.green }}>✓ </span>{s}
+                  </p>
+                ))}
+              </div>
+              <div style={{ padding: 14, background: "#f59e0b0D", border: "1px solid #f59e0b22", borderRadius: 12 }}>
+                <p style={{ fontSize: 10, color: "#f59e0b", fontFamily: "'Space Mono',monospace", letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Improvements</p>
+                {(analysis.improvements || []).map((item, i) => (
+                  <div key={i} style={{ marginBottom: 8 }}>
+                    <p style={{ fontSize: 12, color: "#f59e0b", margin: "0 0 2px", fontWeight: 600 }}>▸ {item.issue}</p>
+                    <p style={{ fontSize: 11, color: COLORS.grayMuted, margin: 0 }}>{item.detail}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* ATS tips */}
+            {(analysis.atsTips || []).length > 0 && (
+              <div style={{ marginBottom: 20, padding: 14, background: `${COLORS.cardDark}88`, border: `1px solid ${COLORS.midPurple}`, borderRadius: 12 }}>
+                <p style={{ fontSize: 10, color: COLORS.accent, fontFamily: "'Space Mono',monospace", letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>ATS Optimisation Tips</p>
+                {analysis.atsTips.map((tip, i) => (
+                  <p key={i} style={{ fontSize: 12, color: COLORS.grayMuted, margin: "0 0 6px" }}>
+                    <span style={{ color: COLORS.accent }}>▸ </span>{tip}
+                  </p>
+                ))}
+              </div>
+            )}
+
+            {/* Missing keywords */}
+            {(analysis.missingKeywords || []).length > 0 && (
+              <div>
+                <p style={{ fontSize: 10, color: COLORS.accent, fontFamily: "'Space Mono',monospace", letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Suggested Keywords to Add</p>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                  {analysis.missingKeywords.map((kw, i) => (
+                    <span key={i} style={{ background: `${COLORS.accent}15`, color: COLORS.accent, fontFamily: "'Space Mono',monospace", fontSize: 11, padding: "4px 12px", borderRadius: 99, border: `1px solid ${COLORS.accent}33` }}>
+                      + {kw}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </SectionCard>
         )}
+      </div>
 
-        <div style={{ marginTop: 20, padding: 16, borderRadius: 12, background: `${COLORS.accent}0D`, border: `1px solid ${COLORS.accent}22` }}>
-          <p style={{ fontSize: 10, color: COLORS.accent, fontFamily: "'Space Mono',monospace", letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Resume Tips</p>
-          {["Keep your resume to 1–2 pages maximum", "Highlight projects, GitHub links, and measurable results", "Use consistent formatting and clear section headers", "Our AI will analyze your resume and suggest improvements"].map((tip, i) => (
-            <p key={i} style={{ fontSize: 12, color: COLORS.grayMuted, margin: "0 0 6px" }}>
-              <span style={{ color: COLORS.accent }}>▸ </span>{tip}
-            </p>
-          ))}
-        </div>
-
-        <button style={{ width: "100%", marginTop: 16, padding: "12px 0", borderRadius: 12, background: `linear-gradient(90deg, ${COLORS.accent}, ${COLORS.midPurple})`, color: "#fff", fontFamily: "'Space Mono',monospace", fontSize: 13, fontWeight: 700, border: "none", cursor: "pointer" }}>
-          ✦ Analyze Resume with AI
-        </button>
-      </SectionCard>
       {toast && <Toast message={toast.msg} type={toast.type} onDone={() => setToast(null)} />}
     </>
   );

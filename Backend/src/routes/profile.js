@@ -4,14 +4,9 @@ import path from "path";
 import fs from "fs";
 import { protect } from "../middleware/auth.js";
 import {
-  getProfile,
-  updateProfile,
-  uploadPhoto,
-  uploadResume,
-  deleteResume,
-  updateEducation,
-  uploadEduDoc,
-  deleteEduDoc,
+  getProfile, updateProfile, uploadPhoto, uploadResume,
+  deleteResume, updateEducation, uploadEduDoc, deleteEduDoc,
+  analyzeResume,   // ← add this
 } from "../controllers/profile.js";
 
 const router = express.Router();
@@ -63,8 +58,11 @@ const eduDocUpload = multer({
 router.get("/", protect, getProfile);
 router.put("/", protect, updateProfile);
 router.post("/photo", protect, photoUpload.single("photo"), uploadPhoto);
+
+router.post("/resume/analyze", protect, analyzeResume);
 router.post("/resume", protect, resumeUpload.single("resume"), uploadResume);
 router.delete("/resume", protect, deleteResume);
+
 router.put("/education", protect, updateEducation);
 router.post("/education/:eduId/doc", protect, eduDocUpload.single("doc"), uploadEduDoc);
 router.delete("/education/:eduId/doc/:docId", protect, deleteEduDoc);

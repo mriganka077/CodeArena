@@ -2,6 +2,10 @@ import User from "../models/User.js";
 import path from "path";
 import fs from "fs";
 import mongoose from "mongoose";
+// In analyzeResume, replace the static import with:
+import pdfParse from "pdf-parse/lib/pdf-parse.js";
+import Groq from "groq-sdk";
+
 
 // ── GET /api/profile ──────────────────────────────────────────────────────────
 export const getProfile = async (req, res) => {
@@ -185,5 +189,113 @@ export const deleteEduDoc = async (req, res) => {
   } catch (err) {
     console.error("deleteEduDoc error:", err);
     res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+
+
+// ── POST /api/profile/resume/analyze ─────────────────────────────────────────
+const ANALYSIS_PROMPT = (text) => `
+You are an expert technical recruiter and career coach reviewing a candidate's resume.
+Analyze the resume below and return ONLY a valid JSON object. No markdown, no backticks, no explanation.
+
+JSON structure (follow exactly):
+{
+  "overallScore": <number 0-100>,
+  "summary": "<2-3 sentence overall assessment>",
+  "strengths": ["<strength 1>", "<strength 2>", "<strength 3>"],
+  "improvements": [
+    { "issue": "<short title>", "detail": "<actionable suggestion>" }
+  ],
+  "atsScore": <number 0-100>,
+  "atsTips": ["<tip 1>", "<tip 2>"],
+  "missingKeywords": ["<keyword1>", "<keyword2>", "<keyword3>"],
+  "sections": {
+    "contact": <number 0-100>,
+    "summary": <number 0-100>,
+    "experience": <number 0-100>,
+    "education": <number 0-100>,
+    "skills": <number 0-100>,
+    "projects": <number 0-100>
+  }
+}
+
+Resume:
+---
+${text.slice(0, 6000)}
+---
+`;
+
+async function analyzeWithGroq(resumeText) {
+  const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+  const completion = await groq.chat.completions.create({
+    model: "llama-3.3-70b-versatile",
+    messages: [{ role: "user", content: ANALYSIS_PROMPT(resumeText) }],
+    temperature: 0.3,
+    max_tokens: 1200,
+  });
+  return completion.choices[0].message.content;
+}
+
+async function analyzeWithOpenRouter(resumeText) {
+  const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
+      "HTTP-Referer": "http://localhost:3000",
+    },
+    body: JSON.stringify({
+      model: "meta-llama/llama-3.3-70b-instruct:free",
+      messages: [{ role: "user", content: ANALYSIS_PROMPT(resumeText) }],
+      temperature: 0.3,
+      max_tokens: 1200,
+    }),
+  });
+  const json = await res.json();
+  if (!json.choices?.[0]) throw new Error("OpenRouter returned no choices");
+  return json.choices[0].message.content;
+}
+
+export const analyzeResume = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user.resumeUrl)
+      return res.status(400).json({ success: false, message: "No resume uploaded yet" });
+
+    const resumePath = path.join(process.cwd(), user.resumeUrl);
+    if (!fs.existsSync(resumePath))
+      return res.status(404).json({ success: false, message: "Resume file not found on disk" });
+
+    // Only PDF supported for text extraction
+    const ext = path.extname(resumePath).toLowerCase();
+    if (ext !== ".pdf")
+      return res.status(422).json({ success: false, message: "Only PDF resumes can be analyzed. Please upload a PDF." });
+
+    const dataBuffer = fs.readFileSync(resumePath);
+    const pdfData = await pdfParse(dataBuffer);
+    const resumeText = pdfData.text?.trim();
+
+    if (!resumeText || resumeText.length < 50)
+      return res.status(422).json({ success: false, message: "Could not extract text from your resume. Make sure it's not a scanned/image PDF." });
+
+    // Try Groq first, fall back to OpenRouter
+    let rawResponse;
+    try {
+      rawResponse = await analyzeWithGroq(resumeText);
+    } catch (groqErr) {
+      console.warn("Groq failed, trying OpenRouter:", groqErr.message);
+      if (!process.env.OPENROUTER_API_KEY)
+        throw new Error("AI analysis unavailable — Groq rate limit hit and no fallback configured.");
+      rawResponse = await analyzeWithOpenRouter(resumeText);
+    }
+
+    const cleaned = rawResponse.replace(/```json|```/g, "").trim();
+    const analysis = JSON.parse(cleaned);
+
+    res.status(200).json({ success: true, analysis });
+  } catch (err) {
+    console.error("analyzeResume error:", err);
+    res.status(500).json({ success: false, message: err.message || "Analysis failed" });
   }
 };
