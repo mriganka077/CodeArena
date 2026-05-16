@@ -11,9 +11,9 @@ import Groq from "groq-sdk";
 export const getProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user._id).select(
-      "firstName lastName email phone location linkedin github bio skills profilePhoto resumeUrl resumeOriginalName education picture"
+      "firstName lastName email phone location linkedin github bio skills profilePhoto resumeUrl resumeOriginalName education picture " +
+      "dob nationality address aadhaarNumber panNumber aadhaarDoc panDoc profileComplete"
     );
-    // console.log("education from DB:", JSON.stringify(user.education)); // ← add this
     res.status(200).json({ success: true, user });
   } catch (err) {
     console.error("getProfile error:", err);
@@ -297,5 +297,131 @@ export const analyzeResume = async (req, res) => {
   } catch (err) {
     console.error("analyzeResume error:", err);
     res.status(500).json({ success: false, message: err.message || "Analysis failed" });
+  }
+};
+
+
+
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// POST /api/profile/complete-setup
+// Handles the 4-step onboarding form: personal, address, education, KYC docs
+// ─────────────────────────────────────────────────────────────────────────────
+export const completeSetup = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+    const {
+      // Step 1 — Personal
+      firstName, lastName, phone, dob,
+      // Step 2 — Address
+      nationality, state, district, pin, locality, postOffice,
+      // Step 3 — Education (matches ProfileDashboard schema exactly)
+      degree, institution, university, year, cgpa,
+      // Step 4 — KYC numbers
+      aadhaarNumber, panNumber,
+    } = req.body;
+
+    // ── Step 1: Personal fields ───────────────────────────────────────────────
+    if (firstName?.trim()) user.firstName = firstName.trim();
+    if (lastName?.trim()) user.lastName = lastName.trim();
+    if (phone?.trim()) user.phone = phone.trim();
+    if (dob?.trim()) user.dob = dob.trim();
+
+    // ── Step 2: Address ───────────────────────────────────────────────────────
+    if (nationality?.trim()) user.nationality = nationality.trim();
+
+    user.address = {
+      state: state?.trim() || "",
+      district: district?.trim() || "",
+      pin: pin?.trim() || "",
+      locality: locality?.trim() || "",
+      postOffice: postOffice?.trim() || "",
+    };
+
+    // ── Step 3: Education — push as new entry matching ProfileDashboard schema ─
+    // Only add if at least degree or institution was provided
+    if (degree?.trim() || institution?.trim()) {
+      const mongoose = await import("mongoose");
+
+      const newEdu = {
+        _id: new mongoose.default.Types.ObjectId(),
+        degree: degree?.trim() || "",
+        institution: institution?.trim() || "",
+        university: university?.trim() || "",
+        year: year?.trim() || "",
+        cgpa: cgpa?.trim() || "",
+        current: false,
+        docs: [],
+      };
+
+      // Avoid duplicates: if same degree+institution already exists, update it
+      const existingIdx = user.education.findIndex(
+        (e) =>
+          e.institution?.toLowerCase() === newEdu.institution.toLowerCase() &&
+          e.degree?.toLowerCase() === newEdu.degree.toLowerCase()
+      );
+
+      if (existingIdx >= 0) {
+        // Merge — preserve existing docs
+        const existing = user.education[existingIdx];
+        user.education[existingIdx] = {
+          ...existing.toObject(),
+          degree: newEdu.degree,
+          institution: newEdu.institution,
+          university: newEdu.university,
+          year: newEdu.year,
+          cgpa: newEdu.cgpa,
+        };
+      } else {
+        // Prepend so it appears first in ProfileDashboard
+        user.education.unshift(newEdu);
+      }
+    }
+
+    // ── Step 4: KYC numbers ───────────────────────────────────────────────────
+    if (aadhaarNumber?.trim()) user.aadhaarNumber = aadhaarNumber.trim();
+    if (panNumber?.trim()) user.panNumber = panNumber.trim();
+
+    // ── Step 4: KYC document files ────────────────────────────────────────────
+    if (req.files?.aadhaar?.[0]) {
+      const f = req.files.aadhaar[0];
+      user.aadhaarDoc = {
+        name: f.originalname,
+        path: `/uploads/kyc/${f.filename}`,
+        size: `${Math.round(f.size / 1024)} KB`,
+      };
+    }
+
+    if (req.files?.pan?.[0]) {
+      const f = req.files.pan[0];
+      user.panDoc = {
+        name: f.originalname,
+        path: `/uploads/kyc/${f.filename}`,
+        size: `${Math.round(f.size / 1024)} KB`,
+      };
+    }
+
+    // Mark setup as done
+    user.profileComplete = true;
+
+    await user.save();
+
+    // Return the user without sensitive fields
+    const safeUser = await User.findById(user._id).select(
+      "-password -twoFactorSecret -emailVerifyToken -emailVerifyExpires"
+    );
+
+    res.json({  
+      success: true,
+      message: "Profile setup complete!",
+      user: safeUser,
+    });
+
+  } catch (err) {
+    console.error("completeSetup error:", err);
+    res.status(500).json({ success: false, message: err.message || "Server error" });
   }
 };
