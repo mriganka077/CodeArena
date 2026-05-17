@@ -25,8 +25,9 @@ export default function Navbar() {
             transition={{ type: "spring", stiffness: 250, damping: 70, mass: 1 }}
         >
             <div className='max-w-6xl mx-auto flex items-center justify-between bg-black/50 backdrop-blur-md border border-white/4 rounded-2xl p-3'>
-                <a href='/#'>
-                    {/* <img src='/logo.svg' alt="logo" className="h-8" /> */}
+
+                <a href="/" className="text-2xl font-bold text-slate-200 hover:text-white transition-colors cursor-pointer">
+                    CodeArena
                 </a>
 
                 <div className='hidden md:flex items-center gap-8 text-sm font-medium text-gray-300'>

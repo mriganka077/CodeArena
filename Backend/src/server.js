@@ -23,6 +23,10 @@ import dashboardRoutes from "./routes/dashboard.js";
 import userDomainRoutes from "./routes/userDomain.js";
 
 
+import candidateRoutes from "./routes/candidate.js";
+
+import driveRoutes from "./routes/drive.js";
+
 dotenv.config();
 
 initGoogleStrategy();
@@ -167,6 +171,15 @@ app.use(
 app.use(
   "/api/dashboard",
   dashboardRoutes
+);
+app.use(
+  "/api/candidates", 
+  candidateRoutes
+);
+
+app.use(
+  "/api/drives",
+  driveRoutes
 );
 
 // ============================
