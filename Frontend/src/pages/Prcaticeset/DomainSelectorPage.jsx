@@ -11,13 +11,11 @@ import {
   ArrowRight,
   Hourglass,
   X,
-  CheckCircle2, // ✅ NEW
 } from "lucide-react";
 
 const API_URL = "http://localhost:4000/api/admin";
-const USER_DOMAIN_API = "http://localhost:4000/api/user-domain"; // ✅ NEW
 
-// ─── Glass styles (unchanged) ──────────────────────────────────────
+// ─── Glass styles (unchanged from original) ───────────────────────────────────
 const glass = {
   section: {
     background: "rgba(255, 255, 255, 0.03)",
@@ -38,10 +36,6 @@ const glass = {
     background: "rgba(108, 99, 255, 0.08)",
     border: "1px solid rgba(108, 99, 255, 0.4)",
   },
-  cardSelected: {
-    background: "rgba(34, 197, 94, 0.08)",
-    border: "1px solid rgba(34, 197, 94, 0.4)",
-  },
   headerCard: {
     background: "rgba(255, 255, 255, 0.04)",
     backdropFilter: "blur(20px)",
@@ -53,7 +47,7 @@ const glass = {
   },
 };
 
-// ─── Difficulty levels config ──────────────────────────────────────
+// ─── Difficulty levels config ─────────────────────────────────────────────────
 const DIFFICULTIES = [
   {
     id: "easy",
@@ -69,7 +63,8 @@ const DIFFICULTIES = [
     id: "medium",
     label: "Medium",
     icon: <Circle size={18} fill="#F59E0B" stroke="#F59E0B" />,
-    description: "Applied knowledge, common interview patterns & trade-offs",
+    description:
+      "Applied knowledge, common interview patterns & trade-offs",
     color: "#F59E0B",
     glow: "rgba(245,158,11,0.25)",
     bg: "rgba(245,158,11,0.08)",
@@ -79,7 +74,8 @@ const DIFFICULTIES = [
     id: "hard",
     label: "Hard",
     icon: <Circle size={18} fill="#EF4444" stroke="#EF4444" />,
-    description: "Advanced topics, edge cases & system-design level depth",
+    description:
+      "Advanced topics, edge cases & system-design level depth",
     color: "#EF4444",
     glow: "rgba(239,68,68,0.25)",
     bg: "rgba(239,68,68,0.08)",
@@ -87,20 +83,22 @@ const DIFFICULTIES = [
   },
 ];
 
-// ─── Difficulty Popup (unchanged) ──────────────────────────────────
-function DifficultyPopup({ domain, category, onClose, onConfirm, saving }) {
+// ─── Difficulty Popup ─────────────────────────────────────────────────────────
+function DifficultyPopup({ domain, category, onClose, onConfirm }) {
   const [selected, setSelected] = useState(null);
   const [hoveredId, setHoveredId] = useState(null);
 
+  // Close on Escape
   useEffect(() => {
-    const handler = (e) => e.key === "Escape" && !saving && onClose();
+    const handler = (e) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [onClose, saving]);
+  }, [onClose]);
 
   return (
+    /* Backdrop */
     <div
-      onClick={() => !saving && onClose()}
+      onClick={onClose}
       style={{
         position: "fixed",
         inset: 0,
@@ -115,10 +113,10 @@ function DifficultyPopup({ domain, category, onClose, onConfirm, saving }) {
         animation: "fadeIn 0.18s ease",
       }}
     >
+      {/* Modal */}
       <div
         onClick={(e) => e.stopPropagation()}
         style={{
-          position: "relative",
           background: "rgba(18, 16, 38, 0.97)",
           border: "1px solid rgba(255,255,255,0.1)",
           borderRadius: "28px",
@@ -130,9 +128,9 @@ function DifficultyPopup({ domain, category, onClose, onConfirm, saving }) {
           animation: "slideUp 0.22s cubic-bezier(0.34,1.56,0.64,1)",
         }}
       >
+        {/* Close button */}
         <button
           onClick={onClose}
-          disabled={saving}
           style={{
             position: "absolute",
             top: "18px",
@@ -146,13 +144,24 @@ function DifficultyPopup({ domain, category, onClose, onConfirm, saving }) {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            cursor: saving ? "not-allowed" : "pointer",
-            opacity: saving ? 0.5 : 1,
+            cursor: "pointer",
+            fontSize: "16px",
+            lineHeight: 1,
+            transition: "all 0.15s",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = "rgba(255,255,255,0.12)";
+            e.currentTarget.style.color = "#fff";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "rgba(255,255,255,0.06)";
+            e.currentTarget.style.color = "rgba(255,255,255,0.5)";
           }}
         >
           <X size={16} />
         </button>
 
+        {/* Domain info */}
         <div style={{ marginBottom: "24px" }}>
           <span
             style={{
@@ -193,6 +202,7 @@ function DifficultyPopup({ domain, category, onClose, onConfirm, saving }) {
           </p>
         </div>
 
+        {/* Divider */}
         <div
           style={{
             height: "1px",
@@ -201,6 +211,7 @@ function DifficultyPopup({ domain, category, onClose, onConfirm, saving }) {
           }}
         />
 
+        {/* Difficulty options */}
         <div
           style={{
             display: "flex",
@@ -215,10 +226,9 @@ function DifficultyPopup({ domain, category, onClose, onConfirm, saving }) {
             return (
               <button
                 key={diff.id}
-                onClick={() => !saving && setSelected(diff.id)}
+                onClick={() => setSelected(diff.id)}
                 onMouseEnter={() => setHoveredId(diff.id)}
                 onMouseLeave={() => setHoveredId(null)}
-                disabled={saving}
                 style={{
                   display: "flex",
                   alignItems: "center",
@@ -233,14 +243,16 @@ function DifficultyPopup({ domain, category, onClose, onConfirm, saving }) {
                     : isHovered
                     ? "rgba(255,255,255,0.04)"
                     : "rgba(255,255,255,0.02)",
-                  cursor: saving ? "not-allowed" : "pointer",
+                  cursor: "pointer",
                   textAlign: "left",
                   transition: "all 0.18s ease",
-                  boxShadow: isSelected ? `0 0 20px ${diff.glow}` : "none",
+                  boxShadow: isSelected
+                    ? `0 0 20px ${diff.glow}`
+                    : "none",
                   outline: "none",
-                  opacity: saving ? 0.6 : 1,
                 }}
               >
+                {/* Icon */}
                 <span
                   style={{
                     fontSize: "22px",
@@ -253,6 +265,8 @@ function DifficultyPopup({ domain, category, onClose, onConfirm, saving }) {
                 >
                   {diff.icon}
                 </span>
+
+                {/* Text */}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div
                     style={{
@@ -260,6 +274,7 @@ function DifficultyPopup({ domain, category, onClose, onConfirm, saving }) {
                       fontWeight: 700,
                       color: isSelected ? diff.color : "#f1f5f9",
                       marginBottom: "2px",
+                      transition: "color 0.18s",
                     }}
                   >
                     {diff.label}
@@ -274,6 +289,8 @@ function DifficultyPopup({ domain, category, onClose, onConfirm, saving }) {
                     {diff.description}
                   </div>
                 </div>
+
+                {/* Radio indicator */}
                 <div
                   style={{
                     width: "18px",
@@ -286,6 +303,7 @@ function DifficultyPopup({ domain, category, onClose, onConfirm, saving }) {
                     alignItems: "center",
                     justifyContent: "center",
                     flexShrink: 0,
+                    transition: "all 0.18s",
                   }}
                 >
                   {isSelected && (
@@ -305,33 +323,36 @@ function DifficultyPopup({ domain, category, onClose, onConfirm, saving }) {
           })}
         </div>
 
+        {/* Start button */}
         <button
-          onClick={() => selected && !saving && onConfirm(selected)}
-          disabled={!selected || saving}
+          onClick={() => selected && onConfirm(selected)}
+          disabled={!selected}
           style={{
             width: "100%",
             padding: "14px",
             borderRadius: "14px",
             border: "none",
-            background:
-              selected && !saving
-                ? "linear-gradient(135deg, #6C63FF 0%, #9B5CFF 100%)"
-                : "rgba(255,255,255,0.06)",
-            color: selected && !saving ? "#fff" : "rgba(255,255,255,0.25)",
+            background: selected
+              ? "linear-gradient(135deg, #6C63FF 0%, #9B5CFF 100%)"
+              : "rgba(255,255,255,0.06)",
+            color: selected ? "#fff" : "rgba(255,255,255,0.25)",
             fontSize: "15px",
             fontWeight: 700,
-            cursor: selected && !saving ? "pointer" : "not-allowed",
+            cursor: selected ? "pointer" : "not-allowed",
             transition: "all 0.2s ease",
-            boxShadow:
-              selected && !saving
-                ? "0 8px 24px rgba(108,99,255,0.35)"
-                : "none",
+            boxShadow: selected
+              ? "0 8px 24px rgba(108,99,255,0.35)"
+              : "none",
             letterSpacing: "0.02em",
           }}
+          onMouseEnter={(e) => {
+            if (selected) e.currentTarget.style.transform = "translateY(-1px)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = "translateY(0)";
+          }}
         >
-          {saving
-            ? "Saving..."
-            : selected
+          {selected
             ? `Start ${
                 DIFFICULTIES.find((d) => d.id === selected)?.label
               } Practice →`
@@ -342,8 +363,8 @@ function DifficultyPopup({ domain, category, onClose, onConfirm, saving }) {
   );
 }
 
-// ─── Domain Card (UPDATED with selected indicator) ─────────────────
-function DomainCard({ domain, category, active, isSelected, onClick }) {
+// ─── Domain Card ──────────────────────────────────────────────────────────────
+function DomainCard({ domain, category, active, onClick }) {
   const [hovered, setHovered] = React.useState(false);
 
   return (
@@ -353,19 +374,10 @@ function DomainCard({ domain, category, active, isSelected, onClick }) {
       onMouseLeave={() => setHovered(false)}
       style={{
         ...glass.card,
-        ...(isSelected
-          ? glass.cardSelected
-          : hovered || active
-          ? glass.cardHover
-          : {}),
-        position: "relative",
+        ...(hovered || active ? glass.cardHover : {}),
         transform: hovered ? "translateY(-4px)" : "translateY(0)",
         boxShadow: hovered
-          ? `0 12px 40px ${
-              isSelected
-                ? "rgba(34, 197, 94, 0.2)"
-                : "rgba(108, 99, 255, 0.2)"
-            }, inset 0 1px 0 rgba(255,255,255,0.08)`
+          ? "0 12px 40px rgba(108, 99, 255, 0.2), inset 0 1px 0 rgba(255,255,255,0.08)"
           : "0 2px 12px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.04)",
         transition: "all 0.25s ease",
         padding: "16px",
@@ -376,30 +388,7 @@ function DomainCard({ domain, category, active, isSelected, onClick }) {
         outlineOffset: "2px",
       }}
     >
-      {/* ✅ Selected badge */}
-      {isSelected && (
-        <div
-          style={{
-            position: "absolute",
-            top: "10px",
-            right: "10px",
-            background: "rgba(34, 197, 94, 0.15)",
-            border: "1px solid rgba(34, 197, 94, 0.5)",
-            borderRadius: "8px",
-            padding: "3px 8px",
-            display: "flex",
-            alignItems: "center",
-            gap: "4px",
-            fontSize: "10px",
-            color: "#22C55E",
-            fontWeight: 700,
-          }}
-        >
-          <CheckCircle2 size={11} />
-          Picked
-        </div>
-      )}
-
+      {/* category pill */}
       <span
         style={{
           display: "inline-block",
@@ -417,6 +406,7 @@ function DomainCard({ domain, category, active, isSelected, onClick }) {
         {category}
       </span>
 
+      {/* title + arrow */}
       <div
         style={{
           marginTop: "12px",
@@ -431,11 +421,7 @@ function DomainCard({ domain, category, active, isSelected, onClick }) {
             fontSize: "13px",
             fontWeight: 600,
             lineHeight: "1.4",
-            color: isSelected
-              ? "#22C55E"
-              : hovered || active
-              ? "#a89eff"
-              : "#f1f5f9",
+            color: hovered || active ? "#a89eff" : "#f1f5f9",
             transition: "color 0.2s",
             margin: 0,
           }}
@@ -446,7 +432,9 @@ function DomainCard({ domain, category, active, isSelected, onClick }) {
           style={{
             flexShrink: 0,
             background:
-              hovered || active ? "#6C63FF" : "rgba(108, 99, 255, 0.15)",
+              hovered || active
+                ? "#6C63FF"
+                : "rgba(108, 99, 255, 0.15)",
             border: "1px solid rgba(108, 99, 255, 0.3)",
             borderRadius: "10px",
             padding: "6px 10px",
@@ -462,6 +450,7 @@ function DomainCard({ domain, category, active, isSelected, onClick }) {
         </div>
       </div>
 
+      {/* footer */}
       <div
         style={{
           marginTop: "16px",
@@ -475,7 +464,7 @@ function DomainCard({ domain, category, active, isSelected, onClick }) {
             width: "7px",
             height: "7px",
             borderRadius: "50%",
-            background: isSelected ? "#22C55E" : "#22C55E",
+            background: "#22C55E",
             boxShadow: "0 0 6px rgba(34,197,94,0.6)",
             display: "inline-block",
           }}
@@ -486,14 +475,14 @@ function DomainCard({ domain, category, active, isSelected, onClick }) {
             color: "rgba(255,255,255,0.35)",
           }}
         >
-          {isSelected ? "Already in your path" : "Open practice set"}
+          Open practice set
         </span>
       </div>
     </button>
   );
 }
 
-// ─── Main Page ─────────────────────────────────────────────────────
+// ─── Main Page ────────────────────────────────────────────────────────────────
 export default function DomainSelectorPage() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
@@ -501,15 +490,8 @@ export default function DomainSelectorPage() {
   const [loadingDomains, setLoadingDomains] = useState(true);
   const [fetchError, setFetchError] = useState(null);
 
-  // ✅ NEW: track user's selected topics
-  const [mySelections, setMySelections] = useState([]);
-  const [saving, setSaving] = useState(false);
-
   // popup state
-  const [popup, setPopup] = useState(null);
-
-  // ── helper to get auth token ──
-  const getToken = () => localStorage.getItem("token");
+  const [popup, setPopup] = useState(null); // { domain, category }
 
   // ── fetch domains from API ──
   useEffect(() => {
@@ -533,36 +515,6 @@ export default function DomainSelectorPage() {
     load();
   }, []);
 
-  // ✅ NEW: fetch user's existing selections
-  useEffect(() => {
-    const loadSelections = async () => {
-      const token = getToken();
-      if (!token) return;
-      try {
-        const res = await fetch(`${USER_DOMAIN_API}/my`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const result = await res.json();
-        if (result.success) {
-          setMySelections(result.data);
-        }
-      } catch (err) {
-        console.error("Failed to load selections:", err);
-      }
-    };
-    loadSelections();
-  }, []);
-
-  // ✅ NEW: helper to check if a topic is already selected
-  const isTopicSelected = useCallback(
-    (topic, category) => {
-      return mySelections.some(
-        (s) => s.topic === topic && s.category === category
-      );
-    },
-    [mySelections]
-  );
-
   const totalTopics = useMemo(
     () => groups.reduce((sum, g) => sum + (g.domains?.length || 0), 0),
     [groups]
@@ -582,63 +534,21 @@ export default function DomainSelectorPage() {
   }, [search, groups]);
 
   // open popup on card click
-  const handleCardClick = useCallback((domain, category, domainId) => {
-    setPopup({ domain, category, domainId });
+  const handleCardClick = useCallback((domain, category) => {
+    setPopup({ domain, category });
   }, []);
 
-  // ✅ UPDATED: save to DB & navigate
+  // confirm difficulty → navigate
   const handleConfirm = useCallback(
-    async (difficulty) => {
+    (difficulty) => {
       if (!popup) return;
-
-      const token = getToken();
-      if (!token) {
-        alert("Please log in to track your progress.");
-        navigate("/auth");
-        return;
-      }
-
-      setSaving(true);
-      try {
-        const res = await fetch(`${USER_DOMAIN_API}/select`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            domainId: popup.domainId,
-            category: popup.category,
-            topic: popup.domain,
-            difficulty,
-          }),
-        });
-
-        const result = await res.json();
-
-        if (result.success) {
-          // Update local state so card immediately shows "Picked"
-          if (!result.alreadyExisted) {
-            setMySelections((prev) => [...prev, result.data]);
-          }
-          setPopup(null);
-          // Navigate to practice set with topic info
-          navigate(
-            `/practiceset?topic=${encodeURIComponent(
-              popup.domain
-            )}&difficulty=${difficulty}&category=${encodeURIComponent(
-              popup.category
-            )}`
-          );
-        } else {
-          alert(result.message || "Failed to save selection");
-        }
-      } catch (err) {
-        console.error("Save error:", err);
-        alert("Could not save your selection. Please try again.");
-      } finally {
-        setSaving(false);
-      }
+      setPopup(null);
+      navigate(`/practiceset`, {
+        state: {
+          domain: popup.domain,
+          difficulty,
+        },
+      });
     },
     [popup, navigate]
   );
@@ -650,14 +560,13 @@ export default function DomainSelectorPage() {
       <div className="relative z-50">
         <Header />
       </div>
-
+      {/* Difficulty popup */}
       {popup && (
         <DifficultyPopup
           domain={popup.domain}
           category={popup.category}
-          onClose={() => !saving && setPopup(null)}
+          onClose={() => setPopup(null)}
           onConfirm={handleConfirm}
-          saving={saving}
         />
       )}
 
@@ -677,6 +586,7 @@ export default function DomainSelectorPage() {
               marginBottom: "32px",
             }}
           >
+            {/* top row */}
             <div
               style={{
                 display: "flex",
@@ -703,7 +613,6 @@ export default function DomainSelectorPage() {
                 Interview Practice Domain Selector
               </div>
 
-              {/* ✅ UPDATED: show selected count */}
               <div
                 style={{
                   display: "inline-flex",
@@ -733,10 +642,11 @@ export default function DomainSelectorPage() {
                 />
                 {loadingDomains
                   ? "Loading…"
-                  : `${groups.length} categories · ${totalTopics} topics · ${mySelections.length} picked`}
+                  : `${groups.length} categories · ${totalTopics} topics`}
               </div>
             </div>
 
+            {/* heading + search */}
             <div
               style={{
                 marginTop: "28px",
@@ -781,10 +691,10 @@ export default function DomainSelectorPage() {
                 >
                   Browse every interview topic in one place. Search fast, pick a
                   domain, and jump straight into a focused practice session.
-                  Your picks appear on your dashboard!
                 </p>
               </div>
 
+              {/* search box */}
               <div
                 style={{
                   background: "rgba(255,255,255,0.03)",
@@ -854,7 +764,7 @@ export default function DomainSelectorPage() {
             </div>
           </div>
 
-          {/* ── LOADING / ERROR / EMPTY STATES (unchanged) ── */}
+          {/* ── LOADING / ERROR / EMPTY STATES ── */}
           {loadingDomains && (
             <div
               style={{
@@ -947,6 +857,7 @@ export default function DomainSelectorPage() {
                   key={group._id || group.category}
                   style={glass.section}
                 >
+                  {/* section header */}
                   <div
                     style={{
                       marginBottom: "20px",
@@ -1007,6 +918,7 @@ export default function DomainSelectorPage() {
                     </span>
                   </div>
 
+                  {/* domain cards grid */}
                   <div
                     style={{
                       display: "grid",
@@ -1021,9 +933,8 @@ export default function DomainSelectorPage() {
                         domain={domain}
                         category={group.category}
                         active={false}
-                        isSelected={isTopicSelected(domain, group.category)} // ✅ NEW
                         onClick={() =>
-                          handleCardClick(domain, group.category, group._id)
+                          handleCardClick(domain, group.category)
                         }
                       />
                     ))}
