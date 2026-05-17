@@ -174,6 +174,52 @@ export const createDrive = async (req, res) => {
     }
 };
 
+export const updateDrive = async (req, res) => {
+
+    try {
+
+        const updatedDrive =
+            await Drive.findByIdAndUpdate(
+
+                req.params.id,
+
+                req.body,
+
+                {
+                    new: true,
+                }
+            );
+
+        if (!updatedDrive) {
+
+            return res.status(404).json({
+
+                success: false,
+
+                message: "Drive not found",
+            });
+        }
+
+        res.status(200).json({
+
+            success: true,
+
+            drive: updatedDrive,
+        });
+
+    } catch (error) {
+
+        console.log(error);
+
+        res.status(500).json({
+
+            success: false,
+
+            message: "Failed to update drive",
+        });
+    }
+};
+
 export const getDriveCandidates = async (req, res) => {
 
     try {

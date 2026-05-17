@@ -175,8 +175,68 @@ const SInput = ({
     </div>
 );
 
-const CreateDriveModal = ({ onClose, onSave }) => {
-    const [form, setForm]       = useState(EMPTY);
+const CreateDriveModal = ({
+    onClose,
+    onSave,
+    editData,
+}) => {
+    const [form, setForm] = useState(
+        editData
+            ? {
+    
+                title:
+                    editData.title || "",
+    
+                tag:
+                    editData.tag || "",
+    
+                type:
+                    editData.type || "Assessment",
+    
+                startDate:
+                    editData.startDate
+                        ? new Date(editData.startDate)
+                            .toISOString()
+                            .slice(0,16)
+                        : "",
+    
+                endDate:
+                    editData.endDate
+                        ? new Date(editData.endDate)
+                            .toISOString()
+                            .slice(0,16)
+                        : "",
+    
+                difficulty:
+                    editData.difficulty || "Intermediate",
+    
+                duration:
+                    editData.duration || "",
+    
+                visibility:
+                    editData.visibility || "Private",
+    
+                mcqCount:
+                    editData.mcqCount || "",
+    
+                codeCount:
+                    editData.codeCount || "",
+    
+                marksPerMcq:
+                    editData.marksPerMcq || "",
+    
+                marksPerCode:
+                    editData.marksPerCode || "",
+    
+                aiPrompt: "",
+    
+                emailTitle: "",
+    
+                emailBody: "",
+            }
+    
+            : EMPTY
+    );
     const [errors, setErrors]   = useState({});
     const [step, setStep]       = useState(1);
     const [saving, setSaving]   = useState(false);
@@ -186,15 +246,40 @@ const CreateDriveModal = ({ onClose, onSave }) => {
     const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }));
 
     const validate1 = () => {
+
         const e = {};
-        if (!form.title.trim()) e.title = "Drive name is required";
-        if (!form.tag.trim())   e.tag   = "Category is required";
-        if (!form.startDate)    e.startDate = "Start date required";
-        if (!form.endDate)      e.endDate   = "End date required";
-        if (form.startDate && form.endDate && form.endDate <= form.startDate)
+    
+        if (!form.title.trim())
+            e.title = "Drive name is required";
+    
+        if (!form.tag.trim())
+            e.tag = "Category is required";
+    
+        if (!form.startDate)
+            e.startDate = "Start date required";
+    
+        if (!form.endDate)
+            e.endDate = "End date required";
+    
+        // only validate while creating
+        if (
+            !editData &&
+            form.startDate &&
+            form.endDate &&
+            new Date(form.endDate).getTime() <
+                new Date(form.startDate).getTime()
+        ) {
             e.endDate = "End must be after start";
-        if (!form.duration || isNaN(form.duration) || +form.duration <= 0)
+        }
+    
+        if (
+            !form.duration ||
+            isNaN(form.duration) ||
+            +form.duration <= 0
+        ) {
             e.duration = "Enter a valid duration";
+        }
+    
         return e;
     };
     const validate2 = () => {
@@ -265,12 +350,19 @@ const CreateDriveModal = ({ onClose, onSave }) => {
                         : 0,
             };
     
-            const res = await axios.post(
-                "http://localhost:4000/api/drives/create",
-                payload
-            );
+            const response = editData
+
+                ? await axios.put(
+                    `http://localhost:4000/api/drives/${editData._id}`,
+                    payload
+                )
+
+                : await axios.post(
+                    "http://localhost:4000/api/drives",
+                    payload
+                );
     
-            if (res.data.success) {
+            if (response.data.success) {
     
                 const newDrive = {
     
@@ -329,7 +421,7 @@ const CreateDriveModal = ({ onClose, onSave }) => {
     
                 setDone(true);
     
-                onSave(newDrive);
+                onSave(response.data.drive);
     
                 setTimeout(() => {
                     onClose();
@@ -386,7 +478,7 @@ const CreateDriveModal = ({ onClose, onSave }) => {
                         </div>
                         <div>
                             <p className="text-white font-bold text-base leading-tight">
-                                {done ? "Drive Created!" : "Create New Drive"}
+                                {editData ? "Update Drive" : "Create New Drive"}
                             </p>
                             <p className="text-white/30 text-[11px] mt-0.5">
                                 {done ? "Adding to your drives list…"

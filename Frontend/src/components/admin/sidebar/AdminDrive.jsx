@@ -6,7 +6,7 @@ import {
     Download, ChevronDown, SlidersHorizontal, Code2, Star, ArrowUpRight,
     Lock, Globe, Layers, Timer, Trophy, ClipboardList, FileText,
     Briefcase, AlignLeft, CheckSquare, Sparkles, Gauge, Wand2, Bot,
-    RefreshCw, ChevronLeft, Trash2, Check,
+    RefreshCw, ChevronLeft, Trash2, Check, AlertTriangle,
 } from "lucide-react";
 import axios from "axios";
 import { useEffect } from "react";
@@ -175,7 +175,11 @@ const EMPTY = {
 
 
 // ── Detail Drawer ──────────────────────────────────────────────────────────────
-const DriveDrawer = ({ drive, onClose }) => {
+const DriveDrawer = ({
+    drive,
+    onClose,
+    onEdit,
+}) => {
     if (!drive) return null;
     const st   = STATUS_STYLE[drive.status] ?? STATUS_STYLE.Draft;
     const diff = DIFF_STYLE[drive.difficulty] ?? DIFF_STYLE.Medium;
@@ -184,6 +188,8 @@ const DriveDrawer = ({ drive, onClose }) => {
     const [candLoading, setCandLoading] = useState(false);
     const [candError, setCandError]     = useState(null);
     const [showAssignModal, setShowAssignModal] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [deleteLoading, setDeleteLoading] = useState(false);
     const [allCandidates, setAllCandidates] = useState([]);
     const [selectedCandidates, setSelectedCandidates] = useState([]);
     const [assignLoading, setAssignLoading] = useState(false);
@@ -302,6 +308,32 @@ const DriveDrawer = ({ drive, onClose }) => {
             console.error(err);
         } finally {
             setAssignLoading(false);
+        }
+    };
+
+    const deleteDrive = async () => {
+
+        try {
+    
+            setDeleteLoading(true);
+    
+            await axios.delete(
+                `http://localhost:4000/api/drives/${drive._id}`
+            );
+    
+            setShowDeleteModal(false);
+    
+            onClose();
+    
+            window.location.reload();
+    
+        } catch (err) {
+    
+            console.error(err);
+    
+        } finally {
+    
+            setDeleteLoading(false);
         }
     };
 
@@ -703,7 +735,10 @@ const DriveDrawer = ({ drive, onClose }) => {
                             </div>
                             <p className="text-white font-semibold text-sm">Drive Settings</p>
                             <p className="text-white/30 text-xs max-w-[200px]">Configure proctoring, time limits, access and scoring.</p>
-                            <button className="mt-2 flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-indigo-300 border border-indigo-500/25 hover:bg-indigo-500/10 transition">
+                            <button
+                                onClick={() => onEdit(drive)}
+                                className="mt-2 flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-indigo-300 border border-indigo-500/25 hover:bg-indigo-500/10 transition"
+                            >
                                 Edit Settings <Edit3 size={12} />
                             </button>
                         </div>
@@ -715,6 +750,7 @@ const DriveDrawer = ({ drive, onClose }) => {
                     style={{ background: "rgba(10,8,22,0.96)" }}
                 >
                     <button
+                        onClick={() => setShowDeleteModal(true)}
                         className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-semibold border border-rose-500/20 text-rose-300 hover:bg-rose-500/10 hover:border-rose-500/40 transition"
                     >
                         <Trash2 size={13} />
@@ -722,6 +758,7 @@ const DriveDrawer = ({ drive, onClose }) => {
                     </button>
 
                     <button
+                        onClick={() => onEdit(drive)}
                         className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-semibold text-white transition"
                         style={{
                             background:
@@ -733,6 +770,268 @@ const DriveDrawer = ({ drive, onClose }) => {
                     </button>
                 </div>
             </motion.aside>
+            <AnimatePresence>
+
+                {showDeleteModal && (
+
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[130] flex items-center justify-center p-4"
+                        style={{
+                            background:
+                                "radial-gradient(circle at top, rgba(99,102,241,0.12), rgba(0,0,0,0.88))",
+                            backdropFilter: "blur(18px)",
+                        }}
+                    >
+
+                        <motion.div
+                            initial={{
+                                opacity: 0,
+                                scale: 0.92,
+                                y: 24,
+                            }}
+                            animate={{
+                                opacity: 1,
+                                scale: 1,
+                                y: 0,
+                            }}
+                            exit={{
+                                opacity: 0,
+                                scale: 0.92,
+                                y: 24,
+                            }}
+                            transition={{
+                                type: "spring",
+                                stiffness: 260,
+                                damping: 22,
+                            }}
+                            className="relative w-full max-w-lg overflow-hidden rounded-[32px] border border-white/10"
+                            style={{
+                                background:
+                                    "linear-gradient(180deg, rgba(12,12,24,0.96), rgba(18,18,32,0.98))",
+                                boxShadow:
+                                    "0 20px 80px rgba(0,0,0,0.55)",
+                            }}
+                        >
+
+                            {/* glow */}
+
+                            <div
+                                className="absolute inset-0 pointer-events-none"
+                                style={{
+                                    background:
+                                        "radial-gradient(circle at top right, rgba(99,102,241,0.12), transparent 35%)",
+                                }}
+                            />
+
+                            {/* HEADER */}
+
+                            <div className="relative px-7 pt-7 pb-6 border-b border-white/6">
+
+                                <button
+                                    onClick={() =>
+                                        setShowDeleteModal(false)
+                                    }
+                                    className="absolute top-5 right-5 w-10 h-10 rounded-2xl border border-white/10 flex items-center justify-center text-white/40 hover:text-white hover:bg-white/5 transition"
+                                >
+                                    <X size={16} />
+                                </button>
+
+                                <div className="flex items-start gap-5">
+
+                                    <div
+                                        className="w-16 h-16 rounded-3xl flex items-center justify-center shrink-0"
+                                        style={{
+                                            background:
+                                                "linear-gradient(135deg, rgba(244,63,94,0.18), rgba(225,29,72,0.08))",
+                                            border:
+                                                "1px solid rgba(244,63,94,0.24)",
+                                            boxShadow:
+                                                "0 10px 30px rgba(244,63,94,0.18)",
+                                        }}
+                                    >
+                                        <Trash2
+                                            size={24}
+                                            className="text-rose-400"
+                                        />
+                                    </div>
+
+                                    <div>
+
+                                        <p className="text-rose-400 text-xs font-semibold uppercase tracking-[0.18em]">
+                                            Danger Zone
+                                        </p>
+
+                                        <h2 className="text-white text-2xl font-bold mt-2">
+                                            Delete Drive
+                                        </h2>
+
+                                        <p className="text-white/40 text-sm leading-relaxed mt-2 max-w-[380px]">
+                                            This permanently removes the
+                                            drive configuration from your
+                                            recruitment workflow.
+                                        </p>
+
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* DRIVE CARD */}
+
+                            <div className="relative px-7 py-6">
+
+                                <div
+                                    className="rounded-3xl border border-white/8 p-5"
+                                    style={{
+                                        background:
+                                            "linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02))",
+                                    }}
+                                >
+
+                                    <div className="flex items-center gap-4">
+
+                                        <div
+                                            className="w-14 h-14 rounded-2xl flex items-center justify-center"
+                                            style={{
+                                                background:
+                                                    "linear-gradient(135deg, rgba(99,102,241,0.18), rgba(139,92,246,0.12))",
+                                                border:
+                                                    "1px solid rgba(99,102,241,0.2)",
+                                            }}
+                                        >
+                                            <Zap
+                                                size={20}
+                                                className="text-indigo-400"
+                                            />
+                                        </div>
+
+                                        <div className="flex-1 min-w-0">
+
+                                            <h3 className="text-white font-semibold text-lg truncate">
+                                                {drive.title}
+                                            </h3>
+
+                                            <p className="text-white/35 text-sm mt-1">
+                                                {drive.tag}
+                                            </p>
+
+                                        </div>
+
+                                        <div
+                                            className="px-3 py-1 rounded-full text-[11px] font-semibold border"
+                                            style={{
+                                                background:
+                                                    "rgba(99,102,241,0.08)",
+                                                borderColor:
+                                                    "rgba(99,102,241,0.18)",
+                                                color: "#a5b4fc",
+                                            }}
+                                        >
+                                            {drive.status}
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-3 gap-3 mt-6">
+
+                                        {[
+                                            {
+                                                label: "Candidates",
+                                                value:
+                                                    drive.totalCandidates || 0,
+                                            },
+                                            {
+                                                label: "Questions",
+                                                value:
+                                                    drive.questionCount || 0,
+                                            },
+                                            {
+                                                label: "Duration",
+                                                value:
+                                                    `${drive.duration || 0}m`,
+                                            },
+                                        ].map((item) => (
+
+                                            <div
+                                                key={item.label}
+                                                className="rounded-2xl border border-white/6 p-3"
+                                                style={{
+                                                    background:
+                                                        "rgba(255,255,255,0.025)",
+                                                }}
+                                            >
+                                                <p className="text-white/25 text-[10px] uppercase tracking-wider">
+                                                    {item.label}
+                                                </p>
+
+                                                <p className="text-white font-bold text-lg mt-1">
+                                                    {item.value}
+                                                </p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* warning */}
+
+                                <div
+                                    className="mt-5 rounded-2xl border border-amber-500/10 p-4"
+                                    style={{
+                                        background:
+                                            "rgba(251,191,36,0.05)",
+                                    }}
+                                >
+                                    <div className="flex gap-3">
+
+                                        <AlertTriangle
+                                            size={18}
+                                            className="text-amber-400 shrink-0 mt-0.5"
+                                        />
+
+                                        <p className="text-amber-100/70 text-xs leading-relaxed">
+                                            Candidate submissions and interview
+                                            results will no longer be linked to
+                                            this drive after deletion.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* FOOTER */}
+
+                            <div className="relative px-7 py-5 border-t border-white/6 flex items-center justify-end gap-3">
+
+                                <button
+                                    onClick={() =>
+                                        setShowDeleteModal(false)
+                                    }
+                                    className="px-5 py-2.5 rounded-2xl text-sm font-semibold border border-white/10 text-white/60 hover:bg-white/5 hover:text-white transition"
+                                >
+                                    Cancel
+                                </button>
+
+                                <button
+                                    onClick={deleteDrive}
+                                    disabled={deleteLoading}
+                                    className="px-6 py-2.5 rounded-2xl text-sm font-semibold text-white disabled:opacity-50 transition hover:scale-[1.02]"
+                                    style={{
+                                        background:
+                                            "linear-gradient(135deg,#ef4444,#f43f5e)",
+                                        boxShadow:
+                                            "0 10px 30px rgba(244,63,94,0.25)",
+                                    }}
+                                >
+                                    {deleteLoading
+                                        ? "Deleting..."
+                                        : "Delete Drive"}
+                                </button>
+
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </AnimatePresence>
     );
 };
@@ -821,6 +1120,7 @@ const AdminDrive = () => {
     const [viewMode, setViewMode]     = useState("grid");
     const [selected, setSelected]     = useState(null);
     const [showCreate, setShowCreate] = useState(false);
+    const [editingDrive, setEditingDrive] = useState(null);
     const [loading, setLoading]       = useState(true);
 
     const statuses = ["All","Active","Completed","On-Hold","Draft"];
@@ -1044,12 +1344,54 @@ const AdminDrive = () => {
                     )}
                 </AnimatePresence>
 
-                <DriveDrawer drive={selected} onClose={()=>setSelected(null)}/>
+                <DriveDrawer
+                    drive={selected}
+                    onClose={() => setSelected(null)}
+                    onEdit={(drive) => {
+
+                        setEditingDrive(drive);
+
+                        setShowCreate(true);
+
+                        setSelected(null);
+                    }}
+                />
             </div>
 
             <AnimatePresence>
                 {showCreate && (
-                    <CreateDriveModal onClose={()=>setShowCreate(false)} onSave={d=>setDrives(prev=>[d,...prev])}/>
+                    <CreateDriveModal
+                    editData={editingDrive}
+                    onClose={() => {
+                
+                        setShowCreate(false);
+                
+                        setEditingDrive(null);
+                    }}
+                
+                    onSave={(updatedDrive) => {
+                
+                        if (editingDrive) {
+                
+                            setDrives((prev) =>
+                                prev.map((d) =>
+                                    d._id === updatedDrive._id
+                                        ? updatedDrive
+                                        : d
+                                )
+                            );
+                
+                        } else {
+                
+                            setDrives((prev) => [
+                                updatedDrive,
+                                ...prev,
+                            ]);
+                        }
+                
+                        setEditingDrive(null);
+                    }}
+                />
                 )}
             </AnimatePresence>
         </>

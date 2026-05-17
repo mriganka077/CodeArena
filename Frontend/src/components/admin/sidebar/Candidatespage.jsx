@@ -306,6 +306,145 @@ const CandidateDrawer = ({ candidate, onClose }) => {
                         </section>
                     )}
 
+                        {/* documents */}
+                        {(
+                            candidate.resumeUrl ||
+                            candidate.aadhaarDoc?.path ||
+                            candidate.panDoc?.path ||
+                            candidate.education?.some(
+                                (ed) => ed.docs?.length > 0
+                            )
+                        ) && (
+                                <section>
+                                    <p className="text-white/35 text-[10px] uppercase tracking-widest font-semibold mb-3">
+                                        Documents
+                                    </p>
+
+                                    <div className="space-y-2">
+
+                                        {/* Resume */}
+                                        {candidate.resumeUrl && (
+                                            <a
+                                                href={`http://localhost:4000${candidate.resumeUrl}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                download={candidate.resumeOriginalName}
+                                                className="flex items-center justify-between gap-3 rounded-xl p-3 border border-white/6 hover:border-indigo-500/30 hover:bg-indigo-500/5 transition group"
+                                                style={{ background: "rgba(255,255,255,0.02)" }}
+                                            >
+                                                <div className="flex items-center gap-3 min-w-0">
+                                                    <div
+                                                        className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                                                        style={{
+                                                            background: "rgba(99,102,241,0.12)",
+                                                            border: "1px solid rgba(99,102,241,0.2)",
+                                                        }}
+                                                    >
+                                                        <FileText size={15} className="text-indigo-400" />
+                                                    </div>
+
+                                                    <div className="min-w-0">
+                                                        <p className="text-white text-xs font-medium truncate">
+                                                            Resume
+                                                        </p>
+
+                                                        <p className="text-white/35 text-[10px] truncate">
+                                                            {candidate.resumeOriginalName}
+                                                        </p>
+                                                    </div>
+                                                </div>
+
+                                                <Download
+                                                    size={13}
+                                                    className="text-indigo-400/70 group-hover:text-indigo-300 transition shrink-0"
+                                                />
+                                            </a>
+                                        )}
+
+                                        {/* Aadhaar */}
+                                        {candidate.aadhaarDoc?.path && (
+                                            <a
+                                                href={`http://localhost:4000${candidate.aadhaarDoc.path}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                download={candidate.aadhaarDoc.name}
+                                                className="flex items-center justify-between gap-3 rounded-xl p-3 border border-white/6 hover:border-indigo-500/30 hover:bg-indigo-500/5 transition group"
+                                                style={{ background: "rgba(255,255,255,0.02)" }}
+                                            >
+                                                <div className="flex items-center gap-3 min-w-0">
+                                                    <div
+                                                        className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                                                        style={{
+                                                            background: "rgba(16,185,129,0.12)",
+                                                            border: "1px solid rgba(16,185,129,0.2)",
+                                                        }}
+                                                    >
+                                                        <ShieldCheck size={15} className="text-emerald-400" />
+                                                    </div>
+
+                                                    <div className="min-w-0">
+                                                        <p className="text-white text-xs font-medium truncate">
+                                                            Aadhaar Document
+                                                        </p>
+
+                                                        <p className="text-white/35 text-[10px] truncate">
+                                                            {candidate.aadhaarDoc.name}
+                                                            {candidate.aadhaarDoc.size && ` • ${candidate.aadhaarDoc.size}`}
+                                                        </p>
+                                                    </div>
+                                                </div>
+
+                                                <Download
+                                                    size={13}
+                                                    className="text-emerald-400/70 group-hover:text-emerald-300 transition shrink-0"
+                                                />
+                                            </a>
+                                        )}
+
+                                        {/* PAN */}
+                                        {candidate.panDoc?.path && (
+                                            <a
+                                                href={`http://localhost:4000${candidate.panDoc.path}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                download={candidate.panDoc.name}
+                                                className="flex items-center justify-between gap-3 rounded-xl p-3 border border-white/6 hover:border-indigo-500/30 hover:bg-indigo-500/5 transition group"
+                                                style={{ background: "rgba(255,255,255,0.02)" }}
+                                            >
+                                                <div className="flex items-center gap-3 min-w-0">
+                                                    <div
+                                                        className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                                                        style={{
+                                                            background: "rgba(245,158,11,0.12)",
+                                                            border: "1px solid rgba(245,158,11,0.2)",
+                                                        }}
+                                                    >
+                                                        <BadgeCheck size={15} className="text-amber-400" />
+                                                    </div>
+
+                                                    <div className="min-w-0">
+                                                        <p className="text-white text-xs font-medium truncate">
+                                                            PAN Document
+                                                        </p>
+
+                                                        <p className="text-white/35 text-[10px] truncate">
+                                                            {candidate.panDoc.name}
+                                                            {candidate.panDoc.size && ` • ${candidate.panDoc.size}`}
+                                                        </p>
+                                                    </div>
+                                                </div>
+
+                                                <Download
+                                                    size={13}
+                                                    className="text-amber-400/70 group-hover:text-amber-300 transition shrink-0"
+                                                />
+                                            </a>
+                                        )}
+
+                                    </div>
+                                </section>
+                            )}
+
                     {/* security */}
                     <section>
                         <p className="text-white/35 text-[10px] uppercase tracking-widest font-semibold mb-3">Security & Account</p>
@@ -335,28 +474,7 @@ const CandidateDrawer = ({ candidate, onClose }) => {
                         </div>
                     </section>
 
-                    {/* resume */}
-                    {candidate.resumeOriginalName && (
-                        <section>
-                            <p className="text-white/35 text-[10px] uppercase tracking-widest font-semibold mb-2">Resume</p>
-                            <div className="flex items-center justify-between rounded-xl p-3 border border-white/6"
-                                style={{ background: "rgba(255,255,255,0.02)" }}>
-                                <div className="flex items-center gap-2">
-                                    <FileText size={14} className="text-indigo-400" />
-                                    <p className="text-white/70 text-xs truncate max-w-[180px]">{candidate.resumeOriginalName}</p>
-                                </div>
-                                    <a
-                                        href={`http://localhost:4000${candidate.resumeUrl}`}
-                                        download={candidate.resumeOriginalName}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="flex items-center gap-1 text-indigo-400 hover:text-indigo-300 text-[11px] transition"
-                                    >
-                                        <Download size={12} /> Download
-                                    </a>
-                            </div>
-                        </section>
-                    )}
+
                 </div>
 
                 {/* drawer footer actions */}
