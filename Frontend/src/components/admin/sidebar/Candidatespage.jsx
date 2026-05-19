@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { animate } from "framer-motion";
 import { motion, AnimatePresence } from "framer-motion";
-
+import toast, { Toaster } from "react-hot-toast";
 import {
     Users,
     Search,
@@ -43,9 +43,9 @@ import axios from "axios";
 
 // ── helpers ────────────────────────────────────────────────────────────────────
 const statusStyle = {
-    Active:    { cls: "bg-emerald-500/15 text-emerald-400 border border-emerald-500/25", dot: "#4ade80" },
-    "On-Hold": { cls: "bg-amber-500/15 text-amber-400 border border-amber-500/25",       dot: "#fbbf24" },
-    Completed: { cls: "bg-sky-500/15 text-sky-400 border border-sky-500/25",             dot: "#38bdf8" },
+    Active: { cls: "bg-emerald-500/15 text-emerald-400 border border-emerald-500/25", dot: "#4ade80" },
+    "On-Hold": { cls: "bg-amber-500/15 text-amber-400 border border-amber-500/25", dot: "#fbbf24" },
+    Completed: { cls: "bg-sky-500/15 text-sky-400 border border-sky-500/25", dot: "#38bdf8" },
 };
 
 const fmt = (iso) =>
@@ -122,74 +122,73 @@ const CandidateDrawer = ({
     const st = statusStyle[candidate.status] ?? statusStyle["Active"];
     const [showAllDrives, setShowAllDrives] = useState(false);
     const [showShortlistModal, setShowShortlistModal] = useState(false);
-    const [selectedCandidate, setSelectedCandidate] =useState(null);
-    const [aiGenerating, setAiGenerating] = useState(false);
+    const [selectedCandidate, setSelectedCandidate] = useState(null);
 
     const [mailData, setMailData] = useState({
         subject: "",
         body: "",
     });
-     const [sendingMail, setSendingMail] = useState(false);
+    const [sendingMail, setSendingMail] = useState(false);
 
 
     return (
         <>
-        <AnimatePresence>
-            <motion.div
-                key="overlay"
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
-                onClick={onClose}
-            />
-            <motion.aside
-                key="drawer"
-                initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }}
-                transition={{ type: "spring", damping: 28, stiffness: 260 }}
-                className="fixed right-0 top-0 h-full w-full max-w-md z-50 flex flex-col border-l border-white/8 overflow-y-auto"
-                style={{ background: "rgba(12,9,24,0.98)", backdropFilter: "blur(24px)" }}
-                onClick={(e) => e.stopPropagation()}
-            >
-                {/* drawer header */}
-                <div className="flex items-center justify-between px-6 py-5 border-b border-white/6 sticky top-0 z-10"
-                    style={{ background: "rgba(12,9,24,0.95)" }}>
-                    <div className="flex items-center gap-3">
-                        <Avatar candidate={candidate} size={42} />
-                        <div>
-                            <p className="text-white font-bold text-base leading-tight">
-                                {candidate.firstName} {candidate.lastName}
-                            </p>
-                            <p className="text-white/40 text-[11px] mt-0.5">{candidate.email}</p>
-                        </div>
-                    </div>
-                    <button onClick={onClose}
-                        className="w-8 h-8 rounded-lg flex items-center justify-center text-white/40 hover:text-white hover:bg-white/6 transition">
-                        <X size={16} />
-                    </button>
-                </div>
-
-                <div className="flex-1 px-6 py-5 space-y-6">
-
-                    {/* score + status row */}
-                    <div className="grid grid-cols-3 gap-3">
-                        {[
-                            { label: "Avg Score", val: candidate.avgScore, node: <ScoreRing score={candidate.avgScore} size={48} /> },
-                            { label: "Completion", val: `${candidate.completionRate}%`, node: null },
-                            { label: "Status", val: candidate.status, node: null },
-                        ].map((item, i) => (
-                            <div key={i} className="rounded-xl p-3 border border-white/6 flex flex-col items-center gap-2"
-                                style={{ background: "rgba(255,255,255,0.025)" }}>
-                                {item.node ?? null}
-                                {!item.node && (
-                                    i === 2
-                                        ? <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${st.cls}`}>{item.val}</span>
-                                        : <p className="text-white font-bold text-lg">{item.val}</p>
-                                )}
-                                <p className="text-white/35 text-[10px]">{item.label}</p>
+            <AnimatePresence>
+                <motion.div
+                    key="overlay"
+                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                    className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
+                    onClick={onClose}
+                />
+                <motion.aside
+                    key="drawer"
+                    initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }}
+                    transition={{ type: "spring", damping: 28, stiffness: 260 }}
+                    className="fixed right-0 top-0 h-full w-full max-w-md z-50 flex flex-col border-l border-white/8 overflow-y-auto"
+                    style={{ background: "rgba(12,9,24,0.98)", backdropFilter: "blur(24px)" }}
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    {/* drawer header */}
+                    <div className="flex items-center justify-between px-6 py-5 border-b border-white/6 sticky top-0 z-10"
+                        style={{ background: "rgba(12,9,24,0.95)" }}>
+                        <div className="flex items-center gap-3">
+                            <Avatar candidate={candidate} size={42} />
+                            <div>
+                                <p className="text-white font-bold text-base leading-tight">
+                                    {candidate.firstName} {candidate.lastName}
+                                </p>
+                                <p className="text-white/40 text-[11px] mt-0.5">{candidate.email}</p>
                             </div>
-                        ))}
+                        </div>
+                        <button onClick={onClose}
+                            className="w-8 h-8 rounded-lg flex items-center justify-center text-white/40 hover:text-white hover:bg-white/6 transition">
+                            <X size={16} />
+                        </button>
                     </div>
 
-                    {/* drive */}
+                    <div className="flex-1 px-6 py-5 space-y-6">
+
+                        {/* score + status row */}
+                        <div className="grid grid-cols-3 gap-3">
+                            {[
+                                { label: "Avg Score", val: candidate.avgScore, node: <ScoreRing score={candidate.avgScore} size={48} /> },
+                                { label: "Completion", val: `${candidate.completionRate}%`, node: null },
+                                { label: "Status", val: candidate.status, node: null },
+                            ].map((item, i) => (
+                                <div key={i} className="rounded-xl p-3 border border-white/6 flex flex-col items-center gap-2"
+                                    style={{ background: "rgba(255,255,255,0.025)" }}>
+                                    {item.node ?? null}
+                                    {!item.node && (
+                                        i === 2
+                                            ? <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${st.cls}`}>{item.val}</span>
+                                            : <p className="text-white font-bold text-lg">{item.val}</p>
+                                    )}
+                                    <p className="text-white/35 text-[10px]">{item.label}</p>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* drive */}
                         {/* applied drives */}
                         <section>
                             <div className="flex items-center justify-between mb-3">
@@ -241,16 +240,16 @@ const CandidateDrawer = ({
                                                     "selectedDriveId",
                                                     drive.id
                                                 );
-                                            
+
                                                 // switch admin tab
                                                 localStorage.setItem(
                                                     "adminActiveTab",
                                                     "drives"
                                                 );
-                                            
+
                                                 // close drawer
                                                 onClose();
-                                            
+
                                                 // trigger tab refresh
                                                 window.location.reload();
                                             }}
@@ -351,137 +350,137 @@ const CandidateDrawer = ({
                                     <ChevronDown
                                         size={13}
                                         className={`transition-transform ${showAllDrives
-                                                ? "rotate-180"
-                                                : ""
+                                            ? "rotate-180"
+                                            : ""
                                             }`}
                                     />
                                 </button>
                             )}
                         </section>
 
-                    {/* contact */}
-                    <section>
-                        <p className="text-white/35 text-[10px] uppercase tracking-widest font-semibold mb-3">Contact & Profile</p>
-                        <div className="space-y-2.5">
-                            {[
-                                { Icon: Mail,    val: candidate.email,    label: "Email" },
-                                { Icon: Phone,   val: candidate.phone || "—", label: "Phone" },
-                                { Icon: MapPin,  val: candidate.location || "—", label: "Location" },
-                                { Icon: Linkedin, val: candidate.linkedin || "—", label: "LinkedIn" },
-                                { Icon: Github,  val: candidate.github || "—", label: "GitHub" },
-                            ].map(({ Icon, val, label }) => (
-                                <div key={label} className="flex items-center gap-3">
-                                    <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
-                                        style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
-                                        <Icon size={13} className="text-indigo-400" />
-                                    </div>
-                                    <div className="min-w-0">
-                                        <p className="text-white/30 text-[10px]">{label}</p>
-                                        <p className="text-white/80 text-xs truncate">{val}</p>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </section>
-
-                    {/* bio */}
-                    {candidate.bio && (
+                        {/* contact */}
                         <section>
-                            <p className="text-white/35 text-[10px] uppercase tracking-widest font-semibold mb-2">Bio</p>
-                            <p className="text-white/55 text-xs leading-relaxed">{candidate.bio}</p>
-                        </section>
-                    )}
-
-                    {/* skills */}
-                    {candidate.skills.length > 0 && (
-                        <section>
-                            <p className="text-white/35 text-[10px] uppercase tracking-widest font-semibold mb-2">Skills</p>
-                            <div className="flex flex-wrap gap-1.5">
-                                {candidate.skills.map((sk) => (
-                                    <span key={sk} className="px-2.5 py-1 rounded-lg text-[11px] font-medium border"
-                                        style={{ background: "rgba(99,102,241,0.1)", borderColor: "rgba(99,102,241,0.25)", color: "#a5b4fc" }}>
-                                        {sk}
-                                    </span>
-                                ))}
-                            </div>
-                        </section>
-                    )}
-
-                    {/* education */}
-                    {candidate.education.length > 0 && (
-                        <section>
-                            <p className="text-white/35 text-[10px] uppercase tracking-widest font-semibold mb-3">Education</p>
-                            <div className="space-y-3">
-                                {candidate.education.map((ed, i) => (
-                                    <div key={ed._id ?? i} className="rounded-xl p-4 border border-white/6"
-                                        style={{ background: "rgba(255,255,255,0.02)" }}>
-                                        <div className="flex items-start gap-3">
-                                            <GraduationCap size={16} className="text-purple-400 shrink-0 mt-0.5" />
-                                            <div className="flex-1 min-w-0">
-                                                {/* degree + current badge */}
-                                                <div className="flex items-center gap-2 flex-wrap">
-                                                    <p className="text-white font-semibold text-xs">{ed.degree}</p>
-                                                    {ed.current && (
-                                                        <span className="px-1.5 py-0.5 rounded-full text-[9px] font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-                                                            Current
-                                                        </span>
-                                                    )}
-                                                </div>
-                                                {/* institution */}
-                                                <p className="text-white/55 text-[11px] mt-0.5">{ed.institution}</p>
-                                                {/* university + year row */}
-                                                <div className="flex items-center gap-3 mt-1.5 flex-wrap">
-                                                    {ed.university && (
-                                                        <div className="flex items-center gap-1 text-white/35 text-[10px]">
-                                                            <BookOpen size={10} className="text-indigo-400" />
-                                                            <span>{ed.university}</span>
-                                                        </div>
-                                                    )}
-                                                    {ed.year && (
-                                                        <div className="flex items-center gap-1 text-white/35 text-[10px]">
-                                                            <Calendar size={10} className="text-indigo-400" />
-                                                            <span>{ed.year}</span>
-                                                        </div>
-                                                    )}
-                                                    {ed.cgpa && (
-                                                        <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md"
-                                                            style={{ background: "rgba(99,102,241,0.12)", color: "#a5b4fc" }}>
-                                                            CGPA {ed.cgpa}
-                                                        </span>
-                                                    )}
-                                                </div>
-
-                                                {/* attached docs */}
-                                                {ed.docs?.length > 0 && (
-                                                    <div className="mt-3 space-y-1.5">
-                                                        {ed.docs.map((doc, j) => (
-                                                            <a
-                                                                key={doc._id ?? j}
-                                                                href={`http://localhost:4000${doc.path}`}
-                                                                download={doc.name}
-                                                                target="_blank"
-                                                                rel="noopener noreferrer"
-                                                                className="flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg border border-white/6 hover:border-indigo-500/30 hover:bg-indigo-500/5 transition group"
-                                                            >
-                                                                <div className="flex items-center gap-2 min-w-0">
-                                                                    <FileText size={11} className="text-indigo-400 shrink-0" />
-                                                                    <span className="text-white/60 text-[10px] truncate">{doc.name}</span>
-                                                                    {doc.size && (
-                                                                        <span className="text-white/25 text-[9px] shrink-0">{doc.size}</span>
-                                                                    )}
-                                                                </div>
-                                                                <Download size={10} className="text-indigo-400/60 group-hover:text-indigo-300 shrink-0 transition" />
-                                                            </a>
-                                                        ))}
-                                                    </div>
-                                                )}
-                                            </div>
+                            <p className="text-white/35 text-[10px] uppercase tracking-widest font-semibold mb-3">Contact & Profile</p>
+                            <div className="space-y-2.5">
+                                {[
+                                    { Icon: Mail, val: candidate.email, label: "Email" },
+                                    { Icon: Phone, val: candidate.phone || "—", label: "Phone" },
+                                    { Icon: MapPin, val: candidate.location || "—", label: "Location" },
+                                    { Icon: Linkedin, val: candidate.linkedin || "—", label: "LinkedIn" },
+                                    { Icon: Github, val: candidate.github || "—", label: "GitHub" },
+                                ].map(({ Icon, val, label }) => (
+                                    <div key={label} className="flex items-center gap-3">
+                                        <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+                                            style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
+                                            <Icon size={13} className="text-indigo-400" />
+                                        </div>
+                                        <div className="min-w-0">
+                                            <p className="text-white/30 text-[10px]">{label}</p>
+                                            <p className="text-white/80 text-xs truncate">{val}</p>
                                         </div>
                                     </div>
                                 ))}
                             </div>
                         </section>
-                    )}
+
+                        {/* bio */}
+                        {candidate.bio && (
+                            <section>
+                                <p className="text-white/35 text-[10px] uppercase tracking-widest font-semibold mb-2">Bio</p>
+                                <p className="text-white/55 text-xs leading-relaxed">{candidate.bio}</p>
+                            </section>
+                        )}
+
+                        {/* skills */}
+                        {candidate.skills.length > 0 && (
+                            <section>
+                                <p className="text-white/35 text-[10px] uppercase tracking-widest font-semibold mb-2">Skills</p>
+                                <div className="flex flex-wrap gap-1.5">
+                                    {candidate.skills.map((sk) => (
+                                        <span key={sk} className="px-2.5 py-1 rounded-lg text-[11px] font-medium border"
+                                            style={{ background: "rgba(99,102,241,0.1)", borderColor: "rgba(99,102,241,0.25)", color: "#a5b4fc" }}>
+                                            {sk}
+                                        </span>
+                                    ))}
+                                </div>
+                            </section>
+                        )}
+
+                        {/* education */}
+                        {candidate.education.length > 0 && (
+                            <section>
+                                <p className="text-white/35 text-[10px] uppercase tracking-widest font-semibold mb-3">Education</p>
+                                <div className="space-y-3">
+                                    {candidate.education.map((ed, i) => (
+                                        <div key={ed._id ?? i} className="rounded-xl p-4 border border-white/6"
+                                            style={{ background: "rgba(255,255,255,0.02)" }}>
+                                            <div className="flex items-start gap-3">
+                                                <GraduationCap size={16} className="text-purple-400 shrink-0 mt-0.5" />
+                                                <div className="flex-1 min-w-0">
+                                                    {/* degree + current badge */}
+                                                    <div className="flex items-center gap-2 flex-wrap">
+                                                        <p className="text-white font-semibold text-xs">{ed.degree}</p>
+                                                        {ed.current && (
+                                                            <span className="px-1.5 py-0.5 rounded-full text-[9px] font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                                                                Current
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    {/* institution */}
+                                                    <p className="text-white/55 text-[11px] mt-0.5">{ed.institution}</p>
+                                                    {/* university + year row */}
+                                                    <div className="flex items-center gap-3 mt-1.5 flex-wrap">
+                                                        {ed.university && (
+                                                            <div className="flex items-center gap-1 text-white/35 text-[10px]">
+                                                                <BookOpen size={10} className="text-indigo-400" />
+                                                                <span>{ed.university}</span>
+                                                            </div>
+                                                        )}
+                                                        {ed.year && (
+                                                            <div className="flex items-center gap-1 text-white/35 text-[10px]">
+                                                                <Calendar size={10} className="text-indigo-400" />
+                                                                <span>{ed.year}</span>
+                                                            </div>
+                                                        )}
+                                                        {ed.cgpa && (
+                                                            <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md"
+                                                                style={{ background: "rgba(99,102,241,0.12)", color: "#a5b4fc" }}>
+                                                                CGPA {ed.cgpa}
+                                                            </span>
+                                                        )}
+                                                    </div>
+
+                                                    {/* attached docs */}
+                                                    {ed.docs?.length > 0 && (
+                                                        <div className="mt-3 space-y-1.5">
+                                                            {ed.docs.map((doc, j) => (
+                                                                <a
+                                                                    key={doc._id ?? j}
+                                                                    href={`http://localhost:4000${doc.path}`}
+                                                                    download={doc.name}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    className="flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg border border-white/6 hover:border-indigo-500/30 hover:bg-indigo-500/5 transition group"
+                                                                >
+                                                                    <div className="flex items-center gap-2 min-w-0">
+                                                                        <FileText size={11} className="text-indigo-400 shrink-0" />
+                                                                        <span className="text-white/60 text-[10px] truncate">{doc.name}</span>
+                                                                        {doc.size && (
+                                                                            <span className="text-white/25 text-[9px] shrink-0">{doc.size}</span>
+                                                                        )}
+                                                                    </div>
+                                                                    <Download size={10} className="text-indigo-400/60 group-hover:text-indigo-300 shrink-0 transition" />
+                                                                </a>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </section>
+                        )}
 
                         {/* documents */}
                         {(
@@ -622,37 +621,37 @@ const CandidateDrawer = ({
                                 </section>
                             )}
 
-                    {/* security */}
-                    <section>
-                        <p className="text-white/35 text-[10px] uppercase tracking-widest font-semibold mb-3">Security & Account</p>
-                        <div className="grid grid-cols-2 gap-2">
-                            {[
-                                { label: "Email Verified", val: candidate.isVerified, TrueIcon: ShieldCheck, FalseIcon: ShieldOff, trueColor: "#4ade80", falseColor: "#f87171" },
-                                { label: "2FA Enabled",    val: candidate.twoFactorEnabled, TrueIcon: Shield, FalseIcon: ShieldOff, trueColor: "#818cf8", falseColor: "#f87171" },
-                            ].map(({ label, val, TrueIcon, FalseIcon, trueColor, falseColor }) => {
-                                const Icon = val ? TrueIcon : FalseIcon;
-                                const color = val ? trueColor : falseColor;
-                                return (
-                                    <div key={label} className="rounded-xl p-3 border border-white/6 flex items-center gap-2"
-                                        style={{ background: "rgba(255,255,255,0.02)" }}>
-                                        <Icon size={14} style={{ color }} />
-                                        <div>
-                                            <p className="text-white/35 text-[10px]">{label}</p>
-                                            <p className="text-xs font-semibold" style={{ color }}>{val ? "Yes" : "No"}</p>
+                        {/* security */}
+                        <section>
+                            <p className="text-white/35 text-[10px] uppercase tracking-widest font-semibold mb-3">Security & Account</p>
+                            <div className="grid grid-cols-2 gap-2">
+                                {[
+                                    { label: "Email Verified", val: candidate.isVerified, TrueIcon: ShieldCheck, FalseIcon: ShieldOff, trueColor: "#4ade80", falseColor: "#f87171" },
+                                    { label: "2FA Enabled", val: candidate.twoFactorEnabled, TrueIcon: Shield, FalseIcon: ShieldOff, trueColor: "#818cf8", falseColor: "#f87171" },
+                                ].map(({ label, val, TrueIcon, FalseIcon, trueColor, falseColor }) => {
+                                    const Icon = val ? TrueIcon : FalseIcon;
+                                    const color = val ? trueColor : falseColor;
+                                    return (
+                                        <div key={label} className="rounded-xl p-3 border border-white/6 flex items-center gap-2"
+                                            style={{ background: "rgba(255,255,255,0.02)" }}>
+                                            <Icon size={14} style={{ color }} />
+                                            <div>
+                                                <p className="text-white/35 text-[10px]">{label}</p>
+                                                <p className="text-xs font-semibold" style={{ color }}>{val ? "Yes" : "No"}</p>
+                                            </div>
                                         </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                        <div className="mt-2 flex items-center gap-2 rounded-xl p-3 border border-white/6"
-                            style={{ background: "rgba(255,255,255,0.02)" }}>
-                            <Calendar size={13} className="text-white/30" />
-                            <p className="text-white/40 text-[11px]">Registered on <span className="text-white/60">{fmt(candidate.createdAt)}</span></p>
-                        </div>
-                    </section>
+                                    );
+                                })}
+                            </div>
+                            <div className="mt-2 flex items-center gap-2 rounded-xl p-3 border border-white/6"
+                                style={{ background: "rgba(255,255,255,0.02)" }}>
+                                <Calendar size={13} className="text-white/30" />
+                                <p className="text-white/40 text-[11px]">Registered on <span className="text-white/60">{fmt(candidate.createdAt)}</span></p>
+                            </div>
+                        </section>
 
 
-                </div>
+                    </div>
 
                     {/* drawer footer actions */}
 
@@ -728,7 +727,7 @@ const CandidateDrawer = ({
                         </button>
 
                     </div>
-            </motion.aside>
+                </motion.aside>
                 <AnimatePresence>
 
                     {showShortlistModal &&
@@ -896,120 +895,53 @@ const CandidateDrawer = ({
                                                     lineHeight: "1.7",
                                                 }}
                                             />
-                                        <button
-                                            onClick={async () => {
-
-                                                try {
-
-                                                    setAiGenerating(true);
-
-                                                    const response = await axios.post(
-                                                        "https://integrate.api.nvidia.com/v1/chat/completions",
-                                                        {
-                                                            model: "meta/llama-3.1-8b-instruct",
-
-                                                            messages: [
-                                                                {
-                                                                    role: "system",
-                                                                    content:
-                                                                        "You are a professional HR email assistant. Return ONLY valid JSON.",
-                                                                },
-
-                                                                {
-                                                                    role: "user",
-                                                                    content: `
-                                                                    Generate a professional shortlist email.
-
-                                                                    Candidate Name:
-                                                                    ${selectedCandidate.firstName} ${selectedCandidate.lastName}
-
-                                                                    Position:
-                                                                    ${candidate.drive || "Software Engineer"}
-
-                                                                    Company:
-                                                                    CodeArena
-
-                                                                    Return response ONLY in JSON format:
-
-                                                                    {
-                                                                    "subject": "",
-                                                                    "body": ""
-                                                                    }
-                                                                                                `,
-                                                                },
-                                                            ],
-
-                                                            temperature: 0.5,
-                                                            top_p: 0.8,
-                                                            max_tokens: 1024,
-                                                            stream: false,
-
-                                                            chat_template_kwargs: {
-                                                                enable_thinking: false,
-                                                            },
-                                                        },
-
-                                                        {
-                                                            headers: {
-                                                                Authorization: `Bearer ${import.meta.env.VITE_NVIDIA_API_KEY}`,
-                                                                "Content-Type": "application/json",
-                                                            },
-                                                        }
-                                                    );
-
-                                                    const raw =
-                                                        response.data?.choices?.[0]?.message?.content || "{}";
-
-                                                    let cleaned = raw
-                                                        .replace(/```json/g, "")
-                                                        .replace(/```/g, "")
-                                                        .trim();
-
-                                                    console.log(cleaned);
-
-                                                    const data = JSON.parse(cleaned);
+                                            <button
+                                                onClick={() => {
 
                                                     setMailData({
-                                                        subject: data.subject || "",
-                                                        body: data.body || "",
+
+                                                        subject:
+                                                            `Congratulations ${selectedCandidate.firstName} - You Have Been Shortlisted`,
+
+                                                        body:
+                                                            `Hello ${selectedCandidate.firstName},
+
+                                                        Congratulations!
+
+                                                        We are pleased to inform you that you have been shortlisted for the next stage of the recruitment process at CodeArena.
+
+                                                        Our recruitment team will contact you shortly with the next steps and interview details.
+
+                                                        We appreciate your interest in joining CodeArena and look forward to speaking with you soon.
+
+                                                        Best Regards,
+                                                        CodeArena Recruitment Team`
                                                     });
-
-                                                } catch (error) {
-
-                                                    console.log(error);
-
-                                                } finally {
-
-                                                    setAiGenerating(false);
-                                                }
-                                            }}
-                                            disabled={aiGenerating}
-                                            className="w-full mt-3 flex items-center justify-center gap-2 py-3 rounded-2xl text-sm font-semibold border border-indigo-500/20 text-indigo-200 hover:bg-indigo-500/10 transition disabled:opacity-50"
-                                            style={{
-                                                background:
-                                                    "rgba(99,102,241,0.08)",
-                                            }}
-                                        >
-                                            <svg
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                width="16"
-                                                height="16"
-                                                fill="none"
-                                                viewBox="0 0 24 24"
-                                                stroke="currentColor"
-                                                strokeWidth="2"
+                                                }}
+                                                className="w-full mt-3 flex items-center justify-center gap-2 py-3 rounded-2xl text-sm font-semibold border border-indigo-500/20 text-indigo-200 hover:bg-indigo-500/10 transition"
+                                                style={{
+                                                    background:
+                                                        "rgba(99,102,241,0.08)",
+                                                }}
                                             >
-                                                <path
-                                                    strokeLinecap="round"
-                                                    strokeLinejoin="round"
-                                                    d="M12 3l1.912 5.813L20 11l-6.088 2.187L12 19l-1.912-5.813L4 11l6.088-2.187L12 3z"
-                                                />
-                                            </svg>
+                                                <svg
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    width="16"
+                                                    height="16"
+                                                    fill="none"
+                                                    viewBox="0 0 24 24"
+                                                    stroke="currentColor"
+                                                    strokeWidth="2"
+                                                >
+                                                    <path
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                        d="M12 3l1.912 5.813L20 11l-6.088 2.187L12 19l-1.912-5.813L4 11l6.088-2.187L12 3z"
+                                                    />
+                                                </svg>
 
-                                            {aiGenerating
-                                                ? "Generating..."
-                                                : "Auto AI Fill - Generate Email"}
-                                        </button>
+                                                Auto Fill Email
+                                            </button>
                                         </div>
                                     </div>
 
@@ -1026,49 +958,53 @@ const CandidateDrawer = ({
                                             Cancel
                                         </button>
 
-                                        <button
-                                            onClick={async () => {
+                                    <button
+                                        onClick={async () => {
 
-                                                try {
+                                            try {
 
-                                                    setSendingMail(true);
+                                                setSendingMail(true);
 
-                                                    await axios.post(
-                                                        "http://localhost:4000/api/mail/shortlist",
-                                                        {
-                                                            email:
-                                                                selectedCandidate.email,
+                                                const res = await axios.post(
+                                                    "http://localhost:4000/api/mail/shortlist",
+                                                    {
+                                                        email: selectedCandidate.email,
+                                                        subject: mailData.subject,
+                                                        body: mailData.body,
+                                                    }
+                                                );
 
-                                                            subject:
-                                                                mailData.subject,
+                                                toast.success(
+                                                    `Mail sent to ${selectedCandidate.firstName}`
+                                                );
 
-                                                            body:
-                                                                mailData.body,
-                                                        }
-                                                    );
+                                                setShowShortlistModal(false);
 
-                                                    setShowShortlistModal(false);
+                                            } catch (error) {
 
-                                                } catch (error) {
+                                                console.log(error);
 
-                                                    console.log(error);
+                                                toast.error(
+                                                    error?.response?.data?.message ||
+                                                    "Failed to send mail"
+                                                );
 
-                                                } finally {
+                                            } finally {
 
-                                                    setSendingMail(false);
-                                                }
-                                            }}
-                                            disabled={sendingMail}
-                                            className="px-6 py-2.5 rounded-2xl text-sm font-semibold text-white disabled:opacity-50 transition"
-                                            style={{
-                                                background:
-                                                    "linear-gradient(135deg,#6366f1,#8b5cf6)",
-                                            }}
-                                        >
-                                            {sendingMail
-                                                ? "Sending..."
-                                                : "Send Mail"}
-                                        </button>
+                                                setSendingMail(false);
+                                            }
+                                        }}
+                                        disabled={sendingMail}
+                                        className="px-6 py-2.5 rounded-2xl text-sm font-semibold text-white disabled:opacity-50 transition"
+                                        style={{
+                                            background:
+                                                "linear-gradient(135deg,#6366f1,#8b5cf6)",
+                                        }}
+                                    >
+                                        {sendingMail
+                                            ? "Sending..."
+                                            : "Send Mail"}
+                                    </button>
 
                                     </div>
 
@@ -1077,7 +1013,7 @@ const CandidateDrawer = ({
                         )}
 
                 </AnimatePresence>
-        </AnimatePresence>
+            </AnimatePresence>
         </>
     );
 };
@@ -1121,27 +1057,27 @@ const CandidatesPage = () => {
     useEffect(() => {
 
         const fetchCandidates = async () => {
-    
+
             try {
-    
+
                 const res = await axios.get(
                     "http://localhost:4000/api/candidates"
                 );
-    
+
                 setCandidates(res.data.candidates);
-    
+
             } catch (error) {
-    
+
                 console.log(error);
-    
+
             } finally {
-    
+
                 setLoading(false);
             }
         };
-    
+
         fetchCandidates();
-    
+
     }, []);
 
     const filtered = candidates
@@ -1154,55 +1090,55 @@ const CandidatesPage = () => {
         })
         .sort((a, b) => {
             if (sortBy === "score") return b.avgScore - a.avgScore;
-            if (sortBy === "date")  return new Date(b.createdAt) - new Date(a.createdAt);
+            if (sortBy === "date") return new Date(b.createdAt) - new Date(a.createdAt);
             return `${a.firstName}${a.lastName}`.localeCompare(`${b.firstName}${b.lastName}`);
         });
 
-    const totalActive    = candidates.filter(c => c.status === "Active").length;
+    const totalActive = candidates.filter(c => c.status === "Active").length;
     const totalCompleted = candidates.filter(c => c.status === "Completed").length;
     const avgScore =
-    candidates.length > 0
-        ? Math.round(
-              candidates.reduce((s, c) => s + c.avgScore, 0) /
-              candidates.length
-          )
-        : 0;
+        candidates.length > 0
+            ? Math.round(
+                candidates.reduce((s, c) => s + c.avgScore, 0) /
+                candidates.length
+            )
+            : 0;
 
-        const deleteCandidate = async () => {
+    const deleteCandidate = async () => {
 
-            if (!deleteCandidateData) return;
-        
-            try {
-        
-                setDeleteLoading(true);
-        
-                await axios.delete(
-                    `http://localhost:4000/api/candidates/${deleteCandidateData._id}`
-                );
-        
-                setCandidates((prev) =>
-                    prev.filter(
-                        (c) =>
-                            c._id !==
-                            deleteCandidateData._id
-                    )
-                );
-        
-                setShowDeleteModal(false);
-        
-                setDeleteCandidateData(null);
-        
-                setSelected(null);
-        
-            } catch (error) {
-        
-                console.log(error);
-        
-            } finally {
-        
-                setDeleteLoading(false);
-            }
-        };
+        if (!deleteCandidateData) return;
+
+        try {
+
+            setDeleteLoading(true);
+
+            await axios.delete(
+                `http://localhost:4000/api/candidates/${deleteCandidateData._id}`
+            );
+
+            setCandidates((prev) =>
+                prev.filter(
+                    (c) =>
+                        c._id !==
+                        deleteCandidateData._id
+                )
+            );
+
+            setShowDeleteModal(false);
+
+            setDeleteCandidateData(null);
+
+            setSelected(null);
+
+        } catch (error) {
+
+            console.log(error);
+
+        } finally {
+
+            setDeleteLoading(false);
+        }
+    };
 
     const exportCSV = () => {
 
@@ -1219,7 +1155,7 @@ const CandidatesPage = () => {
             "Verified",
             "Registered Date",
         ];
-    
+
         const rows = filtered.map((c) => [
             `${c.firstName} ${c.lastName}`,
             c.email,
@@ -1233,39 +1169,91 @@ const CandidatesPage = () => {
             c.isVerified ? "Yes" : "No",
             fmt(c.createdAt),
         ]);
-    
+
         const csvContent = [
             headers.join(","),
             ...rows.map((row) =>
                 row.map((field) => `"${field}"`).join(",")
             ),
         ].join("\n");
-    
+
         const blob = new Blob(
             [csvContent],
             { type: "text/csv;charset=utf-8;" }
         );
-    
+
         const url = URL.createObjectURL(blob);
-    
+
         const link = document.createElement("a");
-    
+
         link.href = url;
-    
+
         link.setAttribute(
             "download",
             `candidates_${Date.now()}.csv`
         );
-    
+
         document.body.appendChild(link);
-    
+
         link.click();
-    
+
         document.body.removeChild(link);
     };
 
     return (
         <>
+            <Toaster
+                position="top-center"
+                reverseOrder={false}
+                gutter={12}
+                toastOptions={{
+
+                    duration: 3500,
+
+                    style: {
+                        background:
+                            "rgba(15,23,42,0.96)",
+                        color: "#fff",
+                        border:
+                            "1px solid rgba(99,102,241,0.22)",
+                        borderRadius: "18px",
+                        padding: "16px 20px",
+                        fontSize: "14px",
+                        fontWeight: "600",
+                        backdropFilter: "blur(14px)",
+                        boxShadow:
+                            "0 20px 60px rgba(0,0,0,0.45)",
+                    },
+
+                    success: {
+                        iconTheme: {
+                            primary: "#8b5cf6",
+                            secondary: "#ffffff",
+                        },
+
+                        style: {
+                            border:
+                                "1px solid rgba(139,92,246,0.28)",
+                            background:
+                                "linear-gradient(135deg, rgba(17,24,39,0.98), rgba(30,27,75,0.98))",
+                        },
+                    },
+
+                    error: {
+                        iconTheme: {
+                            primary: "#ef4444",
+                            secondary: "#ffffff",
+                        },
+
+                        style: {
+                            border:
+                                "1px solid rgba(239,68,68,0.25)",
+                            background:
+                                "linear-gradient(135deg, rgba(17,24,39,0.98), rgba(69,10,10,0.98))",
+                        },
+                    },
+                }}
+            />
             <div className="w-full flex flex-col space-y-3 ">
 
                 {/* page header */}
@@ -1333,8 +1321,8 @@ const CandidatesPage = () => {
                         {statuses.map((s) => (
                             <button key={s} onClick={() => setFilterStatus(s)}
                                 className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold transition border ${filterStatus === s
-                                        ? "bg-indigo-500/20 text-indigo-300 border-indigo-500/30"
-                                        : "text-white/35 border-white/6 hover:bg-white/4 hover:text-white/60"
+                                    ? "bg-indigo-500/20 text-indigo-300 border-indigo-500/30"
+                                    : "text-white/35 border-white/6 hover:bg-white/4 hover:text-white/60"
                                     }`}>
                                 {s}
                             </button>
@@ -1678,10 +1666,10 @@ const CandidatesPage = () => {
                         setDeleteCandidateData
                     }
                 />
-                
+
             </div>
         </>
-        
+
     );
 };
 

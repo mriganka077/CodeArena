@@ -15,6 +15,7 @@ import CandidatesPage from "../../components/admin/sidebar/Candidatespage";
 import AdminDrive from "../../components/admin/sidebar/AdminDrive";
 import AdminAssessments from "../../components/admin/sidebar/AdminAssessments";
 import AdminInterview from "../../components/admin/sidebar/AdminInterview";
+import AdminDomain from "../../components/admin/sidebar/AdminDomain";
 
 
 const AdminDashboard2 = () => {
@@ -101,6 +102,10 @@ const AdminDashboard2 = () => {
 
                         {activeTab === "interviews" && (
                             <AdminInterview />
+                        )}
+
+                        {activeTab === "domains" && (
+                            <AdminDomain />
                         )}
 
                     </main>

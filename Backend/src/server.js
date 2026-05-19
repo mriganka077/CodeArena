@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 import session from "express-session";
 import passport from "passport";
 import rateLimit from "express-rate-limit";
-
+import mailRoutes from "./routes/mail.js";
 
 import connectDB from "./lib/db.js";
 
@@ -28,6 +28,8 @@ import candidateRoutes from "./routes/candidate.js";
 import driveRoutes from "./routes/drive.js";
 
 import aiPromptRoutes from "./routes/aiPrompt.js";
+
+import domainRoutes from "./routes/domain.js";
 
 dotenv.config();
 
@@ -188,6 +190,14 @@ app.use(
   "/api/ai",
   aiPromptRoutes
 );
+
+app.use(
+  "/api/mail", 
+  mailRoutes);
+
+  app.use(
+    "/api/domains", 
+    domainRoutes);
 
 // ============================
 // HEALTH CHECK

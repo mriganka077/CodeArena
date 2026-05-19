@@ -7,7 +7,7 @@ import {
     Trophy,
     ClipboardList,
     MonitorPlay,
-    BarChart3,
+    Layers3,
     Settings,
     LogOut,
 } from "lucide-react";
@@ -44,9 +44,9 @@ const navItems = [
         label: "Results",
     },
     {
-        id: "analytics",
-        Icon: BarChart3,
-        label: "Analytics",
+        id: "domains",
+        Icon: Layers3,
+        label: "Domains",
     },
     {
         id: "settings",
