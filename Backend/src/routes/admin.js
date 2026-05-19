@@ -6,6 +6,8 @@ import InterviewResult from "../models/InterviewResult.js";
 import Domain from "../models/Domain.js";
 import { adminLogin, adminVerifyOtp } from "../controllers/adminAuth.js";
 import { adminProtect } from "../middleware/adminProtect.js";
+import Admin from "../models/Admin.js";
+import upload from "../middleware/upload.js";
 
 const router = express.Router();
 
@@ -230,8 +232,159 @@ router.post("/login",      adminLogin);
 router.post("/verify-otp", adminVerifyOtp);
 
 // Example protected admin route
-router.get("/me", adminProtect, (req, res) => {
-  res.json({ success: true, admin: req.admin });
+router.get("/me", adminProtect, async (req, res) => {
+
+  try {
+    const admin = await Admin.findById(req.admin.id)
+    .select("-password");
+
+    if (!admin) {
+      return res.status(404).json({
+        success: false,
+        message: "Admin not found",
+      });
+    }
+
+    res.json({
+      success: true,
+      admin,
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch admin",
+    });
+  }
+});
+
+router.put(
+  "/upload-photo",
+  adminProtect,
+  upload.single("photo"),
+  async (req, res) => {
+    try {
+
+      const admin = await Admin.findById(req.admin.id);
+
+      if (!admin) {
+        return res.status(404).json({
+          success: false,
+          message: "Admin not found",
+        });
+      }
+
+      admin.photo = req.file
+        ? `/uploads/admin/${req.file.filename}`
+        : admin.photo;
+
+      await admin.save();
+
+      res.json({
+        success: true,
+        photo: admin.photo,
+      });
+
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: "Photo upload failed",
+      });
+    }
+  }
+);
+
+router.put("/update-profile", adminProtect, async (req, res) => {
+  try {
+
+    const {
+      firstName,
+      lastName,
+      phone,
+      phoneCountry,
+    } = req.body;
+
+    const admin = await Admin.findById(req.admin.id);
+
+    if (!admin) {
+      return res.status(404).json({
+        success: false,
+        message: "Admin not found",
+      });
+    }
+
+    admin.name = `${firstName} ${lastName}`.trim();
+
+    admin.phone = phone || "";
+
+    admin.phoneCountry = phoneCountry || "+91";
+
+    await admin.save();
+
+    res.json({
+      success: true,
+      admin,
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to update profile",
+    });
+  }
+});
+
+router.put("/change-password", adminProtect, async (req, res) => {
+  try {
+
+    const {
+      currentPassword,
+      newPassword,
+    } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "All fields are required",
+      });
+    }
+
+    const admin = await Admin.findById(req.admin.id);
+
+    if (!admin) {
+      return res.status(404).json({
+        success: false,
+        message: "Admin not found",
+      });
+    }
+
+    const isMatch = await admin.comparePassword(currentPassword);
+
+    if (!isMatch) {
+      return res.status(400).json({
+        success: false,
+        message: "Current password is incorrect",
+      });
+    }
+
+    admin.password = newPassword;
+
+    await admin.save();
+
+    res.json({
+      success: true,
+      message: "Password updated successfully",
+    });
+
+  } catch (error) {
+
+    console.error(error);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to change password",
+    });
+  }
 });
 
 export default router;

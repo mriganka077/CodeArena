@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const API_URL = "http://localhost:4000/api";
 
@@ -105,6 +106,7 @@ export default function AdminLoginPage() {
   const [error, setError]       = useState("");
   const [success, setSuccess]   = useState("");
   const [loading, setLoading]   = useState(false);
+  const navigate = useNavigate();
 
   // ── Step 1: Submit email + password ──
   const handleCredentials = async () => {
@@ -140,8 +142,9 @@ export default function AdminLoginPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
       localStorage.setItem("adminToken", data.token);
-      localStorage.setItem("adminUser",  JSON.stringify(data.admin));
-      window.location.href = "/admindashboard";
+      localStorage.setItem("adminUser", JSON.stringify(data.admin));
+      
+      window.location.href = "/admindash";
     } catch (err) {
       setError(err.message);
       setOtp("");

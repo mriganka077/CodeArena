@@ -31,6 +31,8 @@ import aiPromptRoutes from "./routes/aiPrompt.js";
 
 import domainRoutes from "./routes/domain.js";
 
+import path from "path";
+
 import mockInterviewRouter from "./routes/mockInterview.js";
 
 dotenv.config();
@@ -200,6 +202,10 @@ app.use(
 app.use(
   "/api/domains", 
   domainRoutes);
+
+    app.use(
+      "/uploads", 
+      express.static("uploads"));
 
 app.use("/api/mockinterview", mockInterviewRouter);
 

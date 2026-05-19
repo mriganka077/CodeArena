@@ -1,4 +1,4 @@
-import React from "react";
+import { useEffect, useState } from "react";
 
 import {
     Clock,
@@ -35,6 +35,50 @@ const headerNav = [
 ];
 
 const Header = ({ now }) => {
+
+    const [admin, setAdmin] = useState(null);
+
+    const initials = admin?.name
+        ? admin.name
+            .split(" ")
+            .map((n) => n[0])
+            .join("")
+            .toUpperCase()
+        : "A";
+
+    useEffect(() => {
+
+        const fetchAdmin = async () => {
+
+            try {
+
+                const token = localStorage.getItem("adminToken");
+
+                if (!token) return;
+
+                const res = await fetch(
+                    "http://localhost:4000/api/admin/me",
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                    }
+                );
+
+                const data = await res.json();
+
+                if (data.success) {
+                    setAdmin(data.admin);
+                }
+
+            } catch (error) {
+                console.error(error);
+            }
+        };
+
+        fetchAdmin();
+
+    }, []);
     const fmt = (d) =>
         d.toLocaleDateString("en-US", {
             weekday: "short",
@@ -90,13 +134,21 @@ const Header = ({ now }) => {
 
                 {/* avatar */}
                 <div
-                    className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white"
+                    className="w-8 h-8 rounded-full overflow-hidden border border-white/10 flex items-center justify-center text-xs font-bold text-white"
                     style={{
                         background:
                             "linear-gradient(135deg,#6366f1,#8b5cf6,#a855f7)",
                     }}
                 >
-                    AH
+                    {admin?.photo ? (
+                        <img
+                            src={`http://localhost:4000${admin.photo}`}
+                            alt="admin"
+                            className="w-full h-full object-cover"
+                        />
+                    ) : (
+                        initials
+                    )}
                 </div>
             </div>
         </header>
