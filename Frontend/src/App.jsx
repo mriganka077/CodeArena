@@ -25,11 +25,11 @@ import Interview from "./pages/InterView/Interview.jsx";
 import AdminDashboard2 from "./pages/Admin/AdminDashboard2.jsx";
 // import CandidatesPage from "./components/admin/sidebar/Candidatespage.jsx";
 import AdminLoginPage from "./pages/Admin/AdminLoginPage.jsx";
-import AdminDash from "./pages/AdminDash";
 // import AdminDrive from "./components/admin/sidebar/AdminDrive.jsx";
 import UserProfileForm from "./pages/Registration/UserProfileForm.jsx";
 import AdminAssessments from "./components/admin/sidebar/AdminAssessments.jsx";
 import AdminInterview from "./components/admin/sidebar/AdminInterview.jsx";
+import InterviewComplete from "./pages/InterView/InterviewComplete.jsx";
 
 
 function App() {
@@ -54,23 +54,33 @@ function App() {
       <Route path="/assessment" element={<Assessment />} />
       <Route path="/domainselector" element={<DomainSelectorPage />} />
       <Route path="/dash" element={<Dash />} />
-      {/* <Route path="/profile" element={<ProfileDashboard />} /> */}
       <Route path="/login" element={<AuthPage />} />
       <Route path="/forgot" element={<ForgotPassword />} />
       <Route path="/feedback" element={<FeedbackPanel />} />
 
       <Route path="/admin" element={<AdminDashboard />} />
-      <Route path="/adminlogin" element={<AdminLoginPage />} />
-      <Route path="/admindashboard" element={<AdminDash />} />
+      <Route
+        path="/adminlogin"
+        element={
+          localStorage.getItem("adminToken")
+            ? <Navigate to="/admindash" replace />
+            : <AdminLoginPage />
+        }
+      />
 
-      <Route path="/admindash" element={<AdminDashboard2 />} />
+      <Route
+        path="/admindash"
+        element={
+          localStorage.getItem("adminToken")
+            ? <AdminDashboard2 />
+            : <Navigate to="/adminlogin" replace />
+        }
+      />
       <Route path="/admin/assessments" element={<AdminAssessments />} />
       <Route path="/admin/interview" element={<AdminInterview />} />
-      {/* <Route path="/candidate" element={<CandidatesPage />} /> */}
-      {/* <Route path="/admindrive" element={<AdminDrive />} /> */}
-      {/* <Route path="/admindrive" element={<AdminDrive />} /> */}
 
       <Route path="/interview" element={<Interview/>} />
+      <Route path="/interviewdone" element={<InterviewComplete/>} />
       <Route path="/registration" element={<UserProfileForm />} />
 
       {/* Protected routes */}
@@ -105,7 +115,13 @@ function App() {
       {/* Default redirect */}
       <Route
         path="*"
-        element={<Navigate to={isLoggedIn ? "/dashboard" : "/login"} replace />}
+        element={
+          localStorage.getItem("adminToken")
+            ? <Navigate to="/admindash" replace />
+            : isLoggedIn
+              ? <Navigate to="/dashboard" replace />
+              : <Navigate to="/login" replace />
+        }
       />
 
     </Routes>

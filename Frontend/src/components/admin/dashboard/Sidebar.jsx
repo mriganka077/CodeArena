@@ -93,7 +93,16 @@ const Sidebar = ({
             )}
 
             <div className="mt-auto pt-4 border-t border-white/5">
-                <button className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-white/35 hover:text-white/70 hover:bg-white/5 transition-all w-full text-left text-[13px]">
+                <button
+                    onClick={() => {
+
+                        localStorage.removeItem("adminToken");
+                        localStorage.removeItem("adminUser");
+
+                        window.location.href = "/adminlogin";
+                    }}
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-white/35 hover:text-red-300 hover:bg-red-500/10 transition-all w-full text-left text-[13px]"
+                >
                     <LogOut size={15} />
                     Logout
                 </button>

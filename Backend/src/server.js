@@ -31,6 +31,8 @@ import aiPromptRoutes from "./routes/aiPrompt.js";
 
 import domainRoutes from "./routes/domain.js";
 
+import path from "path";
+
 dotenv.config();
 
 initGoogleStrategy();
@@ -198,6 +200,10 @@ app.use(
   app.use(
     "/api/domains", 
     domainRoutes);
+
+    app.use(
+      "/uploads", 
+      express.static("uploads"));
 
 // ============================
 // HEALTH CHECK
