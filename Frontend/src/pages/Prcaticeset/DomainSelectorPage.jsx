@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import SoftBackdropNew from "../../components/SoftBackdropNew";
 import LenisScroll from "../../components/lenis";
 import Header from "../../components/Header";
@@ -14,8 +14,9 @@ import {
 } from "lucide-react";
 
 const API_URL = "http://localhost:4000/api/admin";
+const USER_API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
-// ─── Glass styles (unchanged from original) ───────────────────────────────────
+// ─── Glass styles ─────────────────────────────────────────────────────────────
 const glass = {
   section: {
     background: "rgba(255, 255, 255, 0.03)",
@@ -63,8 +64,7 @@ const DIFFICULTIES = [
     id: "medium",
     label: "Medium",
     icon: <Circle size={18} fill="#F59E0B" stroke="#F59E0B" />,
-    description:
-      "Applied knowledge, common interview patterns & trade-offs",
+    description: "Applied knowledge, common interview patterns & trade-offs",
     color: "#F59E0B",
     glow: "rgba(245,158,11,0.25)",
     bg: "rgba(245,158,11,0.08)",
@@ -74,8 +74,7 @@ const DIFFICULTIES = [
     id: "hard",
     label: "Hard",
     icon: <Circle size={18} fill="#EF4444" stroke="#EF4444" />,
-    description:
-      "Advanced topics, edge cases & system-design level depth",
+    description: "Advanced topics, edge cases & system-design level depth",
     color: "#EF4444",
     glow: "rgba(239,68,68,0.25)",
     bg: "rgba(239,68,68,0.08)",
@@ -84,19 +83,34 @@ const DIFFICULTIES = [
 ];
 
 // ─── Difficulty Popup ─────────────────────────────────────────────────────────
-function DifficultyPopup({ domain, category, onClose, onConfirm }) {
+function DifficultyPopup({ domain, category, onClose, onConfirm, mode }) {
   const [selected, setSelected] = useState(null);
   const [hoveredId, setHoveredId] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  // Close on Escape
   useEffect(() => {
     const handler = (e) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [onClose]);
 
+  const handleConfirm = async () => {
+    if (!selected) return;
+    setLoading(true);
+    await onConfirm(selected);
+    setLoading(false);
+  };
+
+  const isInterview = mode === "interview";
+  const accentColor = isInterview ? "#F97316" : "#6C63FF";
+  const accentGradient = isInterview
+    ? "linear-gradient(135deg, #F97316 0%, #EF4444 100%)"
+    : "linear-gradient(135deg, #6C63FF 0%, #9B5CFF 100%)";
+  const accentShadow = isInterview
+    ? "0 8px 24px rgba(249,115,22,0.35)"
+    : "0 8px 24px rgba(108,99,255,0.35)";
+
   return (
-    /* Backdrop */
     <div
       onClick={onClose}
       style={{
@@ -113,10 +127,10 @@ function DifficultyPopup({ domain, category, onClose, onConfirm }) {
         animation: "fadeIn 0.18s ease",
       }}
     >
-      {/* Modal */}
       <div
         onClick={(e) => e.stopPropagation()}
         style={{
+          position: "relative",
           background: "rgba(18, 16, 38, 0.97)",
           border: "1px solid rgba(255,255,255,0.1)",
           borderRadius: "28px",
@@ -145,8 +159,6 @@ function DifficultyPopup({ domain, category, onClose, onConfirm }) {
             alignItems: "center",
             justifyContent: "center",
             cursor: "pointer",
-            fontSize: "16px",
-            lineHeight: 1,
             transition: "all 0.15s",
           }}
           onMouseEnter={(e) => {
@@ -161,65 +173,49 @@ function DifficultyPopup({ domain, category, onClose, onConfirm }) {
           <X size={16} />
         </button>
 
-        {/* Domain info */}
+        {/* Mode badge */}
         <div style={{ marginBottom: "24px" }}>
           <span
             style={{
               display: "inline-block",
-              background: "rgba(108,99,255,0.18)",
-              border: "1px solid rgba(108,99,255,0.3)",
-              color: "#a89eff",
+              background: isInterview
+                ? "rgba(249,115,22,0.15)"
+                : "rgba(108,99,255,0.18)",
+              border: `1px solid ${isInterview ? "rgba(249,115,22,0.3)" : "rgba(108,99,255,0.3)"}`,
+              color: isInterview ? "#fb923c" : "#a89eff",
               borderRadius: "999px",
               padding: "2px 12px",
               fontSize: "10px",
               fontWeight: 700,
               letterSpacing: "0.08em",
               textTransform: "uppercase",
-              marginBottom: "10px",
+              marginBottom: "6px",
             }}
           >
-            {category}
+            {isInterview ? "🎤 Mock Interview" : "📚 Practice Set"} · {category}
           </span>
           <h2
             style={{
               fontSize: "20px",
               fontWeight: 700,
               color: "#f1f5f9",
-              margin: "0 0 6px 0",
+              margin: "8px 0 6px 0",
               lineHeight: 1.3,
             }}
           >
             {domain}
           </h2>
-          <p
-            style={{
-              fontSize: "13px",
-              color: "rgba(255,255,255,0.4)",
-              margin: 0,
-            }}
-          >
-            Choose your difficulty level to begin the practice set.
+          <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.4)", margin: 0 }}>
+            {isInterview
+              ? "Choose difficulty to start your AI mock interview session."
+              : "Choose your difficulty level to begin the practice set."}
           </p>
         </div>
 
-        {/* Divider */}
-        <div
-          style={{
-            height: "1px",
-            background: "rgba(255,255,255,0.06)",
-            marginBottom: "20px",
-          }}
-        />
+        <div style={{ height: "1px", background: "rgba(255,255,255,0.06)", marginBottom: "20px" }} />
 
         {/* Difficulty options */}
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "10px",
-            marginBottom: "24px",
-          }}
-        >
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "24px" }}>
           {DIFFICULTIES.map((diff) => {
             const isSelected = selected === diff.id;
             const isHovered = hoveredId === diff.id;
@@ -246,27 +242,13 @@ function DifficultyPopup({ domain, category, onClose, onConfirm }) {
                   cursor: "pointer",
                   textAlign: "left",
                   transition: "all 0.18s ease",
-                  boxShadow: isSelected
-                    ? `0 0 20px ${diff.glow}`
-                    : "none",
+                  boxShadow: isSelected ? `0 0 20px ${diff.glow}` : "none",
                   outline: "none",
                 }}
               >
-                {/* Icon */}
-                <span
-                  style={{
-                    fontSize: "22px",
-                    lineHeight: 1,
-                    flexShrink: 0,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
+                <span style={{ flexShrink: 0, display: "flex", alignItems: "center" }}>
                   {diff.icon}
                 </span>
-
-                {/* Text */}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div
                     style={{
@@ -279,18 +261,10 @@ function DifficultyPopup({ domain, category, onClose, onConfirm }) {
                   >
                     {diff.label}
                   </div>
-                  <div
-                    style={{
-                      fontSize: "11px",
-                      color: "rgba(255,255,255,0.35)",
-                      lineHeight: 1.4,
-                    }}
-                  >
+                  <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.35)", lineHeight: 1.4 }}>
                     {diff.description}
                   </div>
                 </div>
-
-                {/* Radio indicator */}
                 <div
                   style={{
                     width: "18px",
@@ -325,38 +299,59 @@ function DifficultyPopup({ domain, category, onClose, onConfirm }) {
 
         {/* Start button */}
         <button
-          onClick={() => selected && onConfirm(selected)}
-          disabled={!selected}
+          onClick={handleConfirm}
+          disabled={!selected || loading}
           style={{
             width: "100%",
             padding: "14px",
             borderRadius: "14px",
             border: "none",
-            background: selected
-              ? "linear-gradient(135deg, #6C63FF 0%, #9B5CFF 100%)"
-              : "rgba(255,255,255,0.06)",
-            color: selected ? "#fff" : "rgba(255,255,255,0.25)",
+            background:
+              selected && !loading
+                ? accentGradient
+                : "rgba(255,255,255,0.06)",
+            color: selected && !loading ? "#fff" : "rgba(255,255,255,0.25)",
             fontSize: "15px",
             fontWeight: 700,
-            cursor: selected ? "pointer" : "not-allowed",
+            cursor: selected && !loading ? "pointer" : "not-allowed",
             transition: "all 0.2s ease",
-            boxShadow: selected
-              ? "0 8px 24px rgba(108,99,255,0.35)"
-              : "none",
+            boxShadow: selected && !loading ? accentShadow : "none",
             letterSpacing: "0.02em",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "8px",
           }}
           onMouseEnter={(e) => {
-            if (selected) e.currentTarget.style.transform = "translateY(-1px)";
+            if (selected && !loading)
+              e.currentTarget.style.transform = "translateY(-1px)";
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.transform = "translateY(0)";
           }}
         >
-          {selected
-            ? `Start ${
-                DIFFICULTIES.find((d) => d.id === selected)?.label
-              } Practice →`
-            : "Select a difficulty to continue"}
+          {loading ? (
+            <>
+              <span
+                style={{
+                  width: "14px",
+                  height: "14px",
+                  border: "2px solid rgba(255,255,255,0.3)",
+                  borderTopColor: "#fff",
+                  borderRadius: "50%",
+                  display: "inline-block",
+                  animation: "spin 0.7s linear infinite",
+                }}
+              />
+              Starting…
+            </>
+          ) : selected ? (
+            isInterview
+              ? `Start ${DIFFICULTIES.find((d) => d.id === selected)?.label} Interview →`
+              : `Start ${DIFFICULTIES.find((d) => d.id === selected)?.label} Practice →`
+          ) : (
+            "Select a difficulty to continue"
+          )}
         </button>
       </div>
     </div>
@@ -388,7 +383,6 @@ function DomainCard({ domain, category, active, onClick }) {
         outlineOffset: "2px",
       }}
     >
-      {/* category pill */}
       <span
         style={{
           display: "inline-block",
@@ -405,8 +399,6 @@ function DomainCard({ domain, category, active, onClick }) {
       >
         {category}
       </span>
-
-      {/* title + arrow */}
       <div
         style={{
           marginTop: "12px",
@@ -431,10 +423,7 @@ function DomainCard({ domain, category, active, onClick }) {
         <div
           style={{
             flexShrink: 0,
-            background:
-              hovered || active
-                ? "#6C63FF"
-                : "rgba(108, 99, 255, 0.15)",
+            background: hovered || active ? "#6C63FF" : "rgba(108, 99, 255, 0.15)",
             border: "1px solid rgba(108, 99, 255, 0.3)",
             borderRadius: "10px",
             padding: "6px 10px",
@@ -449,16 +438,7 @@ function DomainCard({ domain, category, active, onClick }) {
           <ArrowRight size={14} />
         </div>
       </div>
-
-      {/* footer */}
-      <div
-        style={{
-          marginTop: "16px",
-          display: "flex",
-          alignItems: "center",
-          gap: "8px",
-        }}
-      >
+      <div style={{ marginTop: "16px", display: "flex", alignItems: "center", gap: "8px" }}>
         <span
           style={{
             width: "7px",
@@ -469,12 +449,7 @@ function DomainCard({ domain, category, active, onClick }) {
             display: "inline-block",
           }}
         />
-        <span
-          style={{
-            fontSize: "11px",
-            color: "rgba(255,255,255,0.35)",
-          }}
-        >
+        <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.35)" }}>
           Open practice set
         </span>
       </div>
@@ -485,15 +460,18 @@ function DomainCard({ domain, category, active, onClick }) {
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function DomainSelectorPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  // "practice" (default) or "interview"
+  const mode = searchParams.get("mode") || "practice";
+  const isInterview = mode === "interview";
+
   const [search, setSearch] = useState("");
   const [groups, setGroups] = useState([]);
   const [loadingDomains, setLoadingDomains] = useState(true);
   const [fetchError, setFetchError] = useState(null);
-
-  // popup state
   const [popup, setPopup] = useState(null); // { domain, category }
 
-  // ── fetch domains from API ──
   useEffect(() => {
     const load = async () => {
       setLoadingDomains(true);
@@ -526,29 +504,55 @@ export default function DomainSelectorPage() {
     return groups
       .map((g) => ({
         ...g,
-        domains: (g.domains || []).filter((d) =>
-          d.toLowerCase().includes(q)
-        ),
+        domains: (g.domains || []).filter((d) => d.toLowerCase().includes(q)),
       }))
       .filter((g) => g.domains.length > 0);
   }, [search, groups]);
 
-  // open popup on card click
-  const handleCardClick = useCallback((domain, category) => {
-    setPopup({ domain, category });
-  }, []);
+  // Replace handleCardClick
+  const handleCardClick = useCallback(async (domain, category) => {
+    if (isInterview) {
+      try {
+        const token = localStorage.getItem("token");
 
-  // confirm difficulty → navigate
+        console.log("Saving to DB:", { domain, category }); // ← check this fires
+        console.log("API URL:", USER_API_URL);               // ← check URL is correct
+        console.log("Token:", token);                        // ← check token exists
+
+        const res = await fetch(`${USER_API_URL}/api/mockinterview`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+          credentials: "include",
+          body: JSON.stringify({
+            domain,
+            category,
+            startedAt: new Date().toISOString(),
+            status: "started",
+          }),
+        });
+
+        const data = await res.json();
+        console.log("DB response:", data); // ← check what backend returns
+
+      } catch (err) {
+        console.error("Failed to save mock interview session:", err);
+      }
+      navigate("/interview", { state: { domain, category } });
+    } else {
+      setPopup({ domain, category });
+    }
+  }, [isInterview, navigate]);
+
+  // Replace handleConfirm (only used for practice now)
   const handleConfirm = useCallback(
-    (difficulty) => {
+    async (difficulty) => {
       if (!popup) return;
+      const { domain } = popup;
       setPopup(null);
-      navigate(`/practiceset`, {
-        state: {
-          domain: popup.domain,
-          difficulty,
-        },
-      });
+      navigate("/practiceset", { state: { domain, difficulty } });
     },
     [popup, navigate]
   );
@@ -560,33 +564,22 @@ export default function DomainSelectorPage() {
       <div className="relative z-50">
         <Header />
       </div>
-      {/* Difficulty popup */}
+
       {popup && (
         <DifficultyPopup
           domain={popup.domain}
           category={popup.category}
           onClose={() => setPopup(null)}
           onConfirm={handleConfirm}
+          mode={mode}
         />
       )}
 
       <div className="relative z-10 min-h-screen text-white bg-transparent">
-        <div
-          style={{
-            maxWidth: "1280px",
-            margin: "0 auto",
-            padding: "32px 24px",
-          }}
-        >
+        <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "32px 24px" }}>
+
           {/* ── HEADER CARD ── */}
-          <div
-            style={{
-              ...glass.headerCard,
-              padding: "32px",
-              marginBottom: "32px",
-            }}
-          >
-            {/* top row */}
+          <div style={{ ...glass.headerCard, padding: "32px", marginBottom: "32px" }}>
             <div
               style={{
                 display: "flex",
@@ -596,21 +589,24 @@ export default function DomainSelectorPage() {
                 gap: "12px",
               }}
             >
+              {/* Mode badge */}
               <div
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
                   gap: "8px",
-                  background: "rgba(108, 99, 255, 0.12)",
-                  border: "1px solid rgba(108, 99, 255, 0.25)",
+                  background: isInterview
+                    ? "rgba(249,115,22,0.12)"
+                    : "rgba(108, 99, 255, 0.12)",
+                  border: `1px solid ${isInterview ? "rgba(249,115,22,0.25)" : "rgba(108, 99, 255, 0.25)"}`,
                   borderRadius: "999px",
                   padding: "6px 16px",
                   fontSize: "13px",
                   color: "rgba(255,255,255,0.85)",
                 }}
               >
-                <Sparkles size={14} color="#a89eff" />
-                Interview Practice Domain Selector
+                <Sparkles size={14} color={isInterview ? "#fb923c" : "#a89eff"} />
+                {isInterview ? "Mock Interview Domain Selector" : "Interview Practice Domain Selector"}
               </div>
 
               <div
@@ -632,11 +628,7 @@ export default function DomainSelectorPage() {
                     height: "7px",
                     borderRadius: "50%",
                     background: loadingDomains ? "#F59E0B" : "#22C55E",
-                    boxShadow: `0 0 6px ${
-                      loadingDomains
-                        ? "rgba(245,158,11,0.5)"
-                        : "rgba(34,197,94,0.5)"
-                    }`,
+                    boxShadow: `0 0 6px ${loadingDomains ? "rgba(245,158,11,0.5)" : "rgba(34,197,94,0.5)"}`,
                     display: "inline-block",
                   }}
                 />
@@ -667,17 +659,17 @@ export default function DomainSelectorPage() {
                     margin: 0,
                   }}
                 >
-                  Choose a domain,{" "}
+                  {isInterview ? "Choose a domain," : "Choose a domain,"}{" "}
                   <span
                     style={{
-                      background:
-                        "linear-gradient(135deg, #a89eff 0%, #6C63FF 100%)",
-                      WebkitBackdropFilter: "text",
+                      background: isInterview
+                        ? "linear-gradient(135deg, #fb923c 0%, #ef4444 100%)"
+                        : "linear-gradient(135deg, #a89eff 0%, #6C63FF 100%)",
                       WebkitTextFillColor: "transparent",
                       backgroundClip: "text",
                     }}
                   >
-                    start practicing.
+                    {isInterview ? "ace your interview." : "start practicing."}
                   </span>
                 </h1>
                 <p
@@ -689,8 +681,9 @@ export default function DomainSelectorPage() {
                     maxWidth: "480px",
                   }}
                 >
-                  Browse every interview topic in one place. Search fast, pick a
-                  domain, and jump straight into a focused practice session.
+                  {isInterview
+                    ? "Select a domain for your AI-powered mock interview. Your session will be saved and tracked."
+                    : "Browse every interview topic in one place. Search fast, pick a domain, and jump straight into a focused practice session."}
                 </p>
               </div>
 
@@ -750,9 +743,12 @@ export default function DomainSelectorPage() {
                       transition: "border-color 0.2s, box-shadow 0.2s",
                     }}
                     onFocus={(e) => {
-                      e.target.style.borderColor = "rgba(108,99,255,0.5)";
-                      e.target.style.boxShadow =
-                        "0 0 0 3px rgba(108,99,255,0.12)";
+                      e.target.style.borderColor = isInterview
+                        ? "rgba(249,115,22,0.5)"
+                        : "rgba(108,99,255,0.5)";
+                      e.target.style.boxShadow = isInterview
+                        ? "0 0 0 3px rgba(249,115,22,0.12)"
+                        : "0 0 0 3px rgba(108,99,255,0.12)";
                     }}
                     onBlur={(e) => {
                       e.target.style.borderColor = "rgba(255,255,255,0.08)";
@@ -764,29 +760,13 @@ export default function DomainSelectorPage() {
             </div>
           </div>
 
-          {/* ── LOADING / ERROR / EMPTY STATES ── */}
+          {/* ── STATES ── */}
           {loadingDomains && (
-            <div
-              style={{
-                ...glass.section,
-                textAlign: "center",
-                padding: "60px 24px",
-                color: "rgba(255,255,255,0.4)",
-              }}
-            >
-              <div
-                style={{
-                  fontSize: "32px",
-                  marginBottom: "12px",
-                  display: "flex",
-                  justifyContent: "center",
-                }}
-              >
+            <div style={{ ...glass.section, textAlign: "center", padding: "60px 24px", color: "rgba(255,255,255,0.4)" }}>
+              <div style={{ fontSize: "32px", marginBottom: "12px", display: "flex", justifyContent: "center" }}>
                 <Hourglass size={32} color="rgba(255,255,255,0.4)" />
               </div>
-              <p style={{ margin: 0, fontSize: "14px" }}>
-                Loading domains from server…
-              </p>
+              <p style={{ margin: 0, fontSize: "14px" }}>Loading domains from server…</p>
             </div>
           )}
 
@@ -800,64 +780,29 @@ export default function DomainSelectorPage() {
                 borderColor: "rgba(239,68,68,0.2)",
               }}
             >
-              <div
-                style={{
-                  fontSize: "32px",
-                  marginBottom: "12px",
-                  display: "flex",
-                  justifyContent: "center",
-                }}
-              >
+              <div style={{ fontSize: "32px", marginBottom: "12px", display: "flex", justifyContent: "center" }}>
                 <AlertTriangle size={32} color="rgba(239,68,68,0.8)" />
               </div>
               <p style={{ margin: 0, fontSize: "14px" }}>{fetchError}</p>
             </div>
           )}
 
-          {!loadingDomains &&
-            !fetchError &&
-            filteredGroups.length === 0 && (
-              <div
-                style={{
-                  ...glass.section,
-                  textAlign: "center",
-                  padding: "60px 24px",
-                  color: "rgba(255,255,255,0.35)",
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: "32px",
-                    marginBottom: "12px",
-                    display: "flex",
-                    justifyContent: "center",
-                  }}
-                >
-                  <Search size={32} color="rgba(255,255,255,0.35)" />
-                </div>
-                <p style={{ margin: 0, fontSize: "14px" }}>
-                  {search
-                    ? `No domains match "${search}"`
-                    : "No domains added yet. Ask an admin to add some!"}
-                </p>
+          {!loadingDomains && !fetchError && filteredGroups.length === 0 && (
+            <div style={{ ...glass.section, textAlign: "center", padding: "60px 24px", color: "rgba(255,255,255,0.35)" }}>
+              <div style={{ fontSize: "32px", marginBottom: "12px", display: "flex", justifyContent: "center" }}>
+                <Search size={32} color="rgba(255,255,255,0.35)" />
               </div>
-            )}
+              <p style={{ margin: 0, fontSize: "14px" }}>
+                {search ? `No domains match "${search}"` : "No domains added yet. Ask an admin to add some!"}
+              </p>
+            </div>
+          )}
 
           {/* ── CATEGORY SECTIONS ── */}
           {!loadingDomains && !fetchError && (
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "20px",
-              }}
-            >
+            <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
               {filteredGroups.map((group, idx) => (
-                <section
-                  key={group._id || group.category}
-                  style={glass.section}
-                >
-                  {/* section header */}
+                <section key={group._id || group.category} style={glass.section}>
                   <div
                     style={{
                       marginBottom: "20px",
@@ -882,25 +827,11 @@ export default function DomainSelectorPage() {
                       >
                         Section {idx + 1}
                       </span>
-                      <h2
-                        style={{
-                          fontSize: "clamp(18px, 2vw, 22px)",
-                          fontWeight: 700,
-                          margin: "0 0 4px 0",
-                        }}
-                      >
+                      <h2 style={{ fontSize: "clamp(18px, 2vw, 22px)", fontWeight: 700, margin: "0 0 4px 0" }}>
                         {group.category}
                       </h2>
-                      <p
-                        style={{
-                          fontSize: "11px",
-                          color: "rgba(255,255,255,0.3)",
-                          margin: 0,
-                        }}
-                      >
-                        {group.domains?.length || 0} topic
-                        {(group.domains?.length || 0) !== 1 ? "s" : ""}{" "}
-                        available
+                      <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.3)", margin: 0 }}>
+                        {group.domains?.length || 0} topic{(group.domains?.length || 0) !== 1 ? "s" : ""} available
                       </p>
                     </div>
                     <span
@@ -918,13 +849,11 @@ export default function DomainSelectorPage() {
                     </span>
                   </div>
 
-                  {/* domain cards grid */}
                   <div
                     style={{
                       display: "grid",
                       gap: "14px",
-                      gridTemplateColumns:
-                        "repeat(auto-fill, minmax(220px, 1fr))",
+                      gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
                     }}
                   >
                     {(group.domains || []).map((domain) => (
@@ -933,9 +862,7 @@ export default function DomainSelectorPage() {
                         domain={domain}
                         category={group.category}
                         active={false}
-                        onClick={() =>
-                          handleCardClick(domain, group.category)
-                        }
+                        onClick={() => handleCardClick(domain, group.category)}
                       />
                     ))}
                   </div>
@@ -948,21 +875,15 @@ export default function DomainSelectorPage() {
 
       <style>{`
         @media (max-width: 768px) {
-          .header-grid {
-            grid-template-columns: 1fr !important;
-          }
+          .header-grid { grid-template-columns: 1fr !important; }
         }
-        input::placeholder {
-          color: rgba(255,255,255,0.25);
-        }
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to   { opacity: 1; }
-        }
+        input::placeholder { color: rgba(255,255,255,0.25); }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes slideUp {
           from { opacity: 0; transform: translateY(24px) scale(0.97); }
           to   { opacity: 1; transform: translateY(0) scale(1); }
         }
+        @keyframes spin { to { transform: rotate(360deg); } }
       `}</style>
     </>
   );

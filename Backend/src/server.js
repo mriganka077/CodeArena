@@ -33,6 +33,8 @@ import domainRoutes from "./routes/domain.js";
 
 import path from "path";
 
+import mockInterviewRouter from "./routes/mockInterview.js";
+
 dotenv.config();
 
 initGoogleStrategy();
@@ -197,13 +199,15 @@ app.use(
   "/api/mail", 
   mailRoutes);
 
-  app.use(
-    "/api/domains", 
-    domainRoutes);
+app.use(
+  "/api/domains", 
+  domainRoutes);
 
     app.use(
       "/uploads", 
       express.static("uploads"));
+
+app.use("/api/mockinterview", mockInterviewRouter);
 
 // ============================
 // HEALTH CHECK
