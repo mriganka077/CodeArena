@@ -7,7 +7,16 @@ dotenv.config();
 // NVIDIA CLIENT
 // ============================
 
-
+const nvidia = axios.create({
+  baseURL:
+    "https://integrate.api.nvidia.com/v1",
+  headers: {
+    Authorization:
+      `Bearer ${process.env.NVIDIA_API_KEY}`,
+    "Content-Type":
+      "application/json",
+  },
+});
 
 // ============================
 // LANGUAGE DETECTION
@@ -16,21 +25,22 @@ dotenv.config();
 const detectLanguage = (domain = "") => {
   const text = domain.toLowerCase();
 
+  // TypeScript FIRST
+  if (
+    text.includes("typescript") ||
+    /\bts\b/.test(text)
+  ) {
+    return "TypeScript";
+  }
+
   if (
     text.includes("frontend") ||
     text.includes("react") ||
     text.includes("javascript") ||
-    text.includes("js") ||
+    /\bjs\b/.test(text) ||
     text.includes("node")
   ) {
     return "JavaScript";
-  }
-
-  if (
-    text.includes("typescript") ||
-    text.includes("ts")
-  ) {
-    return "TypeScript";
   }
 
   if (
@@ -93,7 +103,6 @@ const detectLanguage = (domain = "") => {
 
 const getStarterCode = (language) => {
   switch (language) {
-
     case "Java":
       return `class Solution {
     public static void main(String[] args) {
@@ -161,14 +170,12 @@ func main() {
 const removeDuplicateQuestions = (
   questions = []
 ) => {
-
   return questions.filter(
     (question, index, self) => {
-
       const normalized =
         question.question
           ?.trim()
-          .toLowerCase();
+          ?.toLowerCase();
 
       return (
         index ===
@@ -185,6 +192,55 @@ const removeDuplicateQuestions = (
 };
 
 // ============================
+// CLEAN RAW RESPONSE
+// ============================
+
+const cleanJsonResponse = (
+  raw = ""
+) => {
+  raw = raw
+    .replace(/```json/g, "")
+    .replace(/```/g, "")
+    .trim();
+
+  // remove trailing commas
+  raw = raw.replace(/,\s*}/g, "}");
+  raw = raw.replace(/,\s*]/g, "]");
+
+  return raw;
+};
+
+// ============================
+// VALIDATE QUESTIONS
+// ============================
+
+const validateQuestions = (
+  questions = [],
+  type
+) => {
+  if (!Array.isArray(questions)) {
+    return [];
+  }
+
+  if (type === "CODING") {
+    return questions.filter(
+      (q) =>
+        q.question &&
+        q.starterCode &&
+        q.language
+    );
+  }
+
+  return questions.filter(
+    (q) =>
+      q.question &&
+      Array.isArray(q.options) &&
+      q.options.length === 4 &&
+      q.answer
+  );
+};
+
+// ============================
 // CREATE PROMPT
 // ============================
 
@@ -197,9 +253,7 @@ const createPrompt = ({
   starterCode,
   aiPrompt,
 }) => {
-
   if (type === "CODING") {
-
     return `
 ${aiPrompt || ""}
 
@@ -211,12 +265,16 @@ Rules:
 - No explanations
 - Questions must be different
 - Use ${language}
+- Escape newlines properly
 
 Format:
 [
   {
     "question": "",
-    "starterCode": "${starterCode}",
+    "starterCode": "${starterCode
+      .replace(/\\/g, "\\\\")
+      .replace(/\n/g, "\\n")
+      .replace(/"/g, '\\"')}",
     "language": "${language}"
   }
 ]
@@ -232,7 +290,7 @@ Rules:
 - Return ONLY valid JSON
 - No markdown
 - No explanations
-- Every question must have 4 options
+- Every question must have exactly 4 options
 
 Format:
 [
@@ -249,67 +307,113 @@ Format:
 // CALL AI
 // ============================
 
-const generateBatch = async ({
-  prompt,
-}) => {
+const generateBatch = async (
+  {
+    prompt,
+    type,
+  },
+  retries = 2
+) => {
+  for (
+    let attempt = 0;
+    attempt <= retries;
+    attempt++
+  ) {
+    try {
+      const response =
+        await nvidia.post(
+          "/chat/completions",
+          {
+            model:
+              "meta/llama-3.1-8b-instruct",
 
-  const response = await axios.post(
-    "https://integrate.api.nvidia.com/v1/chat/completions",
+            messages: [
+              {
+                role: "system",
+                content:
+                  "Return ONLY valid JSON array. No markdown. No explanations.",
+              },
+              {
+                role: "user",
+                content: prompt,
+              },
+            ],
 
-    {
-      model: "meta/llama-3.1-8b-instruct",
+            max_tokens: 4096,
+            temperature: 0.3,
+            top_p: 0.8,
 
-      messages: [
-        {
-          role: "system",
-          content:
-            "Return ONLY valid JSON array.",
-        },
-        {
-          role: "user",
-          content: prompt,
-        },
-      ],
+            stream: false,
 
-      max_tokens: 4096,
-      temperature: 0.3,
-      top_p: 0.8,
+            chat_template_kwargs: {
+              enable_thinking: false,
+            },
+          }
+        );
 
-      stream: false,
+      let raw =
+        response.data?.choices?.[0]
+          ?.message?.content || "[]";
 
-      chat_template_kwargs: {
-        enable_thinking: false,
-      },
-    },
+      console.log(
+        "RAW RESPONSE:"
+      );
+      console.log(raw);
 
-    {
-      headers: {
-        Authorization:
-          `Bearer ${process.env.NVIDIA_API_KEY}`,
+      raw = cleanJsonResponse(raw);
 
-        "Content-Type":
-          "application/json",
-      },
+      // Fix malformed starterCode
+      raw = raw.replace(
+        /"starterCode"\s*:\s*"([\s\S]*?)"/g,
+        (match, code) => {
+          const escaped =
+            JSON.stringify(code).slice(
+              1,
+              -1
+            );
+
+          return `"starterCode":"${escaped}"`;
+        }
+      );
+
+      const parsed =
+        JSON.parse(raw);
+
+      const validated =
+        validateQuestions(
+          parsed,
+          type
+        );
+
+      if (validated.length > 0) {
+        return validated;
+      }
+    } catch (error) {
+      console.log(
+        `Batch attempt ${
+          attempt + 1
+        } failed`
+      );
+
+      console.log(
+        error.response?.data ||
+          error.message
+      );
+
+      if (attempt === retries) {
+        return [];
+      }
+
+      await new Promise((resolve) =>
+        setTimeout(
+          resolve,
+          1000 * (attempt + 1)
+        )
+      );
     }
-  );
-
-  const raw =
-    response.data?.choices?.[0]
-      ?.message?.content || "[]";
-
-  try {
-
-    return JSON.parse(raw);
-
-  } catch (error) {
-
-    console.log(
-      "INVALID JSON:",
-      raw
-    );
-
-    return [];
   }
+
+  return [];
 };
 
 // ============================
@@ -317,88 +421,84 @@ const generateBatch = async ({
 // ============================
 
 export const generateQuestions =
-async ({
-  domain,
-  difficulty,
-  type,
-  count,
-  aiPrompt,
-}) => {
+  async ({
+    domain,
+    difficulty = "Medium",
+    type = "MCQ",
+    count = 5,
+    aiPrompt = "",
+  }) => {
+    try {
+      const language =
+        detectLanguage(domain);
 
-  try {
+      const starterCode =
+        getStarterCode(language);
 
-    const language =
-      detectLanguage(domain);
+      const batchSize = 2;
 
-    const starterCode =
-      getStarterCode(language);
+      const totalBatches =
+        Math.ceil(count / batchSize);
 
-    const batchSize = 2;
+      const requests = [];
 
-    const totalBatches =
-      Math.ceil(count / batchSize);
+      for (
+        let i = 0;
+        i < totalBatches;
+        i++
+      ) {
+        const remaining =
+          count - i * batchSize;
 
-    const requests = [];
+        const currentBatchSize =
+          Math.min(
+            batchSize,
+            remaining
+          );
 
-    for (
-      let i = 0;
-      i < totalBatches;
-      i++
-    ) {
+        const prompt =
+          createPrompt({
+            domain,
+            difficulty,
+            type,
+            count:
+              currentBatchSize,
+            language,
+            starterCode,
+            aiPrompt,
+          });
 
-      const remaining =
-        count - i * batchSize;
+        requests.push(
+          generateBatch({
+            prompt,
+            type,
+          })
+        );
+      }
 
-      const currentBatchSize =
-        Math.min(
-          batchSize,
-          remaining
+      const results =
+        await Promise.all(requests);
+
+      const questions =
+        results.flat();
+
+      const uniqueQuestions =
+        removeDuplicateQuestions(
+          questions
         );
 
-      const prompt =
-        createPrompt({
-          domain,
-          difficulty,
-          type,
-          count:
-            currentBatchSize,
-          language,
-          starterCode,
-          aiPrompt,
-        });
+      return uniqueQuestions.slice(
+        0,
+        count
+      );
+    } catch (error) {
+      console.log(
+        error.response?.data ||
+          error.message
+      );
 
-      requests.push(
-        generateBatch({
-          prompt,
-        })
+      throw new Error(
+        "Question generation failed"
       );
     }
-
-    const results =
-      await Promise.all(requests);
-
-    const questions =
-      results.flat();
-
-    const uniqueQuestions =
-      removeDuplicateQuestions(
-        questions
-      );
-
-    return uniqueQuestions.slice(
-      0,
-      count
-    );
-
-  } catch (error) {
-
-    console.log(
-      error.response?.data ||
-      error.message
-    );
-
-    throw new Error(
-      "Question generation failed"
-    );
-  }
-};
+  };
