@@ -35,6 +35,8 @@ import path from "path";
 
 import mockInterviewRouter from "./routes/mockInterview.js";
 
+import assessmentroutes from "./routes/assessment.js"
+
 dotenv.config();
 
 initGoogleStrategy();
@@ -208,6 +210,8 @@ app.use(
       express.static("uploads"));
 
 app.use("/api/mockinterview", mockInterviewRouter);
+
+app.use("/api", assessmentroutes);
 
 // ============================
 // HEALTH CHECK
