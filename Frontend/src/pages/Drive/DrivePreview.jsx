@@ -190,7 +190,7 @@ const DrivePreview = () => {
 
     const pollInterval = setInterval(() => {
       fetchUserDrives(false);
-    }, 5000);
+    }, 500);
 
     return () => clearInterval(pollInterval);
   }, [user]);
