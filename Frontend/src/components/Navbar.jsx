@@ -61,7 +61,7 @@ export default function Navbar() {
                                 Sign in
                             </NavLink>
 
-                            <NavLink to="/signup">
+                            <NavLink to="/login">
                                 <PrimaryButton className="max-sm:text-xs hidden sm:inline-block">
                                     Get Started
                                 </PrimaryButton>
