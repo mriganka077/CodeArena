@@ -430,7 +430,7 @@ const Assessment = () => {
 
     try {
       const token = localStorage.getItem("token");
-      await fetch("http://localhost:4000/api/auth/submit-result", {
+      await fetch(`${import.meta.env.VITE_API_URL}/api/submit-result`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

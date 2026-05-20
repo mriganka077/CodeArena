@@ -1087,7 +1087,10 @@ const Dashboard = () => {
                             progress
                           </p>
                           <button
-                            onClick={() => navigate('/domainselector')}
+                            onClick={() => {
+                              window.scrollTo({ top: 0, behavior: "instant" });
+                              navigate('/domainselector');
+                            }}
                             className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-pink-500 to-rose-500 shadow-lg shadow-pink-500/30 hover:shadow-pink-500/50 transition-all duration-300 hover:-translate-y-0.5"
                           >
                             Browse Courses
@@ -1499,6 +1502,15 @@ const Dashboard = () => {
                           ))}
                         </div>
                         <button
+                          onClick={() => {
+                            if (card.id === "practice") {
+                              window.scrollTo({ top: 0, behavior: "instant" });
+                              navigate("/domainselector?mode=practice");
+                            } else if (card.id === "mock") {
+                              window.scrollTo({ top: 0, behavior: "instant" });
+                              navigate("/domainselector?mode=interview");
+                            }
+                          }}
                           className={`btn-cta relative w-full px-6 py-4 rounded-2xl text-sm sm:text-base font-bold text-white flex items-center justify-center gap-3 overflow-hidden transition-all duration-300 hover:-translate-y-1 cursor-pointer bg-gradient-to-r ${conf.btn}`}
                         >
                           <span className="relative z-10">

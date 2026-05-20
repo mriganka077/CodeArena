@@ -1,10 +1,45 @@
 // src/components/admin/dashboard/GreetingSection.jsx
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Clock } from "lucide-react";
 
 const GreetingSection = ({ now }) => {
+    const [admin, setAdmin] = useState(null);
+
+    useEffect(() => {
+
+        const fetchAdmin = async () => {
+
+            try {
+
+                const token = localStorage.getItem("adminToken");
+
+                if (!token) return;
+
+                const res = await fetch(
+                    "http://localhost:4000/api/admin/me",
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                    }
+                );
+
+                const data = await res.json();
+
+                if (data.success) {
+                    setAdmin(data.admin);
+                }
+
+            } catch (error) {
+                console.error(error);
+            }
+        };
+
+        fetchAdmin();
+
+    }, []);
     const fmt = (d) =>
         d.toLocaleDateString("en-US", {
             weekday: "short",
@@ -29,7 +64,7 @@ const GreetingSection = ({ now }) => {
             </p>
 
             <h1 className="text-3xl font-extrabold bg-gradient-to-r from-indigo-500 via-indigo-400 to-indigo-300 bg-clip-text text-transparent tracking-tight">
-                Welcome, Adhip Halder
+                Welcome, {admin?.name || "Admin"}
             </h1>
         </motion.div>
     );

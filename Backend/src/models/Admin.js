@@ -2,9 +2,37 @@ import mongoose from "mongoose";
 import bcrypt from "bcrypt";
 
 const adminSchema = new mongoose.Schema({
-  email:    { type: String, required: true, unique: true },
-  password: { type: String, required: true },
-  name:     { type: String, default: "Admin" },
+  email: {
+    type: String,
+    required: true,
+    unique: true
+  },
+
+  password: {
+    type: String,
+    required: true
+  },
+
+  name: {
+    type: String,
+    default: "Admin"
+  },
+
+  photo: {
+    type: String,
+    default: ""
+  },
+  
+  phone: {
+    type: String,
+    default: ""
+  },
+  
+  phoneCountry: {
+    type: String,
+    default: "+91"
+  },
+
 }, { timestamps: true });
 
 // ── Fix: don't use next() with async, just return ──
