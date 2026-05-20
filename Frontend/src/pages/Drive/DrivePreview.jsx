@@ -169,7 +169,7 @@ const DrivePreview = () => {
       if (isInitialLoad) setLoading(true);
       try {
         const token = localStorage.getItem("token");
-        const res = await fetch("http://localhost:4000/api/auth/my-drives", {
+        const res = await fetch("http://localhost:4000/api/my-drives", {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();
@@ -190,7 +190,7 @@ const DrivePreview = () => {
 
     const pollInterval = setInterval(() => {
       fetchUserDrives(false);
-    }, 500);
+    }, 5000);
 
     return () => clearInterval(pollInterval);
   }, [user]);
@@ -239,7 +239,7 @@ const DrivePreview = () => {
           text: "View Result",
           resultId: hasResult._id,
         };
-      return { state: "active", text: "Start  Drive" };
+      return { state: "active", text: "Start Drive" };
     } else {
       if (hasResult)
         return {
