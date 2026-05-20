@@ -3,6 +3,7 @@ import bcrypt from "bcrypt";
 import User from "../models/User.js";
 import jwt from "jsonwebtoken"; 
 
+
 export const verifyOtp = async (req, res) => {
   try {
     const { email, otp } = req.body;
