@@ -16,7 +16,11 @@ const callGemini = async (prompt) => {
     {
       contents: [{ parts: [{ text: prompt }] }],
     },
-    { headers: { 'Content-Type': 'application/json' } }
+    {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    }
   );
 
   return (
@@ -30,6 +34,7 @@ const callGemini = async (prompt) => {
 // =====================================
 
 const getLanguageId = (language = '') => {
+
   const map = {
     python: 71,
     javascript: 63,
@@ -38,7 +43,9 @@ const getLanguageId = (language = '') => {
     'c++': 54,
   };
 
-  return map[language.toLowerCase()] || 71;
+  return map[
+    language.toLowerCase()
+  ] || 71;
 };
 
 // =====================================
@@ -52,24 +59,33 @@ const normalize = (str = '') =>
 // POST /api/practice/analyze
 // =====================================
 
-router.post('/analyze', protect, async (req, res) => {
-  try {
-    const {
-      type,
-      question,
-      options,
-      correctAnswer,
-      selectedAnswer,
-      code,
-      output,
-      language,
-    } = req.body;
+router.post(
+  '/analyze',
+  protect,
+  async (req, res) => {
 
-    let prompt = '';
+    try {
 
-    if (type === 'CODING') {
-      prompt = `
-You are a helpful coding mentor. A student is working on a coding problem.
+      const {
+        type,
+        question,
+        options,
+        selectedAnswer,
+        code,
+        output,
+        language,
+      } = req.body;
+
+      let prompt = '';
+
+      // =====================================
+      // CODING ANALYSIS
+      // =====================================
+
+      if (type === 'CODING') {
+
+        prompt = `
+You are a helpful coding mentor.
 
 # Question
 ${question}
@@ -77,25 +93,28 @@ ${question}
 # Language
 ${language || 'Unknown'}
 
-# Code written so far
-${code || '(nothing written yet)'}
+# Code
+${code || '(empty)'}
 
-# Program output
+# Output
 ${output || '(no output)'}
 
-Give hints in this format:
-
-## What you've done right
-
-## Hints to move forward
-
-## Edge cases to consider
+Give:
+- What is correct
+- Hints
+- Edge cases
 
 Do NOT give full solution.
-Keep it concise and beginner-friendly.
-      `.trim();
-    } else {
-      prompt = `
+Keep it concise.
+        `.trim();
+
+      } else {
+
+        // =====================================
+        // MCQ ANALYSIS
+        // =====================================
+
+        prompt = `
 You are a helpful tutor.
 
 # Question
@@ -104,170 +123,208 @@ ${question}
 # Options
 ${(options || []).join('\n')}
 
-# Student's Answer
+# Selected Answer
 ${selectedAnswer || '(none)'}
 
-Give hints in this format:
-
-## What this question tests
-
-## Hint
-
-## Common misconception
+Explain:
+- What this tests
+- Hint
+- Common misconception
 
 Do NOT reveal answer directly.
-Keep it concise.
-      `.trim();
+        `.trim();
+      }
+
+      const hint = await callGemini(prompt);
+
+      res.json({
+        success: true,
+        hint,
+      });
+
+    } catch (err) {
+
+      console.error(err);
+
+      res.status(500).json({
+        success: false,
+        message: 'AI analysis failed.',
+      });
     }
-
-    const hint = await callGemini(prompt);
-
-    res.json({
-      success: true,
-      hint,
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({
-      success: false,
-      message: 'AI analysis failed.',
-    });
   }
-});
+);
 
 // =====================================
 // POST /api/practice/submit
 // =====================================
 
-router.post('/submit', protect, async (req, res) => {
-  try {
-    const {
-      domain,
-      difficulty,
-      attempts,
-    } = req.body;
+router.post(
+  '/submit',
+  protect,
+  async (req, res) => {
 
-    if (!Array.isArray(attempts) || attempts.length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: 'No attempts provided.',
-      });
-    }
+    try {
 
-    // =====================================
-    // MCQ SCORE
-    // =====================================
+      const {
+        domain,
+        difficulty,
+        attempts,
+      } = req.body;
 
-    const correctMCQ = attempts.filter(
-      (a) =>
-        a.type === 'MCQ' &&
-        a.selectedAnswer === a.correctAnswer
-    ).length;
+      // =====================================
+      // VALIDATION
+      // =====================================
 
-    // =====================================
-    // CODING EVALUATION
-    // =====================================
-
-    let codingCorrect = 0;
-
-    for (const attempt of attempts) {
-
-      if (attempt.type !== 'CODING') continue;
-
-      if (!attempt.code?.trim()) {
-        attempt.correct = false;
-        continue;
+      if (
+        !Array.isArray(attempts) ||
+        attempts.length === 0
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: 'No attempts provided.',
+        });
       }
 
-      const languageId = getLanguageId(
-        attempt.language
-      );
+      // =====================================
+      // MCQ STATS
+      // =====================================
 
-      const testCases = attempt.testCases || [];
+      const correctMCQ = attempts.filter(
+        (a) =>
+          a.type === 'MCQ' &&
+          a.selectedAnswer === a.correctAnswer
+      ).length;
 
-      let passedCount = 0;
+      const attemptedMCQ = attempts.filter(
+        (a) =>
+          a.type === 'MCQ' &&
+          a.selectedAnswer
+      ).length;
 
-      for (const tc of testCases) {
+      // =====================================
+      // ATTEMPTED CODING
+      // =====================================
 
-        try {
+      const attemptedCoding = attempts.filter(
+        (a) =>
+          a.type === 'CODING' &&
+          a.code?.trim()
+      ).length;
 
-          const result = await submitCode(
-            attempt.code,
-            languageId,
-            tc.input
+      // =====================================
+      // CODING EVALUATION
+      // =====================================
+
+      let codingCorrect = 0;
+
+      for (const attempt of attempts) {
+
+        if (attempt.type !== 'CODING')
+          continue;
+
+        if (!attempt.code?.trim()) {
+
+          attempt.correct = false;
+
+          continue;
+        }
+
+        const languageId =
+          getLanguageId(
+            attempt.language
           );
 
-          const actual =
-            result.stdout || '';
+        const testCases =
+          attempt.testCases || [];
 
-          const expected =
-            tc.expectedOutput || '';
+        let passedCount = 0;
 
-          if (
-            normalize(actual) ===
-            normalize(expected)
-          ) {
-            passedCount++;
+        for (const tc of testCases) {
+
+          try {
+
+            const result =
+              await submitCode(
+                attempt.code,
+                languageId,
+                tc.input
+              );
+
+            const actual =
+              result.stdout || '';
+
+            const expected =
+              tc.expectedOutput || '';
+
+            if (
+              normalize(actual) ===
+              normalize(expected)
+            ) {
+              passedCount++;
+            }
+
+          } catch (err) {
+
+            console.log(
+              'Judge0 Error:',
+              err.message
+            );
           }
+        }
 
-        } catch (err) {
-          console.log(
-            'Judge0 Error:',
-            err.message
-          );
+        attempt.passedCount =
+          passedCount;
+
+        attempt.totalTestCases =
+          testCases.length;
+
+        attempt.correct =
+          passedCount ===
+          testCases.length;
+
+        if (attempt.correct) {
+          codingCorrect++;
         }
       }
 
-      attempt.passedCount = passedCount;
+      // =====================================
+      // SUMMARY FOR AI REVIEW
+      // =====================================
 
-      attempt.totalTestCases =
-        testCases.length;
+      const summaryLines = attempts.map(
+        (a, i) => {
 
-      attempt.correct =
-        passedCount === testCases.length;
+          if (a.type === 'MCQ') {
 
-      if (attempt.correct) {
-        codingCorrect++;
-      }
-    }
+            const correct =
+              a.selectedAnswer ===
+              a.correctAnswer;
 
-    // =====================================
-    // SUMMARY FOR AI REVIEW
-    // =====================================
-
-    const summaryLines = attempts.map((a, i) => {
-
-      if (a.type === 'MCQ') {
-
-        const correct =
-          a.selectedAnswer === a.correctAnswer;
-
-        return `
+            return `
 Q${i + 1} [MCQ]
 Question: ${a.question}
 Selected: ${a.selectedAnswer || 'none'}
 Result: ${correct ? 'Correct' : 'Wrong'}
-        `.trim();
-      }
+            `.trim();
+          }
 
-      return `
+          return `
 Q${i + 1} [CODING]
 Question: ${a.question}
 Language: ${a.language}
 Passed Test Cases:
 ${a.passedCount || 0}/${a.totalTestCases || 0}
 Result: ${a.correct ? 'Correct' : 'Wrong'}
-      `.trim();
-    });
+          `.trim();
+        }
+      );
 
-    // =====================================
-    // AI REVIEW PROMPT
-    // =====================================
+      // =====================================
+      // AI REVIEW PROMPT
+      // =====================================
 
-    const overallPrompt = `
+      const overallPrompt = `
 You are an expert technical interviewer.
-
-A student completed a coding practice session.
 
 # Domain
 ${domain}
@@ -279,11 +336,12 @@ ${difficulty}
 ${summaryLines.join('\n\n')}
 
 # Stats
-- MCQ Correct: ${correctMCQ}
-- Coding Correct: ${codingCorrect}
-- Total Questions: ${attempts.length}
+- Correct MCQ: ${correctMCQ}
+- Attempted MCQ: ${attemptedMCQ}
+- Attempted Coding: ${attemptedCoding}
+- Correct Coding: ${codingCorrect}
 
-Give review in this format:
+Give review in format:
 
 ## Overall Performance
 
@@ -297,89 +355,136 @@ X / 10
 ## Verdict
 Excellent | Good | Needs Improvement
 
-Keep it encouraging and actionable.
-    `.trim();
+Keep it encouraging.
+      `.trim();
 
-    let aiReview = '';
+      // =====================================
+      // GENERATE AI REVIEW
+      // =====================================
 
-    try {
-      aiReview = await callGemini(overallPrompt);
-    } catch (err) {
-      console.log(
-        'AI Review Error:',
-        err.message
-      );
+      let aiReview = '';
 
-      aiReview =
-        'AI review unavailable right now.';
-    }
+      try {
 
-    // =====================================
-    // SAVE TO DB
-    // =====================================
+        aiReview =
+          await callGemini(
+            overallPrompt
+          );
 
-    const submission =
-      await PracticeSubmission.create({
-        user: req.user._id,
-        domain,
-        difficulty,
-        attempts,
-        aiReview,
-        totalQuestions: attempts.length,
-        correctMCQ,
-        codingCorrect,
+      } catch (err) {
+
+        console.log(
+          'AI Review Error:',
+          err.message
+        );
+
+        aiReview =
+          'AI review unavailable.';
+      }
+
+      // =====================================
+      // SAVE TO DB
+      // =====================================
+
+      const submission =
+        await PracticeSubmission.create({
+
+          user: req.user._id,
+
+          domain,
+
+          difficulty,
+
+          attempts,
+
+          aiReview,
+
+          totalQuestions:
+            attempts.length,
+
+          correctMCQ,
+
+          attemptedMCQ,
+
+          attemptedCoding,
+
+          correctCoding:
+            codingCorrect,
+        });
+
+      // =====================================
+      // RESPONSE
+      // =====================================
+
+      res.status(201).json({
+        success: true,
+
+        submission,
+
+        stats: {
+
+          correctMCQ,
+
+          attemptedMCQ,
+
+          attemptedCoding,
+
+          correctCoding:
+            codingCorrect,
+
+          total:
+            attempts.length,
+        },
       });
 
-    // =====================================
-    // RESPONSE
-    // =====================================
+    } catch (err) {
 
-    res.status(201).json({
-      success: true,
-      submission,
-      stats: {
-        correctMCQ,
-        codingCorrect,
-        total: attempts.length,
-      },
-    });
+      console.error(
+        'Submit Error:',
+        err
+      );
 
-  } catch (err) {
-    console.error('Submit Error:', err);
-
-    res.status(500).json({
-      success: false,
-      message: err.message,
-    });
+      res.status(500).json({
+        success: false,
+        message: err.message,
+      });
+    }
   }
-});
+);
 
 // =====================================
 // GET SUBMISSIONS
 // =====================================
 
-router.get('/submissions', protect, async (req, res) => {
-  try {
+router.get(
+  '/submissions',
+  protect,
+  async (req, res) => {
 
-    const submissions =
-      await PracticeSubmission.find({
-        user: req.user._id,
-      }).sort({ submittedAt: -1 });
+    try {
 
-    res.json({
-      success: true,
-      submissions,
-    });
+      const submissions =
+        await PracticeSubmission.find({
+          user: req.user._id,
+        }).sort({
+          submittedAt: -1,
+        });
 
-  } catch (err) {
+      res.json({
+        success: true,
+        submissions,
+      });
 
-    console.error(err);
+    } catch (err) {
 
-    res.status(500).json({
-      success: false,
-      message: err.message,
-    });
+      console.error(err);
+
+      res.status(500).json({
+        success: false,
+        message: err.message,
+      });
+    }
   }
-});
+);
 
 export default router;
