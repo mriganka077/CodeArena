@@ -5,21 +5,22 @@ import mongoose from 'mongoose';
 // =====================================
 const questionAttemptSchema = new mongoose.Schema(
   {
-    // Index 0-9 within the session
     questionIndex: { type: Number, required: true },
 
-    // Full question text
     question: { type: String, required: true },
 
-    // "CODING" | "MCQ"
-    type: { type: String, enum: ['CODING', 'MCQ'], required: true },
+    type: {
+      type: String,
+      enum: ['CODING', 'MCQ'],
+      required: true,
+    },
 
-    // MCQ fields
+    // MCQ
     options: [{ type: String }],
     correctAnswer: { type: String },
     selectedAnswer: { type: String },
 
-    // Coding fields — only populated for CODING questions
+    // CODING
     code: { type: String, default: '' },
     language: { type: String, default: 'python3' },
     output: { type: String, default: '' },
@@ -30,6 +31,7 @@ const questionAttemptSchema = new mongoose.Schema(
 // =====================================
 // Main schema
 // =====================================
+
 const practiceSubmissionSchema = new mongoose.Schema(
   {
     user: {
@@ -38,17 +40,17 @@ const practiceSubmissionSchema = new mongoose.Schema(
       required: true,
     },
 
-    // Domain the user practised (e.g. "Python", "React Basics")
-    domain: { type: String, required: true },
+    domain: {
+      type: String,
+      required: true,
+    },
 
-    // Difficulty chosen on the domain selector
     difficulty: {
       type: String,
       enum: ['easy', 'medium', 'hard'],
       required: true,
     },
 
-    // All 10 question attempts
     attempts: {
       type: [questionAttemptSchema],
       validate: {
@@ -57,17 +59,49 @@ const practiceSubmissionSchema = new mongoose.Schema(
       },
     },
 
-    // Overall AI review for the whole session (generated on final submit)
-    aiReview: { type: String, default: '' },
+    aiReview: {
+      type: String,
+      default: '',
+    },
 
-    // Quick stats — computed before saving
-    totalQuestions: { type: Number, default: 10 },
-    correctMCQ: { type: Number, default: 0 },
-    attemptedCoding: { type: Number, default: 0 },
+    // =====================================
+    // STATS
+    // =====================================
 
-    submittedAt: { type: Date, default: Date.now },
+    totalQuestions: {
+      type: Number,
+      default: 10,
+    },
+
+    correctMCQ: {
+      type: Number,
+      default: 0,
+    },
+
+    attemptedMCQ: {
+      type: Number,
+      default: 0,
+    },
+
+    attemptedCoding: {
+      type: Number,
+      default: 0,
+    },
+    
+    correctCoding: {
+      type: Number,
+      default: 0,
+    },
+
+    submittedAt: {
+      type: Date,
+      default: Date.now,
+    },
   },
   { timestamps: true }
 );
 
-export default mongoose.model('PracticeSubmission', practiceSubmissionSchema);
+export default mongoose.model(
+  'PracticeSubmission',
+  practiceSubmissionSchema
+);

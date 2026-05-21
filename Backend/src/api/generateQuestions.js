@@ -65,24 +65,23 @@ const detectLanguage = (domain = "") => {
 
 const getStarterCode = (language) => {
   switch (language) {
-    case "Java":
-      return `class Solution {\n    public static void main(String[] args) {\n\n    }\n}`;
+    case "Python":
+      return `# Write your code here`;
+
     case "JavaScript":
-      return `function solution() {\n\n}`;
     case "TypeScript":
-      return `function solution(): void {\n\n}`;
+    case "Java":
     case "C++":
-      return `#include <iostream>\nusing namespace std;\n\nint main() {\n\n    return 0;\n}`;
-    case "C#":
-      return `using System;\n\nclass Solution\n{\n    static void Main()\n    {\n\n    }\n}`;
-    case "PHP":
-      return `<?php\n\nfunction solution() {\n\n}\n\n?>`;
+    case "C":
     case "Go":
-      return `package main\n\nimport "fmt"\n\nfunc main() {\n\n}`;
+    case "PHP":
+      return `// Write your code here`;
+
     case "SQL":
-      return `-- Write your SQL query here\nSELECT * FROM table_name;`;
+      return `-- Write your query here`;
+
     default:
-      return `# Write your Python solution here`;
+      return `# Write your code here`;
   }
 };
 
@@ -128,7 +127,14 @@ const createPrompt = ({ domain, difficulty, type, count, language, starterCode }
       "starterCode": "${starterCode.replace(/\n/g, "\\n")}",
       "language": "${language}",
       "type": "CODING",
-      "testCases": [
+      "visibleTestCases": [
+        {
+          "input": "",
+          "expectedOutput": ""
+        }
+      ],
+
+      "hiddenTestCases": [
         {
           "input": "",
           "expectedOutput": ""

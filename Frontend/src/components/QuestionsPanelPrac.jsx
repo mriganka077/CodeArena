@@ -210,10 +210,15 @@ const QuestionsPanelPrac = ({
             </div>
             <div className="rounded-2xl px-4 py-4 text-center"
               style={{ background: 'rgba(108,99,255,0.07)', border: '1px solid rgba(108,99,255,0.2)' }}>
-              <p className="text-[10px] text-white/40 uppercase tracking-widest mb-2">Coding Done</p>
+              <p className="text-[10px] text-white/40 uppercase tracking-widest mb-2">
+                Coding Score
+              </p>
+
               <p className="text-2xl font-bold text-[#a89eff]">
-                {submitResult.stats.attemptedCoding}
-                <span className="text-sm text-white/30 font-normal"> / {codingQuestions.length}</span>
+                {submitResult.stats.correctCoding}
+                <span className="text-sm text-white/30 font-normal">
+                  / {codingQuestions.length}
+                </span>
               </p>
             </div>
           </div>
