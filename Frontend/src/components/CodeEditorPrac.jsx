@@ -260,91 +260,90 @@ const CodeEditorPrac = ({ currentQuestion, currentIndex, code, output, onCodeCha
 
 
         {/* Output panel */}
-{/* Bottom Panel */}
-<div
-  className="grid grid-cols-2 min-h-0 overflow-hidden"
-  style={{
-    borderTop: '1px solid rgba(255,255,255,0.06)',
-    background: 'rgba(4, 9, 15, 0.6)'
-  }}
->
+        {/* Bottom Panel */}
+        <div
+          className="grid grid-cols-2 min-h-0 overflow-hidden"
+          style={{
+            borderTop: '1px solid rgba(255,255,255,0.06)',
+            background: 'rgba(4, 9, 15, 0.6)'
+          }}
+        >
 
-  {/* Custom Input */}
-  <div className="flex flex-col border-r border-white/10 overflow-hidden">
+          {/* Custom Input */}
+          <div className="flex flex-col border-r border-white/10 overflow-hidden">
 
-    <div
-      className="h-10 shrink-0 px-4 flex items-center"
-      style={{
-        borderBottom: '1px solid rgba(255,255,255,0.05)'
-      }}
-    >
-      <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/30">
-        Custom Input
-      </span>
-    </div>
+            <div
+              className="h-10 shrink-0 px-4 flex items-center"
+              style={{
+                borderBottom: '1px solid rgba(255,255,255,0.05)'
+              }}
+            >
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/30">
+                Custom Input
+              </span>
+            </div>
 
-    <textarea
-      value={customInput}
-      onChange={(e) =>
-        setCustomInput(e.target.value)
-      }
-      placeholder={`Example:
-5
-1 2 3 4 5`}
-      className="flex-1 bg-transparent p-4 text-sm outline-none resize-none text-white font-mono"
-    />
-  </div>
+            <textarea
+              value={customInput}
+              onChange={(e) =>
+                setCustomInput(e.target.value)
+              }
+              placeholder={`Example:
+                5
+                1 2 3 4 5`}
+              className="flex-1 bg-transparent p-4 text-sm outline-none resize-none text-white font-mono"
+            />
+          </div>
 
-  {/* Output */}
-  <div className="flex flex-col overflow-hidden">
+          {/* Output */}
+          <div className="flex flex-col overflow-hidden">
 
-    <div
-      className="h-10 shrink-0 px-4 flex items-center justify-between"
-      style={{
-        borderBottom: '1px solid rgba(255,255,255,0.05)'
-      }}
-    >
-      <div className="flex items-center gap-2">
-        <span
-          className={`w-2 h-2 rounded-full transition-all ${
-            statusDot.pulse ? 'animate-pulse' : ''
-          }`}
-          style={{ background: statusDot.color }}
-        />
+            <div
+              className="h-10 shrink-0 px-4 flex items-center justify-between"
+              style={{
+                borderBottom: '1px solid rgba(255,255,255,0.05)'
+              }}
+            >
+              <div className="flex items-center gap-2">
+                <span
+                  className={`w-2 h-2 rounded-full transition-all ${statusDot.pulse ? 'animate-pulse' : ''
+                    }`}
+                  style={{ background: statusDot.color }}
+                />
 
-        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/30">
-          Output
-        </span>
-      </div>
+                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/30">
+                  Output
+                </span>
+              </div>
 
-      {metaText && (
-        <span className="text-[10px] font-mono text-white/25">
-          {metaText}
-        </span>
-      )}
-    </div>
+              {metaText && (
+                <span className="text-[10px] font-mono text-white/25">
+                  {metaText}
+                </span>
+              )}
+            </div>
 
-    <pre
-      className="flex-1 overflow-auto p-4 font-mono text-[12px] leading-6 text-slate-300 whitespace-pre-wrap"
-      style={{
-        color:
-          runStatus === 'error'
-            ? '#fca5a5'
-            : undefined
-      }}
-    >
-      {
-        output || (
-          <span style={{ color: 'rgba(255,255,255,0.15)' }}>
-            Run your code to see output…
-          </span>
-        )
-      }
-    </pre>
+            <pre
+              className="flex-1 overflow-auto p-4 font-mono text-[12px] leading-6 text-slate-300 whitespace-pre-wrap"
+              style={{
+                color:
+                  runStatus === 'error'
+                    ? '#fca5a5'
+                    : undefined
+              }}
+            >
+              {
+                output || (
+                  <span style={{ color: 'rgba(255,255,255,0.15)' }}>
+                    Run your code to see output…
+                  </span>
+                )
+              }
+            </pre>
 
-  </div>
+          </div>
 
-</div>
+        </div>
       </div>
     </main>
   );
