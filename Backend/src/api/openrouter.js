@@ -291,13 +291,16 @@ Rules:
 - No markdown
 - No explanations
 - Every question must have exactly 4 options
+- "answer" MUST contain the FULL correct option text
+- Do NOT return A/B/C/D
+- Do NOT return indexes like 0,1,2,3
 
 Format:
 [
   {
     "question": "",
     "options": [],
-    "answer": ""
+    "answer": "Exact option text"
   }
 ]
 `;
