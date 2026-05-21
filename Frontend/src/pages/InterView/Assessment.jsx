@@ -225,7 +225,7 @@ const Assessment = () => {
   const navigate = useNavigate();
   const drive = location.state?.drive;
 
-  const photoSrc = user.picture.startsWith("http")
+  const photoSrc = user?.picture?.startsWith("http")
     ? user.picture
     : `http://localhost:4000${user.picture}`;
 
@@ -402,11 +402,17 @@ const Assessment = () => {
     return () => clearInterval(timer);
   }, [status, timeLeft]);
 
-  const submitAssessment = async (finalStatus = "Completed", reason = "") => {
+  const submitAssessment = async (
+    finalStatus = "Completed",
+    reason = ""
+  ) => {
+  
     isTerminating.current = true;
+  
     setStatus("idle");
-
+  
     const doc = window.document;
+  
     if (
       doc.fullscreenElement ||
       doc.webkitFullscreenElement ||
@@ -414,58 +420,175 @@ const Assessment = () => {
       doc.msFullscreenElement
     ) {
       try {
-        if (doc.exitFullscreen) await doc.exitFullscreen();
-        else if (doc.webkitExitFullscreen) await doc.webkitExitFullscreen();
-        else if (doc.mozCancelFullScreen) await doc.mozCancelFullScreen();
-        else if (doc.msExitFullscreen) await doc.msExitFullscreen();
+  
+        if (doc.exitFullscreen)
+          await doc.exitFullscreen();
+  
+        else if (doc.webkitExitFullscreen)
+          await doc.webkitExitFullscreen();
+  
+        else if (doc.mozCancelFullScreen)
+          await doc.mozCancelFullScreen();
+  
+        else if (doc.msExitFullscreen)
+          await doc.msExitFullscreen();
+  
       } catch (err) {
-        console.warn("Fullscreen exit failed:", err);
+        console.warn(
+          "Fullscreen exit failed:",
+          err
+        );
       }
     }
+  
+    const timeTaken =
+      drive.timeDurationInMin * 60 -
+      timeLeft;
+  
+    // ============================
+    // REAL RESULT CALCULATION
+    // ============================
+  
+    const totalMarks =
+      drive.totalMarks || 100;
+  
+    const totalQuestions =
+      questions.length;
+  
+    const marksPerQuestion =
+      totalQuestions > 0
+        ? totalMarks / totalQuestions
+        : 0;
+  
+    let obtainedMarks = 0;
+  
+    let correctAnswers = 0;
+  
+    questions.forEach(
+      (question, index) => {
+  
+        if (
+          question.type === "MCQ"
+        ) {
+  
+          const selectedOptionIndex =
+            answers[index];
 
-    const timeTaken = drive.timeDurationInMin * 60 - timeLeft;
-    const mockScore = Math.floor(
-      Math.random() * ((drive.totalMarks || 100) + 1),
+          if (
+            selectedOptionIndex === undefined
+          ) {
+            return;
+          }
+
+          const selectedOption =
+            question.options?.[
+            selectedOptionIndex
+            ];
+  
+          const correctAnswer =
+            question.answer;
+  
+          if (
+            selectedOption &&
+            correctAnswer &&
+            selectedOption.trim() ===
+              correctAnswer.trim()
+          ) {
+  
+            correctAnswers += 1;
+  
+            obtainedMarks +=
+              marksPerQuestion;
+          }
+        }
+      }
     );
-
+  
+    const finalScore =
+      Math.round(obtainedMarks);
+  
+    console.log({
+      totalQuestions,
+      correctAnswers,
+      finalScore,
+    });
+  
     try {
-      const token = localStorage.getItem("token");
-      await fetch(`${import.meta.env.VITE_API_URL}/api/submit-result`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          driveId: drive._id,
-          score: mockScore,
-          timeTaken,
-          status: finalStatus,
-          violations: violations.current,
-          terminationReason: reason,
-        }),
-      });
-
-      if (finalStatus === "Terminated") {
+  
+      const token =
+        localStorage.getItem("token");
+  
+      await fetch(
+        `${import.meta.env.VITE_API_URL}/api/submit-result`,
+        {
+          method: "POST",
+  
+          headers: {
+            "Content-Type":
+              "application/json",
+  
+            Authorization:
+              `Bearer ${token}`,
+          },
+  
+          body: JSON.stringify({
+            driveId: drive._id,
+  
+            score: finalScore,
+  
+            timeTaken,
+  
+            status: finalStatus,
+  
+            violations:
+              violations.current,
+  
+            terminationReason:
+              reason,
+          }),
+        }
+      );
+  
+      if (
+        finalStatus ===
+        "Terminated"
+      ) {
+  
         triggerAlert(
           "Session Terminated",
+  
           `Your assessment was terminated due to security or environment violations. (${reason})`,
+  
           "danger",
+  
           null,
+  
           false,
-          () => navigate("/drive"),
+  
+          () => navigate("/drive")
         );
+  
       } else {
+  
         triggerAlert(
           "Assessment Finished",
-          "Your responses and security metrics have been saved. You may safely close this tab.",
+  
+          `You scored ${finalScore}/${totalMarks} with ${correctAnswers} correct answers.`,
+  
           "info",
+  
           () => navigate("/drive"),
-          true,
+  
+          true
         );
       }
+  
     } catch (err) {
-      console.error("Failed to submit", err);
+  
+      console.error(
+        "Failed to submit",
+        err
+      );
     }
   };
 
@@ -1177,7 +1300,7 @@ const Assessment = () => {
                   : "bg-white/5 text-[#A1A1AA] border border-white/10 hover:bg-white/10"
             }`}
                   >
-                    {q.submitted ? "✓" : idx + 1}
+                    {answers[idx] !== undefined ? "✓" : idx + 1}
                   </button>
                 ))}
               </div>

@@ -41,20 +41,22 @@ export const isCodingDomain = (domain = "") => {
 // ============================
 
 const detectLanguage = (domain = "") => {
-  const text = domain.toLowerCase();
+  const text = domain.trim().toLowerCase();
 
-  if (text.includes("sql")) return "SQL";
-  if (text.includes("dsa") || text.includes("data structure")) return "Python";
-  if (text.includes("javascript") || text.includes("js")) return "JavaScript";
-  if (text.includes("typescript") || text.includes("ts")) return "TypeScript";
-  if (text.includes("python") || text.includes("ml") || text.includes("ai")) return "Python";
-  if (text.includes("java") && !text.includes("javascript")) return "Java";
-  if (text.includes("c++") || text.includes("cpp")) return "C++";
-  if (text.includes("c#") || text.includes(".net")) return "C#";
-  if (text.includes("php") || text.includes("laravel")) return "PHP";
-  if (text.includes("golang") || text.includes("go developer")) return "Go";
+  const map = {
+    python: "Python",
+    javascript: "JavaScript",
+    java: "Java",
+    "c++": "C++",
+    c: "C",
+    sql: "SQL",
+    dsa: "Python",
+    typescript: "TypeScript",
+    php: "PHP",
+    go: "Go",
+  };
 
-  return "Python";
+  return map[text] || "Python";
 };
 
 // ============================
@@ -107,47 +109,60 @@ const removeDuplicateQuestions = (questions = []) => {
 const createPrompt = ({ domain, difficulty, type, count, language, starterCode }) => {
   if (type === "CODING") {
     return `
-Generate ${count} unique ${difficulty} coding interview questions for ${domain}.
-
-Rules:
-- Return ONLY valid JSON
-- No markdown
-- No explanations
-- Questions must be different from each other
-- Use ${language}
-
-Format:
-[
-  {
-    "question": "",
-    "starterCode": "${starterCode.replace(/\n/g, "\\n")}",
-    "language": "${language}",
-    "type": "CODING"
-  }
-]
-`.trim();
+  Generate ${count} unique ${difficulty} coding interview questions for ${domain}.
+  
+  Rules:
+  - Return ONLY valid JSON
+  - No markdown
+  - No explanations
+  - Questions must be technically correct
+  - Questions must be different from each other
+  - Use ${language}
+  - Each question must contain at least 2 test cases
+  - expectedOutput must exactly match program output
+  
+  Format:
+  [
+    {
+      "question": "",
+      "starterCode": "${starterCode.replace(/\n/g, "\\n")}",
+      "language": "${language}",
+      "type": "CODING",
+      "testCases": [
+        {
+          "input": "",
+          "expectedOutput": ""
+        }
+      ]
+    }
+  ]
+  `.trim();
   }
 
   return `
-Generate ${count} unique ${difficulty} MCQ interview questions for ${domain}.
-
-Rules:
-- Return ONLY valid JSON
-- No markdown
-- No explanations
-- Every question must have exactly 4 options
-- The "answer" field must exactly match one of the options
-
-Format:
-[
-  {
-    "question": "",
-    "options": ["", "", "", ""],
-    "answer": "",
-    "type": "MCQ"
-  }
-]
-`.trim();
+  Generate ${count} unique ${difficulty} MCQ interview questions for ${domain}.
+  
+  Rules:
+  - Return ONLY valid JSON
+  - No markdown
+  - No explanations
+  - Questions must be technically and factually correct
+  - Avoid invalid syntax/operators
+  - Ensure only ONE correct answer exists
+  - Every question must have exactly 4 options
+  - The "answer" field must exactly match one of the options
+  - Do NOT generate trick or ambiguous questions
+  
+  Format:
+  [
+    {
+      "question": "",
+      "options": ["", "", "", ""],
+      "answer": "",
+      "type": "MCQ"
+    }
+  ]
+  `.trim();
 };
 
 // ============================
@@ -221,8 +236,13 @@ export const generatePracticeQuestions = async ({ domain, difficulty }) => {
       ]);
 
       const codingTagged = codingResults
-        .map((q) => ({ ...q, type: "CODING", language, starterCode }))
-        .slice(0, 7);
+      .map((q) => ({
+        ...q,
+        type: "CODING",
+        language: q.language || language,
+        starterCode: q.starterCode || starterCode,
+      }))
+      .slice(0, 7);
 
       const mcqTagged = mcqResults
         .map((q) => ({ ...q, type: "MCQ" }))
