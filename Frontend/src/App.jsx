@@ -15,8 +15,8 @@ import SignUp from "./pages/SignUp/SignUp";
 
 
 import { useAuth } from "./context/AuthContext.jsx";
-import Dashboard from "./pages/Dashboard.jsx";
-import Dash from "./pages/Dashboard/Dashboard.jsx";
+// import Dashboard from "./pages/Dashboard.jsx";
+import Dashboard from "./pages/Dashboard/Dashboard.jsx";
 import AuthCallback from "./pages/AuthCallback.jsx";
 import VerifyEmail from "./pages/VerifyEmail.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
@@ -53,7 +53,7 @@ function App() {
       <Route path="/drive" element={<DrivePreview />} />
       <Route path="/assessment" element={<Assessment />} />
       <Route path="/domainselector" element={<DomainSelectorPage />} />
-      <Route path="/dash" element={<Dash />} />
+      {/* <Route path="/dash" element={<Dash />} /> */}
       <Route path="/login" element={<AuthPage />} />
       <Route path="/forgot" element={<ForgotPassword />} />
       <Route path="/feedback" element={<FeedbackPanel />} />
@@ -79,7 +79,7 @@ function App() {
       <Route path="/admin/assessments" element={<AdminAssessments />} />
       <Route path="/admin/interview" element={<AdminInterview />} />
 
-      <Route path="/interview" element={<Interview/>} />
+      <Route path="/interview" element={<Interview/>} />  
       <Route path="/interviewdone" element={<InterviewComplete/>} />
       <Route path="/registration" element={<UserProfileForm />} />
 
@@ -113,16 +113,14 @@ function App() {
 
 
       {/* Default redirect */}
-      <Route
+      {/* <Route
         path="*"
         element={
-          localStorage.getItem("adminToken")
-            ? <Navigate to="/admindash" replace />
-            : isLoggedIn
+            isLoggedIn
               ? <Navigate to="/dashboard" replace />
               : <Navigate to="/login" replace />
         }
-      />
+      /> */}
 
     </Routes>
   );

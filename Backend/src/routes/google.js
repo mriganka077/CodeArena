@@ -6,7 +6,6 @@ import User from "../models/User.js";
 
 const router = express.Router();
 
-// Called from server.js AFTER dotenv.config() runs
 export const initGoogleStrategy = () => {
   passport.use(
     new GoogleStrategy(
@@ -19,15 +18,14 @@ export const initGoogleStrategy = () => {
         try {
           const email = profile.emails[0].value;
           const photo = profile.photos?.[0]?.value || "";
-  
+
           let user = await User.findOne({ email });
-  
+          let isNewUser = false; // ← track if newly created
+
           if (user) {
             user.googleId = profile.id;
             user.isVerified = true;
-  
             if (photo) user.picture = photo;
-  
             await user.save();
           } else {
             user = await User.create({
@@ -38,8 +36,11 @@ export const initGoogleStrategy = () => {
               picture: photo,
               isVerified: true,
             });
+            isNewUser = true; // ← newly created
           }
-  
+
+          // Pass isNewUser flag through to the callback route via user object
+          user._isNewUser = isNewUser;
           return done(null, user);
         } catch (error) {
           return done(error, null);
@@ -66,7 +67,9 @@ router.get(
     const token = jwt.sign({ id: req.user._id }, process.env.JWT_SECRET, {
       expiresIn: process.env.JWT_EXPIRES_IN,
     });
-    res.redirect(`${process.env.CLIENT_URL}/auth/callback?token=${token}`);
+
+    const isNew = req.user._isNewUser ? "&new=true" : "";
+    res.redirect(`${process.env.CLIENT_URL}/auth/callback?token=${token}${isNew}`);
   }
 );
 

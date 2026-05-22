@@ -114,7 +114,25 @@ router.get("/verify-email/:token", async (req, res) => {
     user.emailVerifyExpires = undefined;
     await user.save({ validateBeforeSave: false });
 
-    sendTokenResponse(user, 200, res);
+    // ← Add isNewUser: true so frontend redirects to /registration
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: process.env.JWT_EXPIRES_IN,
+    });
+
+    return res.status(200).json({
+      success: true,
+      isNewUser: true,   // ← frontend uses this to redirect
+      token,
+      user: {
+        id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        isVerified: user.isVerified,
+        twoFactorEnabled: user.twoFactorEnabled,
+        picture: user.picture,
+      },
+    });
   } catch (error) {
     console.error("Verify email error:", error);
     res.status(500).json({ success: false, message: "Server error." });

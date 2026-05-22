@@ -1,11 +1,21 @@
 import { useEffect } from "react";
-import { handleGoogleCallback } from "../hooks/useAuth";
+import { useAuth } from "../context/AuthContext.jsx";
 
 export default function AuthCallback() {
+  const { login } = useAuth();
+
   useEffect(() => {
-    const token = handleGoogleCallback();
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("token");
+    const isNew = params.get("new") === "true";
+
     if (token) {
-      window.location.href = "/dashboard";
+      // Decode user info from token to pass into AuthContext
+      const base64 = token.split(".")[1];
+      const payload = JSON.parse(atob(base64));
+      login({ id: payload.id }, token);
+
+      window.location.href = isNew ? "/registration" : "/dashboard";
     } else {
       window.location.href = "/login?error=google_failed";
     }
@@ -13,7 +23,7 @@ export default function AuthCallback() {
 
   return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", background: "#050816", color: "#fff" }}>
-      <p>Signing you in with Google...</p>
+      <p>Signing you in...</p>
     </div>
   );
 }
