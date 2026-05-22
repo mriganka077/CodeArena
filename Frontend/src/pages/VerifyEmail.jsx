@@ -10,9 +10,12 @@ export default function VerifyEmail() {
       .then((r) => r.json())
       .then((data) => {
         if (data.success) {
-          localStorage.setItem("token", data.token);
           setStatus("success");
-          setTimeout(() => (window.location.href = "/dashboard"), 2000);
+          // Route through AuthCallback so login + redirect logic is in one place
+          setTimeout(() => {
+            const isNew = data.isNewUser ? "&new=true" : "";
+            window.location.href = `/auth/callback?token=${data.token}${isNew}`;
+          }, 2000);
         } else {
           setStatus("error");
         }
@@ -27,7 +30,7 @@ export default function VerifyEmail() {
       flexDirection: "column", gap: 12, fontFamily: "DM Sans, sans-serif"
     }}>
       {status === "verifying" && <p>Verifying your email...</p>}
-      {status === "success"   && <p>Email verified! Redirecting to dashboard...</p>}
+      {status === "success"   && <p>Email verified! Redirecting...</p>}
       {status === "error"     && <p>Link is invalid or expired. Please sign up again.</p>}
     </div>
   );
