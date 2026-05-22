@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const interviewResultSchema = new mongoose.Schema({
+const assessmentResultSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   driveId: { type: mongoose.Schema.Types.ObjectId, ref: "Drive", required: true },
   score: { type: Number, default: 0 }, 
@@ -18,7 +18,7 @@ const interviewResultSchema = new mongoose.Schema({
   terminationReason: { type: String, default: "" }
 }, { timestamps: true });
 
-interviewResultSchema.pre("save", async function () {
+assessmentResultSchema.pre("save", async function () {
 
   const Drive = mongoose.model("Drive");
   const driveInfo = await Drive.findById(this.driveId);
@@ -32,4 +32,4 @@ interviewResultSchema.pre("save", async function () {
   this.isPass = this.score >= passingThreshold;
 });
 
-export default mongoose.model("InterviewResult", interviewResultSchema);
+export default mongoose.model("AssessmentResult", assessmentResultSchema);

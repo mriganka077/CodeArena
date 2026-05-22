@@ -2,8 +2,7 @@ import express from "express";
 import mongoose from "mongoose";
 import User from "../models/User.js";
 import Drive from "../models/Drive.js";
-import InterviewResult from "../models/InterviewResult.js";
-import Interview from "../models/Interview.js";
+import AssessmentResult from "../models/AssessmentResult.js";
 import PracticeSubmission from "../models/PracticeSubmission.js";
 import Domain from "../models/Domain.js";
 import UserDomain from "../models/UserDomain.js";
@@ -65,7 +64,7 @@ async function getActivityData(period, userId) {
   const userObjectId = new mongoose.Types.ObjectId(userId);
 
   // Only THIS user's results
-  const results = await InterviewResult.aggregate([
+  const results = await AssessmentResult.aggregate([
     { $match: { userId: userObjectId, createdAt: { $gte: startDate } } },
     {
       $group: {
@@ -115,19 +114,19 @@ router.get("/summary", protect, async (req, res) => {
     const totalDrives = await Drive.countDocuments();
 
     // Drives THIS user has COMPLETED
-    const completedDriveIds = await InterviewResult.distinct("driveId", {
+    const completedDriveIds = await AssessmentResult.distinct("driveId", {
       userId: userObjectId,
       status: "Completed",
     });
     const completedCount = completedDriveIds.length;
 
     // Drives THIS user is SCHEDULED for (but not completed yet)
-    const scheduledInterviews = await Interview.find({
-      userIds: userObjectId,
-    }).select("driveId");
+    const scheduledDrives = await Drive.find({
+      assignedCandidates: userObjectId,
+    }).select("_id");
     
-    const scheduledDriveIds = scheduledInterviews
-      .map((i) => i.driveId.toString())
+    const scheduledDriveIds = scheduledDrives
+  .map((d) => d._id.toString())
       .filter((id) => !completedDriveIds.some((cid) => cid.toString() === id));
 
     const inProgressCount = scheduledDriveIds.length;
@@ -222,10 +221,10 @@ router.get("/summary", protect, async (req, res) => {
       : 0;
 
     // Mock interview stats — only THIS user's results
-    const userInterviewResults = await InterviewResult.countDocuments({
+    const assessmentSessions = await AssessmentResult.countDocuments({
       userId: userObjectId,
     });
-    const userScoreAgg = await InterviewResult.aggregate([
+    const userScoreAgg = await AssessmentResult.aggregate([
       { $match: { userId: userObjectId } },
       {
         $group: {
@@ -285,7 +284,7 @@ router.get("/summary", protect, async (req, res) => {
             description: "Prepare for real interviews with AI-powered mock sessions and detailed feedback.",
             badgeText: "Pro",
             stats: [
-              { num: userInterviewResults, text: "Sessions" },
+              { num: assessmentSessions, text: "Sessions" },
               { num: Number(avgScore), text: "Avg Score" },
               { num: totalHours, text: "Hours" },
             ],
