@@ -444,8 +444,30 @@ const DriveDrawer = ({
                                     { Icon:Globe,   label:"Visibility",val:drive.visibility },
                                     { Icon:Timer,   label:"Duration",  val:`${drive.duration} min` },
                                     { Icon:Code2,   label:"Questions", val:`${drive.questionCount} total` },
-                                    { Icon:Calendar,label:"Start",     val:fmt(drive.startDate) },
-                                    { Icon:Calendar,label:"End",       val:fmt(drive.endDate) },
+                                    {
+                                        Icon: Calendar,
+                                        label: "Start",
+                                        val: new Date(drive.startDate).toLocaleString("en-US", {
+                                          day: "numeric",
+                                          month: "short",
+                                          year: "numeric",
+                                          hour: "numeric",
+                                          minute: "2-digit",
+                                          hour12: true,
+                                        }),
+                                      },
+                                      {
+                                        Icon: Calendar,
+                                        label: "End",
+                                        val: new Date(drive.endDate).toLocaleString("en-US", {
+                                          day: "numeric",
+                                          month: "short",
+                                          year: "numeric",
+                                          hour: "numeric",
+                                          minute: "2-digit",
+                                          hour12: true,
+                                        }),
+                                      },
                                 ].map(({ Icon,label,val,color }) => (
                                     <div key={label} className="flex items-center gap-3">
                                         <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"

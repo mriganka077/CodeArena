@@ -37,6 +37,8 @@ import mockInterviewRouter from "./routes/mockInterview.js";
 
 import assessmentroutes from "./routes/assessment.js"
 
+import interviewRoutes from "./routes/interview.js";
+
 dotenv.config();
 
 initGoogleStrategy();
@@ -62,13 +64,14 @@ app.use(
 
 app.use(
   express.json({
-    limit: "10kb",
+    limit: "10mb",
   })
 );
 
 app.use(
   express.urlencoded({
     extended: true,
+    limit: "10mb",
   })
 );
 
@@ -209,9 +212,17 @@ app.use(
       "/uploads", 
       express.static("uploads"));
 
-app.use("/api/mockinterview", mockInterviewRouter);
+app.use(
+  "/api/mockinterview", 
+  mockInterviewRouter);
 
-app.use("/api", assessmentroutes);
+app.use(
+  "/api", 
+  assessmentroutes);
+
+app.use(
+  "/api/interview", 
+  interviewRoutes);
 
 // ============================
 // HEALTH CHECK

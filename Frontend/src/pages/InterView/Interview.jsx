@@ -7,6 +7,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useLocation, useNavigate } from "react-router-dom";
 import { FaceDetector, ObjectDetector, FilesetResolver } from "@mediapipe/tasks-vision";
 import vapi from "../../lib/vapi";
+import { useParams } from "react-router-dom";
 
 const CustomModal = ({ isOpen, title, message, type, onClose, onConfirm }) => {
   return (
@@ -223,7 +224,7 @@ const Interview = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const drive = location.state?.drive;
+  const { driveId } = useParams();
 
   const [elapsed, setElapsed] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
@@ -284,27 +285,40 @@ const Interview = () => {
   });
 
   const submitInterviewResult = async (
+   
     finalStatus = "Completed",
     reason = "",
   ) => {
     try {
       const token = localStorage.getItem("token");
-      await fetch("http://localhost:4000/api/auth/submit-result", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          driveId: drive?._id,
-          score: 0,
-          timeTaken: elapsed,
-          status: finalStatus,
-          violations: violations.current,
-          terminationReason: reason,
-          transcript: conversationTranscript,
-      }),
-      });
+      const response = await fetch(
+        "http://localhost:4000/api/interview/submit-result",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+
+            driveId,
+          
+            timeTaken: elapsed,
+          
+            status: finalStatus,
+          
+            violations: violations.current,
+          
+            terminationReason: reason,
+          
+            transcript: [...conversationTranscript],
+          }),
+        }
+      );
+      
+      const data = await response.json();
+      
+      console.log(data);
     } catch (err) {
       console.error("Failed to submit interview result", err);
     }
@@ -362,6 +376,23 @@ const Interview = () => {
     }
 };
 
+
+useEffect(() => {
+
+  if (!driveId) {
+
+    console.error("Drive ID missing");
+
+    triggerAlert(
+      "Drive Error",
+      "Invalid interview URL.",
+      "danger",
+      () => navigate("/drive")
+    );
+  }
+
+}, [driveId]);
+
   useEffect(() => {
     vapi.on("call-start", () => {
       console.log("CALL STARTED");
@@ -383,44 +414,56 @@ const Interview = () => {
     });
 
     vapi.on("message", (message) => {
+
       console.log("VAPI MESSAGE:", message);
-
-      if (message.type === "transcript") {
-
-        const transcriptText = message.transcript?.trim();
     
-        if (!transcriptText) return;
+      if (message.type !== "transcript") return;
     
-        const transcriptEntry = {
+      const transcriptText = message.transcript?.trim();
+    
+      if (!transcriptText) return;
+    
+      setConversationTranscript((prev) => {
+    
+        const lastMessage = prev[prev.length - 1];
+    
+        // prevent duplicate consecutive transcript
+        if (
+          lastMessage &&
+          lastMessage.role === message.role &&
+          lastMessage.text === transcriptText
+        ) {
+          return prev;
+        }
+    
+        return [
+          ...prev,
+          {
             role: message.role,
             text: transcriptText,
             timestamp: new Date().toISOString(),
-        };
+          },
+        ];
+      });
     
-        setConversationTranscript((prev) => [
-            ...prev,
-            transcriptEntry,
-        ]);
+      if (message.role === "assistant") {
+        setCurrentQuestion(transcriptText);
+      }
     
-        if (message.role === "assistant") {
-            setCurrentQuestion(transcriptText);
-        }
+      if (message.role === "user") {
     
-        if (message.role === "user") {
+        setCandidateSpeaking(true);
     
-            setCandidateSpeaking(true);
+        setCandidateAnswer((prev) =>
+          prev
+            ? `${prev} ${transcriptText}`
+            : transcriptText
+        );
     
-            setCandidateAnswer((prev) =>
-                prev
-                    ? `${prev} ${transcriptText}`
-                    : transcriptText
-            );
-    
-            setTimeout(() => {
-                setCandidateSpeaking(false);
-            }, 1200);
-        }
-    }
+        setTimeout(() => {
+          setCandidateSpeaking(false);
+        }, 1200);
+      }
     });
 
     vapi.on("error", (e) => {
