@@ -1,7 +1,6 @@
 import express from "express";
 import { protect } from "../middleware/auth.js";
-import Interview from "../models/Interview.js";
-import InterviewResult from "../models/InterviewResult.js";
+import AssessmentResult from "../models/AssessmentResult.js";
 import Drive from "../models/Drive.js";
 import {
   sendEmail,
@@ -20,7 +19,7 @@ router.post("/submit-result", protect, async (req, res) => {
   } = req.body;
 
   try {
-    const existingResult = await InterviewResult.findOne({
+    const existingResult = await AssessmentResult.findOne({
       userId: req.user._id,
       driveId: driveId,
     });
@@ -34,7 +33,7 @@ router.post("/submit-result", protect, async (req, res) => {
 
     const drive = await Drive.findById(driveId);
 
-    const newResult = await InterviewResult.create({
+    const newResult = await AssessmentResult.create({
       userId: req.user._id,
       driveId: driveId,
       score: score || 0,
@@ -171,19 +170,19 @@ router.post("/submit-result", protect, async (req, res) => {
 
 router.get("/my-drives", protect, async (req, res) => {
   try {
-    const interviews = await Interview.find({ userIds: req.user._id })
-      .populate("driveId")
-      .sort({ createdAt: -1 });
+    const drives = await Drive.find({
+      assignedCandidates: req.user._id,
+   }).sort({ createdAt: -1 });
 
-    const results = await InterviewResult.find({
+    const results = await AssessmentResult.find({
       userId: req.user._id,
     }).populate("driveId");
 
     res.status(200).json({
       success: true,
-      interviews,
+      drives,
       results,
-    });
+   });
   } catch (error) {
     console.error("My drives fetch error:", error);
 

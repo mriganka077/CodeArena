@@ -1,7 +1,6 @@
 import Drive from "../models/Drive.js";
 import User from "../models/User.js";
-import InterviewResult from "../models/InterviewResult.js";
-import Interview from "../models/Interview.js";
+import AssessmentResult from "../models/AssessmentResult.js";
 
 export const getAllDrives = async (req, res) => {
 
@@ -15,7 +14,7 @@ export const getAllDrives = async (req, res) => {
 
             drives.map(async (drive) => {
 
-                const results = await InterviewResult.find({
+                const results = await AssessmentResult.find({
                     driveId: drive._id,
                 });
 
@@ -72,12 +71,8 @@ export const getAllDrives = async (req, res) => {
                         
                         }
 
-                        const interview = await Interview.findOne({
-                            driveId: drive._id,
-                        });
-                        
-                        const assignedCount =
-                            interview?.userIds?.length || 0;
+                const assignedCount =
+                    drive.assignedCandidates?.length || 0;
                         
                         return {
                         
@@ -226,45 +221,32 @@ export const getDriveCandidates = async (req, res) => {
 
         const { id } = req.params;
 
-        // FIND INTERVIEW ASSIGNMENT
-        const interview =
-            await Interview.findOne({
-                driveId: id,
-            })
-
+        const drive = await Drive.findById(id)
             .populate(
-                "userIds",
+                "assignedCandidates",
                 "firstName lastName email picture profilePhoto"
-            )
+            );
 
-            .populate("driveId");
+        if (!drive) {
 
-        // NO INTERVIEW FOUND
-        if (!interview) {
-
-            return res.status(200).json({
-
-                success: true,
-
-                candidates: [],
+            return res.status(404).json({
+                success: false,
+                message: "Drive not found",
             });
         }
 
-        // GET RESULTS
         const results =
-            await InterviewResult.find({
+            await AssessmentResult.find({
                 driveId: id,
             });
 
-        // FORMAT USERS
         const candidates =
-            interview.userIds.map((u) => {
+            drive.assignedCandidates.map((u) => {
 
-                // FIND RESULT
                 const result =
                     results.find(
                         (r) =>
-                            r.userId?._id?.toString() ===
+                            r.userId?.toString() ===
                             u._id.toString()
                     );
 
@@ -296,9 +278,7 @@ export const getDriveCandidates = async (req, res) => {
             });
 
         res.status(200).json({
-
             success: true,
-
             candidates,
         });
 
@@ -307,9 +287,7 @@ export const getDriveCandidates = async (req, res) => {
         console.log(error);
 
         res.status(500).json({
-
             success: false,
-
             message:
                 "Failed to fetch candidates",
         });
@@ -322,41 +300,35 @@ export const assignCandidatesToDrive = async (req, res) => {
 
         const { candidateIds } = req.body;
 
-        let interview = await Interview.findOne({
-            driveId: req.params.id,
-        });
+        const drive =
+            await Drive.findById(req.params.id);
 
-        // CREATE INTERVIEW IF NOT EXISTS
-        if (!interview) {
+        if (!drive) {
 
-            interview = await Interview.create({
-                driveId: req.params.id,
-                userIds: candidateIds,
+            return res.status(404).json({
+                success: false,
+                message: "Drive not found",
             });
-
-        } else {
-
-            const existingIds =
-                interview.userIds.map((id) =>
-                    id.toString()
-                );
-
-            const merged = [
-                ...new Set([
-                    ...existingIds,
-                    ...candidateIds,
-                ]),
-            ];
-
-            interview.userIds = merged;
-
-            await interview.save();
         }
 
+        const existingIds =
+            drive.assignedCandidates.map((id) =>
+                id.toString()
+            );
+
+        const merged = [
+            ...new Set([
+                ...existingIds,
+                ...candidateIds,
+            ]),
+        ];
+
+        drive.assignedCandidates = merged;
+
+        await drive.save();
+
         res.status(200).json({
-
             success: true,
-
             message:
                 "Candidates assigned successfully",
         });
@@ -366,9 +338,7 @@ export const assignCandidatesToDrive = async (req, res) => {
         console.log(error);
 
         res.status(500).json({
-
             success: false,
-
             message:
                 "Failed to assign candidates",
         });

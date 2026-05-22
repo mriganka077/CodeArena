@@ -1,8 +1,7 @@
 import express from "express";
 import User from "../models/User.js";
 import Drive from "../models/Drive.js";
-import Interview from "../models/Interview.js";
-import InterviewResult from "../models/InterviewResult.js";
+import AssessmentResult from "../models/AssessmentResult.js";
 import Domain from "../models/Domain.js";
 import { adminLogin, adminVerifyOtp } from "../controllers/adminAuth.js";
 import { adminProtect } from "../middleware/adminProtect.js";
@@ -76,15 +75,40 @@ router.get("/interviews", async (req, res) => {
 });
 
 router.post("/interviews", async (req, res) => {
+
   try {
+
     const { driveId, userIds } = req.body;
+
     if (!driveId || !userIds || userIds.length === 0) {
-      return res.status(400).json({ success: false, message: "Drive and at least one user are required." });
+
+      return res.status(400).json({
+        success: false,
+        message: "Drive and at least one user are required.",
+      });
     }
-    const newInterview = await Interview.create({ driveId, userIds });
-    res.status(201).json({ success: true, data: newInterview });
+
+    const updatedDrive = await Drive.findByIdAndUpdate(
+      driveId,
+      {
+        assignedCandidates: userIds,
+      },
+      {
+        new: true,
+      }
+    );
+
+    res.status(201).json({
+      success: true,
+      data: updatedDrive,
+    });
+
   } catch (error) {
-    res.status(400).json({ success: false, message: error.message });
+
+    res.status(400).json({
+      success: false,
+      message: error.message,
+    });
   }
 });
 
@@ -115,7 +139,7 @@ router.delete("/interviews/:id", async (req, res) => {
 
 router.get("/results", async (req, res) => {
   try {
-    const results = await InterviewResult.find()
+    const results = await AssessmentResult.find()
       .populate("userId", "firstName lastName email")
       .populate("driveId", "driveId hiringPositionName totalMarks")
       .sort({ createdAt: -1 });

@@ -1,5 +1,5 @@
 import User from "../models/User.js";
-import InterviewResult from "../models/InterviewResult.js";
+import AssessmentResult from "../models/AssessmentResult.js";
 
 export const getAllCandidates = async (req, res) => {
   try {
@@ -10,7 +10,7 @@ export const getAllCandidates = async (req, res) => {
       users.map(async (user) => {
 
         // fetch all interview results
-        const results = await InterviewResult
+        const results = await AssessmentResult
           .find({ userId: user._id })
           .populate("driveId");
 
@@ -123,7 +123,7 @@ export const getCandidateById = async (req, res) => {
     }
 
     // fetch all results
-    const results = await InterviewResult
+    const results = await AssessmentResult
       .find({ userId: candidate._id })
       .populate("driveId")
       .sort({ createdAt: -1 });
@@ -167,7 +167,7 @@ export const deleteCandidate = async (
       }
 
       // remove interview results
-      await InterviewResult.deleteMany({
+      await AssessmentResult.deleteMany({
           userId: candidate._id,
       });
 
