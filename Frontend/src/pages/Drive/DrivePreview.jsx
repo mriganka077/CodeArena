@@ -175,8 +175,8 @@ const DrivePreview = () => {
         const data = await res.json();
 
         if (data.success) {
-          const validInterviews = data.interviews.filter((inv) => inv.driveId);
-          setAssignedDrives(validInterviews);
+          const validDrives = data.drives || [];
+          setAssignedDrives(validDrives);
           setUserResults(data.results || []);
         }
       } catch (error) {
@@ -216,9 +216,7 @@ const DrivePreview = () => {
     }
   };
 
-  const getDriveStatus = (driveData) => {
-    const drive = driveData.driveId;
-    if (!drive) return null;
+  const getDriveStatus = (drive) => {
 
     const startTime = new Date(drive.driveDate).getTime();
     const durationMs = drive.timeDurationInMin * 60 * 1000;
@@ -316,11 +314,10 @@ const DrivePreview = () => {
           </div>
         ) : (
           <div className="space-y-4">
-            {assignedDrives.map((interview, index) => {
-              const drive = interview.driveId;
+            {assignedDrives.map((drive, index) => {
               if (!drive) return null;
 
-              const statusInfo = getDriveStatus(interview);
+              const statusInfo = getDriveStatus(drive);
 
               let btnClass =
                 "px-6 py-2.5 rounded-xl font-bold text-sm transition-all ";
@@ -340,7 +337,7 @@ const DrivePreview = () => {
 
               return (
                 <motion.div
-                  key={interview._id}
+                  key={drive._id}
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.15 }}
