@@ -204,6 +204,23 @@ const DriveDrawer = ({
     const [selectedCandidates, setSelectedCandidates] = useState([]);
     const [assignLoading, setAssignLoading] = useState(false);
     const [fetchingCandidates, setFetchingCandidates] = useState(false);    
+    const [candidateSearch, setCandidateSearch] = useState("");
+
+    const filteredAssignCandidates = allCandidates.filter((candidate) => {
+
+        const q = candidateSearch.toLowerCase().trim();
+    
+        const fullName =
+            `${candidate.firstName || ""} ${candidate.lastName || ""}`
+                .toLowerCase();
+    
+        return (
+            fullName.includes(q) ||
+            candidate.firstName?.toLowerCase().includes(q) ||
+            candidate.lastName?.toLowerCase().includes(q) ||
+            candidate.email?.toLowerCase().includes(q)
+        );
+    });
 
     const fetchCandidates = async () => {
 
@@ -627,6 +644,43 @@ const DriveDrawer = ({
                                             </div>
 
                                             {/* Candidate List */}
+                                            {/* Search */}
+                                            <div className="px-6 pt-4">
+                                                <div className="relative">
+                                                    <Search
+                                                        size={15}
+                                                        className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30"
+                                                    />
+
+                                                    <input
+                                                        type="text"
+                                                        value={candidateSearch}
+                                                        onChange={(e) =>
+                                                            setCandidateSearch(e.target.value)
+                                                        }
+                                                        placeholder="Search candidates by name or email..."
+                                                        className="w-full pl-11 pr-10 py-3 rounded-2xl text-sm text-white/80 placeholder-white/25 border border-white/10 outline-none transition focus:border-indigo-500/40 focus:bg-indigo-500/[0.03]"
+                                                        style={{
+                                                            background:
+                                                                "linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02))",
+                                                            backdropFilter: "blur(10px)",
+                                                        }}
+                                                    />
+
+                                                    {candidateSearch && (
+                                                        <button
+                                                            onClick={() =>
+                                                                setCandidateSearch("")
+                                                            }
+                                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-white/25 hover:text-white/60 transition"
+                                                        >
+                                                            <X size={14} />
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {/* Candidate List */}
                                             <div className="max-h-[420px] overflow-y-auto px-6 py-4 space-y-2">
 
                                                 {fetchingCandidates ? (
@@ -634,7 +688,7 @@ const DriveDrawer = ({
                                                         <div className="w-8 h-8 rounded-full border-2 border-indigo-500/30 border-t-indigo-400 animate-spin" />
                                                     </div>
                                                 ) : (
-                                                    allCandidates.map((candidate) => {
+                                                    filteredAssignCandidates.map((candidate) => {
 
                                                         const selected = selectedCandidates.includes(candidate._id);
 

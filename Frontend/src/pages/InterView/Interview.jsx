@@ -249,6 +249,7 @@ const Interview = () => {
   const lastViolationTime = useRef(0);
   const isAnalyzing = useRef(false);
   const analysisTimeoutRef = useRef(null);
+  const [conversationTranscript, setConversationTranscript] = useState([]);
 
   const [modalConfig, setModalConfig] = useState({
     isOpen: false,
@@ -301,7 +302,8 @@ const Interview = () => {
           status: finalStatus,
           violations: violations.current,
           terminationReason: reason,
-        }),
+          transcript: conversationTranscript,
+      }),
       });
     } catch (err) {
       console.error("Failed to submit interview result", err);
@@ -341,13 +343,24 @@ const Interview = () => {
   };
 
   const startVapiInterview = async () => {
+
     try {
-      await vapi.start(import.meta.env.VITE_VAPI_ASSISTANT_ID);
-      setCallActive(true);
+
+        await vapi.start(
+            import.meta.env.VITE_VAPI_ASSISTANT_ID,
+            {
+                variableValues: {
+                  candidateName: user?.firstName || "Candidate",
+                },
+            }
+        );
+
+        setCallActive(true);
+
     } catch (error) {
-      console.log(error);
+        console.log(error);
     }
-  };
+};
 
   useEffect(() => {
     vapi.on("call-start", () => {
@@ -373,21 +386,41 @@ const Interview = () => {
       console.log("VAPI MESSAGE:", message);
 
       if (message.type === "transcript") {
+
+        const transcriptText = message.transcript?.trim();
+    
+        if (!transcriptText) return;
+    
+        const transcriptEntry = {
+            role: message.role,
+            text: transcriptText,
+            timestamp: new Date().toISOString(),
+        };
+    
+        setConversationTranscript((prev) => [
+            ...prev,
+            transcriptEntry,
+        ]);
+    
         if (message.role === "assistant") {
-          setCurrentQuestion(message.transcript);
+            setCurrentQuestion(transcriptText);
         }
-
+    
         if (message.role === "user") {
-          setCandidateSpeaking(true);
-          setCandidateAnswer((prev) =>
-            prev ? `${prev} ${message.transcript}` : message.transcript,
-          );
-
-          setTimeout(() => {
-            setCandidateSpeaking(false);
-          }, 1200);
+    
+            setCandidateSpeaking(true);
+    
+            setCandidateAnswer((prev) =>
+                prev
+                    ? `${prev} ${transcriptText}`
+                    : transcriptText
+            );
+    
+            setTimeout(() => {
+                setCandidateSpeaking(false);
+            }, 1200);
         }
-      }
+    }
     });
 
     vapi.on("error", (e) => {
@@ -399,76 +432,76 @@ const Interview = () => {
     };
   }, []);
 
-  useEffect(() => {
-    if (status !== "active") return;
+  // useEffect(() => {
+  //   if (status !== "active") return;
 
-    const handleViolation = (reason) => {
-      violations.current.tab += 1;
-      if (violations.current.tab >= 3) {
-        terminateInterview(`${reason}. Multiple violations detected.`);
-        return;
-      }
-      triggerAlert(
-        "Warning",
-        `${reason}. Warning ${violations.current.tab}/2`,
-        "danger",
-      );
-    };
+  //   const handleViolation = (reason) => {
+  //     violations.current.tab += 1;
+  //     if (violations.current.tab >= 3) {
+  //       terminateInterview(`${reason}. Multiple violations detected.`);
+  //       return;
+  //     }
+  //     triggerAlert(
+  //       "Warning",
+  //       `${reason}. Warning ${violations.current.tab}/2`,
+  //       "danger",
+  //     );
+  //   };
 
-    const handleVisibility = () => {
-      if (document.hidden) {
-        handleViolation("Tab switching detected");
-      }
-    };
+  //   const handleVisibility = () => {
+  //     if (document.hidden) {
+  //       handleViolation("Tab switching detected");
+  //     }
+  //   };
 
-    const handleFullscreen = () => {
-      if (isEndingInterview.current) return;
+  //   const handleFullscreen = () => {
+  //     if (isEndingInterview.current) return;
 
-      if (!document.fullscreenElement) {
-        violations.current.fullscreen += 1;
+  //     if (!document.fullscreenElement) {
+  //       violations.current.fullscreen += 1;
 
-        if (violations.current.fullscreen >= 3) {
-          terminateInterview("Multiple fullscreen violations detected.");
-          return;
-        }
+  //       if (violations.current.fullscreen >= 3) {
+  //         terminateInterview("Multiple fullscreen violations detected.");
+  //         return;
+  //       }
 
-        triggerAlert(
-          "Warning",
-          `Fullscreen exit detected. Warning ${violations.current.fullscreen}/2. Click Continue to resume interview.`,
-          "danger",
-          async () => {
-            try {
-              await document.documentElement.requestFullscreen();
-            } catch (err) {
-              console.error("Failed to re-enter fullscreen");
-            }
-          },
-        );
-      }
-    };
+  //       triggerAlert(
+  //         "Warning",
+  //         `Fullscreen exit detected. Warning ${violations.current.fullscreen}/2. Click Continue to resume interview.`,
+  //         "danger",
+  //         async () => {
+  //           try {
+  //             await document.documentElement.requestFullscreen();
+  //           } catch (err) {
+  //             console.error("Failed to re-enter fullscreen");
+  //           }
+  //         },
+  //       );
+  //     }
+  //   };
 
-    const handleKeyDown = (e) => {
-      const key = e.key.toLowerCase();
-      if (
-        key === "f12" ||
-        (e.altKey && key === "tab") ||
-        ((e.ctrlKey || e.metaKey) && ["c", "v", "u", "p"].includes(key))
-      ) {
-        e.preventDefault();
-        handleViolation("Restricted shortcut detected");
-      }
-    };
+  //   const handleKeyDown = (e) => {
+  //     const key = e.key.toLowerCase();
+  //     if (
+  //       key === "f12" ||
+  //       (e.altKey && key === "tab") ||
+  //       ((e.ctrlKey || e.metaKey) && ["c", "v", "u", "p"].includes(key))
+  //     ) {
+  //       e.preventDefault();
+  //       handleViolation("Restricted shortcut detected");
+  //     }
+  //   };
 
-    document.addEventListener("visibilitychange", handleVisibility);
-    document.addEventListener("fullscreenchange", handleFullscreen);
-    document.addEventListener("keydown", handleKeyDown, true);
+  //   document.addEventListener("visibilitychange", handleVisibility);
+  //   document.addEventListener("fullscreenchange", handleFullscreen);
+  //   document.addEventListener("keydown", handleKeyDown, true);
 
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibility);
-      document.removeEventListener("fullscreenchange", handleFullscreen);
-      document.removeEventListener("keydown", handleKeyDown, true);
-    };
-  }, [status]);
+  //   return () => {
+  //     document.removeEventListener("visibilitychange", handleVisibility);
+  //     document.removeEventListener("fullscreenchange", handleFullscreen);
+  //     document.removeEventListener("keydown", handleKeyDown, true);
+  //   };
+  // }, [status]);
 
   useEffect(() => {
     const timer = setInterval(() => setElapsed((p) => p + 1), 1000);
@@ -581,196 +614,196 @@ const Interview = () => {
     };
   }, [status]);
 
-  useEffect(() => {
-    if (status !== "active" || !isModelsLoaded) return;
+  // useEffect(() => {
+  //   if (status !== "active" || !isModelsLoaded) return;
     
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d", { willReadFrequently: true });
-    canvas.width = 64;
-    canvas.height = 36;
-    let isRunning = true;
+  //   const canvas = document.createElement("canvas");
+  //   const ctx = canvas.getContext("2d", { willReadFrequently: true });
+  //   canvas.width = 64;
+  //   canvas.height = 36;
+  //   let isRunning = true;
 
-    const performAnalysis = async () => {
-      if (!isRunning || isAnalyzing.current || modalConfig.isOpen) return;
-      isAnalyzing.current = true;
+  //   const performAnalysis = async () => {
+  //     if (!isRunning || isAnalyzing.current || modalConfig.isOpen) return;
+  //     isAnalyzing.current = true;
 
-      try {
-        const video = videoRef.current;
-        if (!video || video.readyState < 2 || video.paused || video.ended) {
-          isAnalyzing.current = false;
-          return;
-        }
+  //     try {
+  //       const video = videoRef.current;
+  //       if (!video || video.readyState < 2 || video.paused || video.ended) {
+  //         isAnalyzing.current = false;
+  //         return;
+  //       }
 
-        const checkCooldown = () => Date.now() - lastViolationTime.current < 4000;
+  //       const checkCooldown = () => Date.now() - lastViolationTime.current < 4000;
 
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  //       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  //       const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
-        let totalBrightness = 0;
-        for (let i = 0; i < frame.data.length; i += 16) {
-          totalBrightness +=
-            (frame.data[i] + frame.data[i + 1] + frame.data[i + 2]) / 3;
-        }
-        const avgBrightness = totalBrightness / (frame.data.length / 16);
+  //       let totalBrightness = 0;
+  //       for (let i = 0; i < frame.data.length; i += 16) {
+  //         totalBrightness +=
+  //           (frame.data[i] + frame.data[i + 1] + frame.data[i + 2]) / 3;
+  //       }
+  //       const avgBrightness = totalBrightness / (frame.data.length / 16);
 
-        if (avgBrightness < 30) {
-          if (!checkCooldown()) {
-            violations.current.brightness += 1;
-            lastViolationTime.current = Date.now();
-            if (violations.current.brightness >= 4)
-              terminateInterview("Environment too dark.");
-            else
-              triggerAlert(
-                "Lighting Warning",
-                `Warning ${violations.current.brightness}/3: Lighting is too dark. Please turn on a light.`,
-                "danger",
-              );
-          }
-          isAnalyzing.current = false;
-          return;
-        }
+  //       if (avgBrightness < 30) {
+  //         if (!checkCooldown()) {
+  //           violations.current.brightness += 1;
+  //           lastViolationTime.current = Date.now();
+  //           if (violations.current.brightness >= 4)
+  //             terminateInterview("Environment too dark.");
+  //           else
+  //             triggerAlert(
+  //               "Lighting Warning",
+  //               `Warning ${violations.current.brightness}/3: Lighting is too dark. Please turn on a light.`,
+  //               "danger",
+  //             );
+  //         }
+  //         isAnalyzing.current = false;
+  //         return;
+  //       }
 
-        let faceCount = 0;
-        let isMasked = false;
+  //       let faceCount = 0;
+  //       let isMasked = false;
 
-        if (faceDetectorRef.current) {
-          const results = faceDetectorRef.current.detectForVideo(
-            video,
-            performance.now(),
-          );
-          faceCount = results.detections.length;
+  //       if (faceDetectorRef.current) {
+  //         const results = faceDetectorRef.current.detectForVideo(
+  //           video,
+  //           performance.now(),
+  //         );
+  //         faceCount = results.detections.length;
 
-          if (faceCount === 1) {
-            const face = results.detections[0];
-            const score = face.categories[0].score;
+  //         if (faceCount === 1) {
+  //           const face = results.detections[0];
+  //           const score = face.categories[0].score;
 
-            if (score < 0.82) {
-              isMasked = true;
-            }
-          }
-        }
+  //           if (score < 0.82) {
+  //             isMasked = true;
+  //           }
+  //         }
+  //       }
 
-        if (faceCount === 0) {
-          missingFaceFrames.current += 1;
-          const allowedMissingFrames = 3;
+  //       if (faceCount === 0) {
+  //         missingFaceFrames.current += 1;
+  //         const allowedMissingFrames = 3;
 
-          if (missingFaceFrames.current >= allowedMissingFrames) {
-            if (!checkCooldown()) {
-              violations.current.noFace += 1;
-              lastViolationTime.current = Date.now();
-              missingFaceFrames.current = 0;
-              if (violations.current.noFace >= 4) {
-                terminateInterview("Face obscured or not visible.");
-              } else {
-                triggerAlert(
-                  "Visibility Violation",
-                  `Warning ${violations.current.noFace}/3: Face not detected! Please look directly at the screen.`,
-                  "danger",
-                );
-              }
-            }
-          }
-        } else if (faceCount > 1) {
-          missingFaceFrames.current = 0;
-          if (!checkCooldown()) {
-            violations.current.multiPerson += 1;
-            lastViolationTime.current = Date.now();
-            if (violations.current.multiPerson >= 3) {
-              terminateInterview(
-                "Multiple people detected in the environment.",
-              );
-            } else {
-              triggerAlert(
-                "Security Violation",
-                `Warning ${violations.current.multiPerson}/2: Multiple faces detected! You must take this assessment alone.`,
-                "danger",
-              );
-            }
-          }
-        } else if (isMasked) {
-          missingFaceFrames.current = 0;
-          maskFrames.current += 1;
+  //         if (missingFaceFrames.current >= allowedMissingFrames) {
+  //           if (!checkCooldown()) {
+  //             violations.current.noFace += 1;
+  //             lastViolationTime.current = Date.now();
+  //             missingFaceFrames.current = 0;
+  //             if (violations.current.noFace >= 4) {
+  //               terminateInterview("Face obscured or not visible.");
+  //             } else {
+  //               triggerAlert(
+  //                 "Visibility Violation",
+  //                 `Warning ${violations.current.noFace}/3: Face not detected! Please look directly at the screen.`,
+  //                 "danger",
+  //               );
+  //             }
+  //           }
+  //         }
+  //       } else if (faceCount > 1) {
+  //         missingFaceFrames.current = 0;
+  //         if (!checkCooldown()) {
+  //           violations.current.multiPerson += 1;
+  //           lastViolationTime.current = Date.now();
+  //           if (violations.current.multiPerson >= 3) {
+  //             terminateInterview(
+  //               "Multiple people detected in the environment.",
+  //             );
+  //           } else {
+  //             triggerAlert(
+  //               "Security Violation",
+  //               `Warning ${violations.current.multiPerson}/2: Multiple faces detected! You must take this assessment alone.`,
+  //               "danger",
+  //             );
+  //           }
+  //         }
+  //       } else if (isMasked) {
+  //         missingFaceFrames.current = 0;
+  //         maskFrames.current += 1;
 
-          if (maskFrames.current >= 3) {
-            if (!checkCooldown()) {
-              violations.current.mask += 1;
-              lastViolationTime.current = Date.now();
-              maskFrames.current = 0;
-              if (violations.current.mask >= 3) {
-                terminateInterview(
-                  "Face covering or mask detected repeatedly.",
-                );
-              } else {
-                triggerAlert(
-                  "Security Violation",
-                  `Warning ${violations.current.mask}/2: Face covering or mask detected! Please ensure your full face is visible.`,
-                  "danger",
-                );
-              }
-            }
-          }
-        } else {
-          missingFaceFrames.current = 0;
-          maskFrames.current = 0;
-        }
+  //         if (maskFrames.current >= 3) {
+  //           if (!checkCooldown()) {
+  //             violations.current.mask += 1;
+  //             lastViolationTime.current = Date.now();
+  //             maskFrames.current = 0;
+  //             if (violations.current.mask >= 3) {
+  //               terminateInterview(
+  //                 "Face covering or mask detected repeatedly.",
+  //               );
+  //             } else {
+  //               triggerAlert(
+  //                 "Security Violation",
+  //                 `Warning ${violations.current.mask}/2: Face covering or mask detected! Please ensure your full face is visible.`,
+  //                 "danger",
+  //               );
+  //             }
+  //           }
+  //         }
+  //       } else {
+  //         missingFaceFrames.current = 0;
+  //         maskFrames.current = 0;
+  //       }
 
-        let isPhoneDetected = false;
-        if (objectDetectorRef.current) {
-          const objResults = objectDetectorRef.current.detectForVideo(
-            video,
-            performance.now(),
-          );
+  //       let isPhoneDetected = false;
+  //       if (objectDetectorRef.current) {
+  //         const objResults = objectDetectorRef.current.detectForVideo(
+  //           video,
+  //           performance.now(),
+  //         );
 
-          for (const detection of objResults.detections) {
-            const hasPhone = detection.categories.some(
-              (cat) => cat.categoryName === "cell phone",
-            );
+  //         for (const detection of objResults.detections) {
+  //           const hasPhone = detection.categories.some(
+  //             (cat) => cat.categoryName === "cell phone",
+  //           );
 
-            if (hasPhone) {
-              isPhoneDetected = true;
-              break;
-            }
-          }
-        }
+  //           if (hasPhone) {
+  //             isPhoneDetected = true;
+  //             break;
+  //           }
+  //         }
+  //       }
 
-        if (isPhoneDetected) {
-          if (!checkCooldown()) {
-            violations.current.phone += 1;
-            lastViolationTime.current = Date.now();
+  //       if (isPhoneDetected) {
+  //         if (!checkCooldown()) {
+  //           violations.current.phone += 1;
+  //           lastViolationTime.current = Date.now();
 
-            if (violations.current.phone >= 3) {
-              terminateInterview(
-                "Use of an electronic device (cell phone) detected.",
-              );
-            } else {
-              triggerAlert(
-                "Security Violation",
-                `Warning ${violations.current.phone}/2: Cell phone detected! Electronic devices are strictly prohibited.`,
-                "danger",
-              );
-            }
-          }
-        }
-      } catch (err) {
-        console.error("Analysis Error:", err);
-      } finally {
-        isAnalyzing.current = false;
-      }
-    };
+  //           if (violations.current.phone >= 3) {
+  //             terminateInterview(
+  //               "Use of an electronic device (cell phone) detected.",
+  //             );
+  //           } else {
+  //             triggerAlert(
+  //               "Security Violation",
+  //               `Warning ${violations.current.phone}/2: Cell phone detected! Electronic devices are strictly prohibited.`,
+  //               "danger",
+  //             );
+  //           }
+  //         }
+  //       }
+  //     } catch (err) {
+  //       console.error("Analysis Error:", err);
+  //     } finally {
+  //       isAnalyzing.current = false;
+  //     }
+  //   };
 
-    const loop = async () => {
-      if (!isRunning) return;
-      await performAnalysis();
-      analysisTimeoutRef.current = setTimeout(loop, 150);
-    };
+  //   const loop = async () => {
+  //     if (!isRunning) return;
+  //     await performAnalysis();
+  //     analysisTimeoutRef.current = setTimeout(loop, 150);
+  //   };
 
-    loop();
+  //   loop();
 
-    return () => {
-      isRunning = false;
-      if (analysisTimeoutRef.current) clearTimeout(analysisTimeoutRef.current);
-    };
-  }, [status, isModelsLoaded, modalConfig.isOpen]);
+  //   return () => {
+  //     isRunning = false;
+  //     if (analysisTimeoutRef.current) clearTimeout(analysisTimeoutRef.current);
+  //   };
+  // }, [status, isModelsLoaded, modalConfig.isOpen]);
 
   return (
     <>
