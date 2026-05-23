@@ -251,6 +251,7 @@ const Assessment = () => {
 
   const missingFaceFrames = useRef(0);
   const maskFrames = useRef(0);
+  const phoneFrames = useRef(0);
   const noiseFrames = useRef(0);
   const audioAnalyserRef = useRef(null);
   const audioContextRef = useRef(null);
@@ -402,17 +403,13 @@ const Assessment = () => {
     return () => clearInterval(timer);
   }, [status, timeLeft]);
 
-  const submitAssessment = async (
-    finalStatus = "Completed",
-    reason = ""
-  ) => {
-  
+  const submitAssessment = async (finalStatus = "Completed", reason = "") => {
     isTerminating.current = true;
-  
+
     setStatus("idle");
-  
+
     const doc = window.document;
-  
+
     if (
       doc.fullscreenElement ||
       doc.webkitFullscreenElement ||
@@ -420,175 +417,120 @@ const Assessment = () => {
       doc.msFullscreenElement
     ) {
       try {
-  
-        if (doc.exitFullscreen)
-          await doc.exitFullscreen();
-  
-        else if (doc.webkitExitFullscreen)
-          await doc.webkitExitFullscreen();
-  
-        else if (doc.mozCancelFullScreen)
-          await doc.mozCancelFullScreen();
-  
-        else if (doc.msExitFullscreen)
-          await doc.msExitFullscreen();
-  
+        if (doc.exitFullscreen) await doc.exitFullscreen();
+        else if (doc.webkitExitFullscreen) await doc.webkitExitFullscreen();
+        else if (doc.mozCancelFullScreen) await doc.mozCancelFullScreen();
+        else if (doc.msExitFullscreen) await doc.msExitFullscreen();
       } catch (err) {
-        console.warn(
-          "Fullscreen exit failed:",
-          err
-        );
+        console.warn("Fullscreen exit failed:", err);
       }
     }
-  
-    const timeTaken =
-      drive.timeDurationInMin * 60 -
-      timeLeft;
-  
+
+    const timeTaken = drive.timeDurationInMin * 60 - timeLeft;
+
     // ============================
     // REAL RESULT CALCULATION
     // ============================
-  
-    const totalMarks =
-      drive.totalMarks || 100;
-  
-    const totalQuestions =
-      questions.length;
-  
+
+    const totalMarks = drive.totalMarks || 100;
+
+    const totalQuestions = questions.length;
+
     const marksPerQuestion =
-      totalQuestions > 0
-        ? totalMarks / totalQuestions
-        : 0;
-  
+      totalQuestions > 0 ? totalMarks / totalQuestions : 0;
+
     let obtainedMarks = 0;
-  
+
     let correctAnswers = 0;
-  
-    questions.forEach(
-      (question, index) => {
-  
+
+    questions.forEach((question, index) => {
+      if (question.type === "MCQ") {
+        const selectedOptionIndex = answers[index];
+
+        if (selectedOptionIndex === undefined) {
+          return;
+        }
+
+        const selectedOption = question.options?.[selectedOptionIndex];
+
+        const correctAnswer = question.answer;
+
         if (
-          question.type === "MCQ"
+          selectedOption &&
+          correctAnswer &&
+          selectedOption.trim() === correctAnswer.trim()
         ) {
-  
-          const selectedOptionIndex =
-            answers[index];
+          correctAnswers += 1;
 
-          if (
-            selectedOptionIndex === undefined
-          ) {
-            return;
-          }
-
-          const selectedOption =
-            question.options?.[
-            selectedOptionIndex
-            ];
-  
-          const correctAnswer =
-            question.answer;
-  
-          if (
-            selectedOption &&
-            correctAnswer &&
-            selectedOption.trim() ===
-              correctAnswer.trim()
-          ) {
-  
-            correctAnswers += 1;
-  
-            obtainedMarks +=
-              marksPerQuestion;
-          }
+          obtainedMarks += marksPerQuestion;
         }
       }
-    );
-  
-    const finalScore =
-      Math.round(obtainedMarks);
-  
+    });
+
+    const finalScore = Math.round(obtainedMarks);
+
     console.log({
       totalQuestions,
       correctAnswers,
       finalScore,
     });
-  
+
     try {
-  
-      const token =
-        localStorage.getItem("token");
-  
-      await fetch(
-        `${import.meta.env.VITE_API_URL}/api/submit-result`,
-        {
-          method: "POST",
-  
-          headers: {
-            "Content-Type":
-              "application/json",
-  
-            Authorization:
-              `Bearer ${token}`,
-          },
-  
-          body: JSON.stringify({
-            driveId: drive._id,
-  
-            score: finalScore,
-  
-            timeTaken,
-  
-            status: finalStatus,
-  
-            violations:
-              violations.current,
-  
-            terminationReason:
-              reason,
-          }),
-        }
-      );
-  
-      if (
-        finalStatus ===
-        "Terminated"
-      ) {
-  
+      const token = localStorage.getItem("token");
+
+      await fetch(`${import.meta.env.VITE_API_URL}/api/submit-result`, {
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json",
+
+          Authorization: `Bearer ${token}`,
+        },
+
+        body: JSON.stringify({
+          driveId: drive._id,
+
+          score: finalScore,
+
+          timeTaken,
+
+          status: finalStatus,
+
+          violations: violations.current,
+
+          terminationReason: reason,
+        }),
+      });
+
+      if (finalStatus === "Terminated") {
         triggerAlert(
           "Session Terminated",
-  
+
           `Your assessment was terminated due to security or environment violations. (${reason})`,
-  
+
           "danger",
-  
+
           null,
-  
+
           false,
-  
-          () => navigate("/drive")
+
+          () => navigate("/drive"),
         );
-  
       } else {
-  
         triggerAlert(
           "Assessment Finished",
-  
+
           `You scored ${finalScore}/${totalMarks} with ${correctAnswers} correct answers.`,
-  
+
           "info",
-  
+
           () => navigate("/drive"),
-  
-          true
+
+          true,
         );
       }
-  
     } catch (err) {
-  
-      console.error(
-        "Failed to submit",
-        err
-      );
+      console.error("Failed to submit", err);
     }
   };
 
@@ -628,10 +570,15 @@ const Assessment = () => {
 
         const objectDetector = await ObjectDetector.createFromOptions(vision, {
           baseOptions: {
-            modelAssetPath: `https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite`,
+            modelAssetPath:
+              "https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite",
             delegate: "GPU",
           },
-          scoreThreshold: 0.3,
+
+          scoreThreshold: 0.08,
+
+          maxResults: 5,
+
           runningMode: "VIDEO",
         });
 
@@ -755,38 +702,57 @@ const Assessment = () => {
         }
 
         if (audioAnalyserRef.current) {
-          const dataArray = new Uint8Array(
-            audioAnalyserRef.current.frequencyBinCount,
-          );
-          audioAnalyserRef.current.getByteFrequencyData(dataArray);
-          let sum = 0;
-          for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
-          const avgVolume = sum / dataArray.length;
+          const analyser = audioAnalyserRef.current;
 
-          if (avgVolume > 35) {
+          const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+          analyser.getByteFrequencyData(dataArray);
+
+          let volumeSum = 0;
+
+          let speechFrequencyEnergy = 0;
+
+          for (let i = 0; i < dataArray.length; i++) {
+            volumeSum += dataArray[i];
+
+            if (i > 2 && i < 35) {
+              speechFrequencyEnergy += dataArray[i];
+            }
+          }
+
+          const avgVolume = volumeSum / dataArray.length;
+
+          const speechEnergy = speechFrequencyEnergy / 33;
+
+
+          const isSuspiciousAudio = avgVolume > 42 && speechEnergy > 38;
+
+          if (isSuspiciousAudio) {
             noiseFrames.current += 1;
+          } else {
+            noiseFrames.current = Math.max(noiseFrames.current - 1, 0);
+          }
 
-            if (noiseFrames.current >= 3) {
-              if (!checkCooldown()) {
-                violations.current.noise += 1;
-                lastViolationTime.current = Date.now();
-                noiseFrames.current = 0;
+          if (noiseFrames.current >= 18) {
+            if (!checkCooldown()) {
+              violations.current.noise += 1;
 
-                if (violations.current.noise >= 4) {
-                  terminateSession(
-                    "Continuous background noise, talking, or music detected.",
-                  );
-                } else {
-                  triggerAlert(
-                    "Audio Violation",
-                    `Warning ${violations.current.noise}/3: High background noise or talking detected! Please remain in a quiet environment.`,
-                    "danger",
-                  );
-                }
+              lastViolationTime.current = Date.now();
+
+              noiseFrames.current = 0;
+
+              if (violations.current.noise >= 4) {
+                terminateSession(
+                  "Continuous conversation or background speech detected.",
+                );
+              } else {
+                triggerAlert(
+                  "Environment Warning",
+                  `Warning ${violations.current.noise}/3: Continuous speech or distracting audio detected. Please remain alone in a quiet environment.`,
+                  "danger",
+                );
               }
             }
-          } else {
-            noiseFrames.current = 0;
           }
         }
 
@@ -871,21 +837,53 @@ const Assessment = () => {
         }
 
         let isPhoneDetected = false;
+
         if (objectDetectorRef.current) {
           const objResults = objectDetectorRef.current.detectForVideo(
             video,
             performance.now(),
           );
 
+          console.log(objResults.detections);
+
           for (const detection of objResults.detections) {
-            const hasPhone = detection.categories.some(
-              (cat) => cat.categoryName === "cell phone",
+            const phoneCategory = detection.categories.find(
+              (cat) =>
+                cat.categoryName.toLowerCase() === "cell phone" ||
+                cat.categoryName.toLowerCase() === "mobile phone",
             );
 
-            if (hasPhone) {
+            if (!phoneCategory) continue;
+
+            console.log("PHONE FOUND:", phoneCategory.score);
+
+            if (phoneCategory.score < 0.18) continue;
+
+            const box = detection.boundingBox;
+
+            if (!box) continue;
+
+            const area = box.width * box.height;
+
+            const frameArea = video.videoWidth * video.videoHeight;
+
+            const relativeSize = area / frameArea;
+
+            console.log("PHONE SIZE:", relativeSize);
+
+            if (relativeSize < 0.002) continue;
+
+            phoneFrames.current += 1;
+
+            if (phoneFrames.current >= 2) {
               isPhoneDetected = true;
+              phoneFrames.current = 0;
               break;
             }
+          }
+
+          if (!isPhoneDetected) {
+            phoneFrames.current = Math.max(phoneFrames.current - 1, 0);
           }
         }
 
