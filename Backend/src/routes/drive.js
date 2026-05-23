@@ -1,4 +1,5 @@
 import express from "express";
+import { protect } from "../middleware/auth.js";
 
 import {
   getAllDrives,
@@ -6,10 +7,10 @@ import {
   updateDrive,
   getDriveCandidates,
   assignCandidatesToDrive,
-} from "../controllers/drive.js";
-
-import {
   deleteDrive,
+  endDrive,
+  createInterview,
+  getMyInterviews,
 } from "../controllers/drive.js";
 
 const router = express.Router();
@@ -22,12 +23,25 @@ router.put("/:id", updateDrive);
 
 router.delete("/:id", deleteDrive);
 
-
 router.get("/:id/candidates", getDriveCandidates);
+
+router.post(
+  "/schedule-interview",
+  protect,
+  createInterview
+);
 
 router.post(
   "/:id/assign-candidates",
   assignCandidatesToDrive
 );
+
+router.get(
+  "/my-interviews",
+  protect,
+  getMyInterviews
+);
+
+router.put("/:id/end-drive", endDrive);
 
 export default router;

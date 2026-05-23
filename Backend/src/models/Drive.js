@@ -5,12 +5,33 @@ const driveSchema = new mongoose.Schema({
 
   hiringPositionName: { type: String, required: true },
 
-  driveDate: { type: Date, required: true },
+  // Assessment timing
+  assessmentStartDate: {
+    type: Date,
+    required: true,
+  },
+
+  assessmentEndDate: {
+    type: Date,
+    required: true,
+  },
+
+  // Drive timing
+  driveEndDate: {
+    type: Date,
+    required: true,
+  },
 
   driveType: {
     type: String,
     enum: ["Assessment", "Interview"],
     required: true,
+  },
+
+  status: {
+    type: String,
+    enum: ["Active", "Completed", "On-Hold", "Draft"],
+    default: "Active",
   },
 
   timeDurationInMin: {
@@ -49,21 +70,13 @@ const driveSchema = new mongoose.Schema({
       ref: "User",
     },
   ],
+  interviews: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "InterviewSchedule",
+    },
+  ],
 
 }, { timestamps: true });
-
-driveSchema.pre("save", async function () {
-
-  if (this.driveType === "Assessment") {
-
-    this.totalMarks =
-      (this.mcqCount * this.mcqMarks) +
-      (this.codeCount * this.codeMarks);
-
-  } else {
-
-    this.totalMarks = 0;
-  }
-});
 
 export default mongoose.model("Drive", driveSchema);

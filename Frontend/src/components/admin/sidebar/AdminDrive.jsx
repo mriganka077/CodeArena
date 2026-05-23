@@ -164,8 +164,8 @@ const EMPTY = {
     title:"", 
     tag:"", 
     type:"Assessment", 
-    startDate:"", 
-    endDate:"",
+    assessmentStartDate:"", 
+    assessmentEndDate:"",
     difficulty:"Intermediate", 
     duration:"", 
     visibility:"Private",
@@ -205,6 +205,8 @@ const DriveDrawer = ({
     const [assignLoading, setAssignLoading] = useState(false);
     const [fetchingCandidates, setFetchingCandidates] = useState(false);    
     const [candidateSearch, setCandidateSearch] = useState("");
+    const isDriveEnded = drive.status === "Completed";
+    
 
     const filteredAssignCandidates = allCandidates.filter((candidate) => {
 
@@ -221,6 +223,32 @@ const DriveDrawer = ({
             candidate.email?.toLowerCase().includes(q)
         );
     });
+
+    const [endDriveLoading, setEndDriveLoading] = useState(false);
+
+const endDrive = async () => {
+
+    try {
+
+        setEndDriveLoading(true);
+
+        await axios.put(
+            `http://localhost:4000/api/drives/${drive._id}/end-drive`
+        );
+
+        setShowDeleteModal(false);
+
+        window.location.reload();
+
+    } catch (err) {
+
+        console.error(err);
+
+    } finally {
+
+        setEndDriveLoading(false);
+    }
+};
 
     const fetchCandidates = async () => {
 
@@ -380,11 +408,11 @@ const DriveDrawer = ({
                     <div className="flex items-start justify-between gap-3">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                                style={{ background:`${tagColor(drive.title)}22`, border:`1px solid ${tagColor(drive.title)}40` }}>
-                                <Zap size={16} style={{ color: tagColor(drive.title) }} />
+                                style={{ background:`${tagColor(drive.hiringPositionName)}22`, border:`1px solid ${tagColor(drive.hiringPositionName)}40` }}>
+                                <Zap size={16} style={{ color: tagColor(drive.hiringPositionName) }} />
                             </div>
                             <div>
-                                <p className="text-white font-bold text-sm">{drive.title}</p>
+                                <p className="text-white font-bold text-sm">{drive.hiringPositionName}</p>
                                 <p className="text-white/35 text-[11px] mt-0.5">{drive.tag}</p>
                             </div>
                         </div>
@@ -446,8 +474,8 @@ const DriveDrawer = ({
                                     { Icon:Code2,   label:"Questions", val:`${drive.questionCount} total` },
                                     {
                                         Icon: Calendar,
-                                        label: "Start",
-                                        val: new Date(drive.startDate).toLocaleString("en-US", {
+                                        label: "Start Assessment",
+                                        val: new Date(drive.assessmentStartDate).toLocaleString("en-US", {
                                           day: "numeric",
                                           month: "short",
                                           year: "numeric",
@@ -458,8 +486,8 @@ const DriveDrawer = ({
                                       },
                                       {
                                         Icon: Calendar,
-                                        label: "End",
-                                        val: new Date(drive.endDate).toLocaleString("en-US", {
+                                        label: "End Assessment",
+                                        val: new Date(drive.assessmentEndDate).toLocaleString("en-US", {
                                           day: "numeric",
                                           month: "short",
                                           year: "numeric",
@@ -516,7 +544,8 @@ const DriveDrawer = ({
 
                                         <button
                                             onClick={openAssignModal}
-                                            className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-semibold text-indigo-300 border border-indigo-500/25 hover:bg-indigo-500/10 transition"
+                                            disabled={isDriveEnded}
+                                            className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-semibold text-indigo-300 border border-indigo-500/25 hover:bg-indigo-500/10 transition disabled:opacity-40 disabled:cursor-not-allowed"
                                         >
                                             <Plus size={11} />
                                             Assign
@@ -547,6 +576,7 @@ const DriveDrawer = ({
 
                                     <button
                                         onClick={openAssignModal}
+                                        disabled={isDriveEnded}
                                         className="mt-3 flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-indigo-300 border border-indigo-500/25 hover:bg-indigo-500/10 transition"
                                     >
                                         <Plus size={12} />
@@ -832,28 +862,49 @@ const DriveDrawer = ({
                 </div>
 
                 <div
-                    className="sticky bottom-0 px-6 py-4 border-t border-white/6 flex gap-2"
+                    className="sticky bottom-0 px-6 py-4 border-t border-white/6"
                     style={{ background: "rgba(10,8,22,0.96)" }}
                 >
-                    <button
-                        onClick={() => setShowDeleteModal(true)}
-                        className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-semibold border border-rose-500/20 text-rose-300 hover:bg-rose-500/10 hover:border-rose-500/40 transition"
-                    >
-                        <Trash2 size={13} />
-                        Delete Drive
-                    </button>
 
-                    <button
-                        onClick={() => onEdit(drive)}
-                        className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-semibold text-white transition"
-                        style={{
-                            background:
-                                "linear-gradient(135deg,#6366f1,#8b5cf6)",
-                        }}
-                    >
-                        <Edit3 size={13} />
-                        Edit Drive
-                    </button>
+                    {isDriveEnded ? (
+
+                        <div
+                            className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border border-emerald-500/20 text-emerald-300 text-sm font-semibold"
+                            style={{
+                                background:
+                                    "rgba(74,222,128,0.08)",
+                            }}
+                        >
+                            <CheckCircle2 size={16} />
+                            This drive has been ended
+                        </div>
+
+                    ) : (
+
+                        <div className="flex gap-2">
+
+                            <button
+                                onClick={() => setShowDeleteModal(true)}
+                                className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-semibold border border-rose-500/20 text-rose-300 hover:bg-rose-500/10 hover:border-rose-500/40 transition"
+                            >
+                                <Trash2 size={13} />
+                                Delete Drive
+                            </button>
+
+                            <button
+                                onClick={() => onEdit(drive)}
+                                className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-semibold text-white transition"
+                                style={{
+                                    background:
+                                        "linear-gradient(135deg,#6366f1,#8b5cf6)",
+                                }}
+                            >
+                                <Edit3 size={13} />
+                                Edit Drive
+                            </button>
+
+                        </div>
+                    )}
                 </div>
             </motion.aside>
             <AnimatePresence>
@@ -996,7 +1047,7 @@ const DriveDrawer = ({
                                         <div className="flex-1 min-w-0">
 
                                             <h3 className="text-white font-semibold text-lg truncate">
-                                                {drive.title}
+                                                {drive.hiringPositionName}
                                             </h3>
 
                                             <p className="text-white/35 text-sm mt-1">
@@ -1089,12 +1140,13 @@ const DriveDrawer = ({
                             <div className="relative px-7 py-5 border-t border-white/6 flex items-center justify-end gap-3">
 
                                 <button
-                                    onClick={() =>
-                                        setShowDeleteModal(false)
-                                    }
-                                    className="px-5 py-2.5 rounded-2xl text-sm font-semibold border border-white/10 text-white/60 hover:bg-white/5 hover:text-white transition"
+                                    onClick={endDrive}
+                                    disabled={endDriveLoading}
+                                    className="px-5 py-2.5 rounded-2xl text-sm font-semibold border border-amber-500/20 text-amber-300 hover:bg-amber-500/10 hover:text-amber-200 transition disabled:opacity-50"
                                 >
-                                    Cancel
+                                    {endDriveLoading
+                                        ? "Ending..."
+                                        : "End Drive"}
                                 </button>
 
                                 <button
@@ -1126,7 +1178,7 @@ const DriveDrawer = ({
 const DriveCard = ({ drive, onClick }) => {
     const st   = STATUS_STYLE[drive.status] ?? STATUS_STYLE.Draft;
     const diff = DIFF_STYLE[drive.difficulty] ?? DIFF_STYLE.Medium;
-    const accent = tagColor(drive.title);
+    const accent = tagColor(drive.hiringPositionName);
     const isLive = drive.status === "Active";
 
     return (
@@ -1145,7 +1197,7 @@ const DriveCard = ({ drive, onClick }) => {
                             <Zap size={15} style={{ color:accent }} />
                         </div>
                         <div>
-                            <p className="text-white font-bold text-sm leading-tight group-hover:text-indigo-200 transition">{drive.title}</p>
+                            <p className="text-white font-bold text-sm leading-tight group-hover:text-indigo-200 transition">{drive.hiringPositionName}</p>
                             <p className="text-white/30 text-[10px] mt-0.5">{drive.tag}</p>
                         </div>
                     </div>
@@ -1187,7 +1239,7 @@ const DriveCard = ({ drive, onClick }) => {
                             : <span className="px-2 py-0.5 rounded-md text-[10px] border border-white/10 text-white/30 flex items-center gap-1"><Globe size={9}/> Public</span>}
                     </div>
                     <div className="flex items-center gap-1 text-[10px]">
-                        {isLive && <span className="text-amber-400 font-semibold">{daysLeft(drive.endDate)}</span>}
+                        {isLive && <span className="text-amber-400 font-semibold">{daysLeft(drive.assessmentEndDate)}</span>}
                         {!isLive && <span className="text-white/25">{fmt(drive.createdAt)}</span>}
                         <ChevronRight size={12} className="text-white/20 group-hover:text-indigo-400 group-hover:translate-x-0.5 transition-all" />
                     </div>

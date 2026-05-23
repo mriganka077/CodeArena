@@ -1,14 +1,20 @@
 import Drive from "../models/Drive.js";
 import User from "../models/User.js";
 import AssessmentResult from "../models/AssessmentResult.js";
+import InterviewSchedule from "../models/InterviewSchedule.js";
 
 export const getAllDrives = async (req, res) => {
 
     try {
 
         const drives = await Drive.find()
+            .populate(
+                "assignedCandidates",
+                "firstName lastName email picture profilePhoto"
+            )
             .sort({ createdAt: -1 })
             .lean();
+            
 
         const formattedDrives = await Promise.all(
 
@@ -50,25 +56,22 @@ export const getAllDrives = async (req, res) => {
 
                         const now = new Date();
 
-                        const driveDate = new Date(
-                            drive.driveDate
-                        );
+                        let status = drive.status || "Draft";
                         
-                        let status = "Draft";
+                        // Only auto-close assessment
+                        const assessmentEnded =
+                          new Date(drive.assessmentEndDate) < now;
                         
-                        if (driveDate >= now) {
+                        // Drive closes only after driveEndDate
+                        const driveEnded =
+                          new Date(drive.driveEndDate) < now;
                         
-                            status = "Active";
-                        
-                        }
-                        
-                        if (
-                            driveDate < now &&
-                            totalCandidates > 0
-                        ) {
-                        
-                            status = "Completed";
-                        
+                        if (driveEnded) {
+                          status = "Completed";
+                        } else if (assessmentEnded) {
+                          status = "On-Hold";
+                        } else {
+                          status = "Active";
                         }
 
                 const assignedCount =
@@ -78,7 +81,9 @@ export const getAllDrives = async (req, res) => {
                         
                             _id: drive._id,
                         
-                            title: drive.hiringPositionName,
+                            hiringPositionName: drive.hiringPositionName,
+                            assignedCandidates:
+                                drive.assignedCandidates || [],
                         
                             tag: drive.driveType,
                         
@@ -89,9 +94,11 @@ export const getAllDrives = async (req, res) => {
                                     ? "Public"
                                     : "Private",
                         
-                            startDate: drive.driveDate,
-                        
-                            endDate: drive.driveDate,
+                                    startDate: drive.assessmentStartDate,
+
+                                    endDate: drive.assessmentEndDate,
+                                    
+                                    driveEndDate: drive.driveEndDate,
                         
                             totalCandidates,
                         
@@ -173,32 +180,34 @@ export const updateDrive = async (req, res) => {
 
     try {
 
-        const updatedDrive =
-            await Drive.findByIdAndUpdate(
+        const existingDrive =
+            await Drive.findById(req.params.id);
 
-                req.params.id,
-
-                req.body,
-
-                {
-                    new: true,
-                }
-            );
-
-        if (!updatedDrive) {
+        if (!existingDrive) {
 
             return res.status(404).json({
-
                 success: false,
-
                 message: "Drive not found",
             });
         }
 
+        if (existingDrive.status === "Completed") {
+
+            return res.status(400).json({
+                success: false,
+                message: "Drive already ended",
+            });
+        }
+
+        const updatedDrive =
+            await Drive.findByIdAndUpdate(
+                req.params.id,
+                req.body,
+                { new: true }
+            );
+
         res.status(200).json({
-
             success: true,
-
             drive: updatedDrive,
         });
 
@@ -207,9 +216,7 @@ export const updateDrive = async (req, res) => {
         console.log(error);
 
         res.status(500).json({
-
             success: false,
-
             message: "Failed to update drive",
         });
     }
@@ -310,6 +317,13 @@ export const assignCandidatesToDrive = async (req, res) => {
                 message: "Drive not found",
             });
         }
+        if (drive.status === "Completed") {
+
+            return res.status(400).json({
+                success: false,
+                message: "Cannot assign candidates to ended drive",
+            });
+        }
 
         const existingIds =
             drive.assignedCandidates.map((id) =>
@@ -399,3 +413,111 @@ export const deleteDrive = async (req, res) => {
         });
     }
 };
+
+export const endDrive = async (req, res) => {
+
+    try {
+
+        const drive = await Drive.findByIdAndUpdate(
+            req.params.id,
+            {
+                status: "Completed",
+                driveEndDate: new Date(),
+            },
+            { new: true }
+        );
+
+        if (!drive) {
+            return res.status(404).json({
+                success: false,
+                message: "Drive not found",
+            });
+        }
+
+        res.json({
+            success: true,
+            message: "Drive ended successfully",
+            drive,
+        });
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.status(500).json({
+            success: false,
+            message: "Server error",
+        });
+    }
+};
+
+export const createInterview = async (req, res) => {
+
+    try {
+
+        if (!req.body.candidates?.length) {
+            return res.status(400).json({
+              success: false,
+              message: "Select at least one candidate",
+            });
+          }
+  
+        const interview =
+            await InterviewSchedule.create({
+                ...req.body,
+                createdBy: req.user._id,
+            });
+
+        await Drive.findByIdAndUpdate(
+            req.body.drive,
+            {
+                $push: {
+                    interviews: interview._id,
+                },
+            }
+        );
+
+        res.status(201).json({
+            success: true,
+            interview,
+        });
+  
+    } catch (err) {
+  
+      res.status(500).json({
+        success: false,
+        message: err.message,
+      });
+    }
+  };
+
+  export const getMyInterviews = async (
+    req,
+    res
+  ) => {
+  
+    try {
+  
+      const interviews =
+        await InterviewSchedule.find({
+          candidates: req.user._id,
+        })
+        .populate("drive")
+        .sort({ createdAt: -1 });
+  
+      res.status(200).json({
+        success: true,
+        interviews,
+      });
+  
+    } catch (error) {
+  
+      console.log(error);
+  
+      res.status(500).json({
+        success: false,
+        message:
+          "Failed to fetch interviews",
+      });
+    }
+  };

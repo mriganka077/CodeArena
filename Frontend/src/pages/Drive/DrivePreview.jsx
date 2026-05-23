@@ -165,24 +165,115 @@ const DrivePreview = () => {
   useEffect(() => {
     if (!user) return;
 
-    const fetchUserDrives = async (isInitialLoad = false) => {
-      if (isInitialLoad) setLoading(true);
+    const fetchUserDrives = async (
+      isInitialLoad = false
+    ) => {
+    
+      if (isInitialLoad)
+        setLoading(true);
+    
       try {
-        const token = localStorage.getItem("token");
-        const res = await fetch("http://localhost:4000/api/my-drives", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = await res.json();
+    
+        const token =
+          localStorage.getItem("token");
+    
+        // Assessment drives
+        const drivesRes = await fetch(
+          "http://localhost:4000/api/my-drives",
+          {
+            headers: {
+              Authorization:
+                `Bearer ${token}`,
+            },
+          }
+        );
 
-        if (data.success) {
-          const validDrives = data.drives || [];
-          setAssignedDrives(validDrives);
-          setUserResults(data.results || []);
-        }
+        const resultRes = await fetch(
+          "http://localhost:4000/api/interview/my-results",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        
+        const resultData =
+          await resultRes.json();
+    
+        const drivesData =
+          await drivesRes.json();
+    
+        // Interview schedules
+        const interviewRes =
+          await fetch(
+            "http://localhost:4000/api/drives/my-interviews",
+            {
+              headers: {
+                Authorization:
+                  `Bearer ${token}`,
+              },
+            }
+          );
+    
+        const interviewData =
+          await interviewRes.json();
+    
+        const assessmentDrives =
+          drivesData.drives || [];
+    
+        // Convert interviews into drive-like objects
+        const interviewDrives =
+          (interviewData.interviews || [])
+            .map((interview) => ({
+    
+              _id: interview._id,
+    
+              driveId:
+                interview.drive?.driveId,
+    
+              hiringPositionName:
+                interview.drive
+                  ?.hiringPositionName,
+    
+              driveType: "Interview",
+    
+              assessmentStartDate:
+                interview.startDate,
+    
+              assessmentEndDate:
+                interview.endDate,
+    
+              timeDurationInMin:
+                interview.timeDurationInMin,
+    
+              status:
+                interview.status,
+    
+              isInterview: true,
+            }));
+    
+        // Merge both
+        setAssignedDrives([
+          ...assessmentDrives,
+          ...interviewDrives,
+        ]);
+    
+        setUserResults([
+          ...(drivesData.results || []),
+          ...(resultData.results || []),
+        ]);
+    
       } catch (error) {
-        console.error("Failed to fetch drives:", error);
+    
+        console.error(
+          "Failed to fetch drives:",
+          error
+        );
+    
       } finally {
-        if (isInitialLoad) setLoading(false);
+    
+        if (isInitialLoad)
+          setLoading(false);
       }
     };
 
@@ -210,7 +301,10 @@ const DrivePreview = () => {
   const confirmStartInterview = (drive) => {
     closeInstructionsModal();
     if (drive.driveType === "Interview") {
-      navigate("/interview", { state: { drive } });
+      navigate(
+        `/interview/${drive._id}`,
+        { state: { drive } }
+      );
     } else {
       navigate("/assessment", { state: { drive } });
     }
@@ -218,35 +312,124 @@ const DrivePreview = () => {
 
   const getDriveStatus = (drive) => {
 
-    const startTime = new Date(drive.driveDate).getTime();
-    const durationMs = drive.timeDurationInMin * 60 * 1000;
-    const endTime = startTime + durationMs;
-    
     const now = currentTime;
+  
+    // =========================
+    // INTERVIEW LOGIC
+    // =========================
+    if (drive.driveType === "Interview") {
 
-    const hasResult = userResults.find(
-      (r) => r.driveId && r.driveId._id === drive._id
-    );
-
-    if (now < startTime) {
-      return { state: "upcoming", text: "Start Drive" };
-    } else if (now >= startTime && now <= endTime) {
-      if (hasResult)
+      const startTime = new Date(
+        drive.assessmentStartDate ||
+        drive.startDate
+      ).getTime();
+    
+      const endTime = new Date(
+        drive.assessmentEndDate ||
+        drive.endDate
+      ).getTime();
+    
+      // check completed interview
+      const hasInterviewResult =
+        userResults.find(
+          (r) =>
+            r.driveId &&
+            (
+              r.driveId === drive._id ||
+              r.driveId?._id === drive._id
+            )
+        );
+    
+      // already completed
+      if (hasInterviewResult) {
+    
         return {
           state: "completed",
-          text: "View Result",
-          resultId: hasResult._id,
+          text: "Interview Completed",
+          resultId: hasInterviewResult._id,
         };
-      return { state: "active", text: "Start Drive" };
-    } else {
-      if (hasResult)
+      }
+    
+      if (now < startTime) {
+    
         return {
-          state: "completed",
-          text: "View Result",
-          resultId: hasResult._id,
+          state: "upcoming",
+          text: "Start Interview",
         };
-      return { state: "missed", text: "Not Attempted" };
+      }
+    
+      if (now >= startTime && now <= endTime) {
+    
+        return {
+          state: "active",
+          text: "Start Interview",
+        };
+      }
+    
+      return {
+        state: "missed",
+        text: "Interview Expired",
+      };
     }
+  
+    // =========================
+    // ASSESSMENT LOGIC
+    // =========================
+  
+    const startTime = new Date(
+      drive.assessmentStartDate
+    ).getTime();
+  
+    const durationMs =
+      drive.timeDurationInMin * 60 * 1000;
+  
+    const endTime =
+      startTime + durationMs;
+  
+    const hasResult = userResults.find(
+      (r) =>
+        r.driveId &&
+        r.driveId._id === drive._id
+    );
+  
+    if (now < startTime) {
+  
+      return {
+        state: "upcoming",
+        text: "Start Drive",
+      };
+    }
+  
+    if (now >= startTime && now <= endTime) {
+  
+      if (hasResult) {
+  
+        return {
+          state: "completed",
+          text: "View Result",
+          resultId: hasResult._id,
+        };
+      }
+  
+      return {
+        state: "active",
+        text: "Start Drive",
+      };
+    }
+  
+    if (hasResult) {
+  
+      return {
+        state: "completed",
+        text: "View Result",
+        resultId: hasResult._id,
+      };
+    }
+  
+    return {
+      state: "missed",
+      text: "Not Attempted",
+    };
   };
 
   const handleAction = (statusInfo, drive) => {
@@ -254,7 +437,8 @@ const DrivePreview = () => {
       openInfoModal(
         "Interview Not Started",
         `This interview will be enabled at ${new Date(
-          drive.driveDate
+          drive.assessmentStartDate ||
+          drive.startDate
         ).toLocaleString()}. Please return at the scheduled time.`
       );
     } else if (statusInfo.state === "active") {
@@ -352,13 +536,18 @@ const DrivePreview = () => {
                     </h3>
                     <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-300">
                       <span className="flex items-center gap-1.5">
-                        {new Date(drive.driveDate).toLocaleString()}
+                        {new Date(
+                          drive.assessmentStartDate ||
+                          drive.startDate
+                        ).toLocaleString()}
                       </span>
                       <span className="flex items-center gap-1.5">
                         ⏱ {drive.timeDurationInMin} mins
                       </span>
                       <span className="flex items-center gap-1.5 uppercase text-xs font-bold text-indigo-300">
-                        {drive.driveType}
+                        <span>
+                          {drive.driveType}
+                        </span>
                       </span>
                     </div>
                   </div>

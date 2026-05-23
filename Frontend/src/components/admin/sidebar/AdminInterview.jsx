@@ -12,6 +12,7 @@ import {
   PhoneOff, CircleDot, Timer, MapPin, Link2,
   ChevronLeft, Hash, BookOpen,
 } from "lucide-react";
+import ScheduleInterviewModal from "../drive/ScheduleInterviewModal";
 
 // ── mock data ─────────────────────────────────────────────────────────────────
 const INTERVIEWS = [
@@ -706,6 +707,7 @@ const AdminInterview = () => {
   const [sortBy, setSortBy]         = useState("date");
   const [viewMode, setViewMode]     = useState("grid");
   const [selected, setSelected]     = useState(null);
+  const [showSchedule, setShowSchedule] = useState(false);
 
   const statuses = ["All", "Scheduled", "In Progress", "Completed", "No-Show"];
   const types    = ["All", "Technical", "HR", "Design"];
@@ -752,6 +754,7 @@ const AdminInterview = () => {
           </div>
           <motion.button
             whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+            onClick={() => setShowSchedule(true)}
             className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-white"
             style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6)" }}
           >
@@ -922,6 +925,7 @@ const AdminInterview = () => {
       </div>
 
       <InterviewDrawer interview={selected} onClose={() => setSelected(null)} />
+      {showSchedule && <ScheduleInterviewModal onClose={() => setShowSchedule(false)} />}
     </>
   );
 };

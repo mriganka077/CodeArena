@@ -73,4 +73,34 @@ router.post(
     }
   );
 
+  router.get(
+    "/my-results",
+    protect,
+    async (req, res) => {
+  
+      try {
+  
+        const results =
+          await InterviewResult.find({
+            userId: req.user._id,
+          });
+  
+        res.status(200).json({
+          success: true,
+          results,
+        });
+  
+      } catch (error) {
+  
+        console.log(error);
+  
+        res.status(500).json({
+          success: false,
+          message:
+            "Failed to fetch interview results",
+        });
+      }
+    }
+  );
+
 export default router;

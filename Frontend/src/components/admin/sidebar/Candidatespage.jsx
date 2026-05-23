@@ -1084,7 +1084,9 @@ const CandidatesPage = () => {
         .filter((c) => {
             const q = search.toLowerCase();
             const name = `${c.firstName} ${c.lastName}`.toLowerCase();
-            const matchQ = !q || name.includes(q) || c.email.includes(q) || c.drive.toLowerCase().includes(q);
+            const matchQ = !q || name.includes(q) || c.email.includes(q) || c.drives?.some((d) =>
+                d.name?.toLowerCase().includes(q)
+            );
             const matchS = filterStatus === "All" || c.status === filterStatus;
             return matchQ && matchS;
         })
@@ -1381,7 +1383,7 @@ const CandidatesPage = () => {
                                                 </div>
                                             </td>
                                             {/* drive */}
-                                            <td className="px-5 py-3.5 text-white/50 whitespace-nowrap">{c.drive}</td>
+                                            <td className="px-5 py-3.5 text-white/50 whitespace-nowrap">{c.drives?.[0]?.name || "No Drive"}</td>
                                             {/* score */}
                                             <td className="px-5 py-3.5">
                                                 <div className="flex items-center gap-2">

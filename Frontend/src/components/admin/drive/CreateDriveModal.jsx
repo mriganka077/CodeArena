@@ -53,8 +53,8 @@ const EMPTY = {
     title: "",
     tag: "",
     type: "Assessment",
-    startDate: "",
-    endDate: "",
+    assessmentStartDate: "",
+    assessmentEndDateend: "",
     difficulty: "Intermediate",
     duration: "",
 
@@ -193,16 +193,16 @@ const CreateDriveModal = ({
                 type:
                     editData.type || "Assessment",
     
-                startDate:
-                    editData.startDate
-                        ? new Date(editData.startDate)
+                assessmentStartDate:
+                    editData.assessmentStartDate
+                        ? new Date(editData.assessmentStartDate)
                             .toISOString()
                             .slice(0,16)
                         : "",
     
-                endDate:
-                    editData.endDate
-                        ? new Date(editData.endDate)
+                assessmentEndDate:
+                    editData.assessmentEndDateend
+                        ? new Date(editData.assessmentEndDateend)
                             .toISOString()
                             .slice(0,16)
                         : "",
@@ -255,21 +255,21 @@ const CreateDriveModal = ({
         if (!form.tag.trim())
             e.tag = "Category is required";
     
-        if (!form.startDate)
-            e.startDate = "Start date required";
+        if (!form.assessmentStartDate)
+            e.assessmentStartDate = "Start date required";
     
-        if (!form.endDate)
-            e.endDate = "End date required";
+        if (!form.assessmentEndDateend)
+            e.assessmentEndDateend = "End date required";
     
         // only validate while creating
         if (
             !editData &&
-            form.startDate &&
-            form.endDate &&
-            new Date(form.endDate).getTime() <
-                new Date(form.startDate).getTime()
+            form.assessmentStartDate &&
+            form.assessmentEndDateend &&
+            new Date(form.assessmentEndDateend).getTime() <
+                new Date(form.assessmentStartDate).getTime()
         ) {
-            e.endDate = "End must be after start";
+            e.assessmentEndDateend = "End must be after start";
         }
     
         if (
@@ -363,28 +363,35 @@ const CreateDriveModal = ({
             setSaving(true);
     
             const payload = {
-    
+
                 driveId: Math.floor(
                     100000 + Math.random() * 900000
                 ).toString(),
-    
+            
                 hiringPositionName: form.title,
-    
-                driveDate: form.startDate,
-    
+            
+                assessmentStartDate:
+                    form.assessmentStartDate,
+            
+                assessmentEndDate:
+                    form.assessmentEndDateend,
+            
+                driveEndDate:
+                    form.assessmentEndDateend,
+            
                 driveType: form.type,
-    
+            
                 timeDurationInMin: Number(form.duration),
-    
+            
                 mcqCount: Number(form.mcqCount || 0),
-    
+            
                 codeCount:
                     form.type === "Assessment"
                         ? Number(form.codeCount || 0)
                         : 0,
-    
+            
                 mcqMarks: Number(form.marksPerMcq || 0),
-    
+            
                 codeMarks:
                     form.type === "Assessment"
                         ? Number(form.marksPerCode || 0)
@@ -419,9 +426,9 @@ const CreateDriveModal = ({
     
                     type: response.data.drive.driveType,
     
-                    startDate: response.data.drive.driveDate,
+                    assessmentStartDate: response.data.drive.driveDate,
     
-                    endDate: response.data.drive.driveDate,
+                    assessmentEndDateend: response.data.drive.driveDate,
     
                     totalCandidates: 0,
     
@@ -589,21 +596,21 @@ const CreateDriveModal = ({
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-3">
-                                    <Field label="Start Date" icon={Calendar} error={errors.startDate}>
+                                    <Field label="Start Date" icon={Calendar} error={errors.assessmentStartDate}>
                                         <TInput
                                             type="datetime-local"
-                                            value={form.startDate}
-                                            onChange={set("startDate")}
-                                            error={errors.startDate}
+                                            value={form.assessmentStartDate}
+                                            onChange={set("assessmentStartDate")}
+                                            error={errors.assessmentStartDate}
                                         />
                                     </Field>
 
-                                    <Field label="End Date" icon={Calendar} error={errors.endDate}>
+                                    <Field label="End Date" icon={Calendar} error={errors.assessmentEndDateend}>
                                         <TInput
                                             type="datetime-local"
-                                            value={form.endDate}
-                                            onChange={set("endDate")}
-                                            error={errors.endDate}
+                                            value={form.assessmentEndDateend}
+                                            onChange={set("assessmentEndDateend")}
+                                            error={errors.assessmentEndDateend}
                                         />
                                     </Field>
                                 </div>
