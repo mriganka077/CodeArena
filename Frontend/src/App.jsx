@@ -79,7 +79,7 @@ function App() {
       <Route path="/admin/assessments" element={<AdminAssessments />} />
       <Route path="/admin/interview" element={<AdminInterview />} />
 
-      <Route path="/interview" element={<Interview/>} />  
+      <Route path="/interview/:driveId" element={<Interview />} />
       <Route path="/interviewdone" element={<InterviewComplete/>} />
       <Route path="/registration" element={<UserProfileForm />} />
 
