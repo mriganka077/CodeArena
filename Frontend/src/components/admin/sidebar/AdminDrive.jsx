@@ -187,6 +187,8 @@ const EMPTY = {
 // ── Detail Drawer ──────────────────────────────────────────────────────────────
 const DriveDrawer = ({
     drive,
+    drives,
+    setDrives,
     onClose,
     onEdit,
 }) => {
@@ -238,7 +240,17 @@ const endDrive = async () => {
 
         setShowDeleteModal(false);
 
-        window.location.reload();
+        setDrives((prev) =>
+            prev.map((d) =>
+                d._id === drive._id
+                    ? {
+                          ...d,
+                          status: "Completed",
+                          driveEndDate: new Date(),
+                      }
+                    : d
+            )
+        );
 
     } catch (err) {
 
@@ -380,7 +392,9 @@ const endDrive = async () => {
     
             onClose();
     
-            window.location.reload();
+            setDrives((prev) =>
+                prev.filter((d) => d._id !== drive._id)
+            );
     
         } catch (err) {
     
@@ -413,7 +427,41 @@ const endDrive = async () => {
                             </div>
                             <div>
                                 <p className="text-white font-bold text-sm">{drive.hiringPositionName}</p>
-                                <p className="text-white/35 text-[11px] mt-0.5">{drive.tag}</p>
+                                <div className="flex items-center gap-2 mt-1">
+
+                                    <p className="text-white/35 text-[11px]">
+                                        {drive.tag}
+                                    </p>
+
+                                    <span
+                                        className="px-2 py-0.5 rounded-md text-[9px] font-semibold border"
+                                        style={{
+                                            background:
+                                                drive.difficulty === "Advanced"
+                                                    ? "rgba(248,113,113,0.08)"
+                                                    : drive.difficulty === "Intermediate"
+                                                        ? "rgba(251,191,36,0.08)"
+                                                        : "rgba(74,222,128,0.08)",
+
+                                            borderColor:
+                                                drive.difficulty === "Advanced"
+                                                    ? "rgba(248,113,113,0.2)"
+                                                    : drive.difficulty === "Intermediate"
+                                                        ? "rgba(251,191,36,0.2)"
+                                                        : "rgba(74,222,128,0.2)",
+
+                                            color:
+                                                drive.difficulty === "Advanced"
+                                                    ? "#f87171"
+                                                    : drive.difficulty === "Intermediate"
+                                                        ? "#fbbf24"
+                                                        : "#4ade80",
+                                        }}
+                                    >
+                                        {drive.difficulty}
+                                    </span>
+
+                                </div>
                             </div>
                         </div>
                         <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center text-white/40 hover:text-white hover:bg-white/6 transition">
@@ -474,27 +522,35 @@ const endDrive = async () => {
                                     { Icon:Code2,   label:"Questions", val:`${drive.questionCount} total` },
                                     {
                                         Icon: Calendar,
-                                        label: "Start Assessment",
-                                        val: new Date(drive.assessmentStartDate).toLocaleString("en-US", {
-                                          day: "numeric",
-                                          month: "short",
-                                          year: "numeric",
-                                          hour: "numeric",
-                                          minute: "2-digit",
-                                          hour12: true,
-                                        }),
+                                        label: "Assessment Starting Date",
+                                        val: drive.assessmentStartDate
+                                            ? new Date(
+                                                drive.assessmentStartDate
+                                            ).toLocaleString("en-US", {
+                                                day: "numeric",
+                                                month: "short",
+                                                year: "numeric",
+                                                hour: "numeric",
+                                                minute: "2-digit",
+                                                hour12: true,
+                                            })
+                                            : "Not Available",
                                       },
                                       {
                                         Icon: Calendar,
-                                        label: "End Assessment",
-                                        val: new Date(drive.assessmentEndDate).toLocaleString("en-US", {
-                                          day: "numeric",
-                                          month: "short",
-                                          year: "numeric",
-                                          hour: "numeric",
-                                          minute: "2-digit",
-                                          hour12: true,
-                                        }),
+                                        label: "Assessment Ending Date",
+                                          val: drive.assessmentEndDate
+                                              ? new Date(
+                                                  drive.assessmentEndDate
+                                              ).toLocaleString("en-US", {
+                                                  day: "numeric",
+                                                  month: "short",
+                                                  year: "numeric",
+                                                  hour: "numeric",
+                                                  minute: "2-digit",
+                                                  hour12: true,
+                                              })
+                                              : "Not Available",
                                       },
                                 ].map(({ Icon,label,val,color }) => (
                                     <div key={label} className="flex items-center gap-3">
@@ -869,14 +925,34 @@ const endDrive = async () => {
                     {isDriveEnded ? (
 
                         <div
-                            className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border border-emerald-500/20 text-emerald-300 text-sm font-semibold"
+                            className="w-full flex flex-col items-center justify-center gap-1 py-3 rounded-2xl border border-emerald-500/20 text-emerald-300"
                             style={{
                                 background:
                                     "rgba(74,222,128,0.08)",
                             }}
                         >
-                            <CheckCircle2 size={16} />
-                            This drive has been ended
+
+                            <div className="flex items-center gap-2 text-sm font-semibold">
+                                <CheckCircle2 size={16} />
+                                This drive has been ended
+                            </div>
+
+                            <p className="text-[11px] text-emerald-200/70 font-medium">
+                                Ended on{" "}
+                                {drive.driveEndDate
+                                    ? new Date(
+                                        drive.driveEndDate
+                                    ).toLocaleString("en-US", {
+                                        day: "numeric",
+                                        month: "short",
+                                        year: "numeric",
+                                        hour: "numeric",
+                                        minute: "2-digit",
+                                        hour12: true,
+                                    })
+                                    : "Not Available"}
+                            </p>
+
                         </div>
 
                     ) : (
@@ -1542,13 +1618,12 @@ const AdminDrive = () => {
 
                 <DriveDrawer
                     drive={selected}
+                    drives={drives}
+                    setDrives={setDrives}
                     onClose={() => setSelected(null)}
                     onEdit={(drive) => {
-
                         setEditingDrive(drive);
-
                         setShowCreate(true);
-
                         setSelected(null);
                     }}
                 />

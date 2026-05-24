@@ -59,12 +59,15 @@ export const getAllDrives = async (req, res) => {
                         let status = drive.status || "Draft";
                         
                         // Only auto-close assessment
-                        const assessmentEnded =
-                          new Date(drive.assessmentEndDate) < now;
-                        
-                        // Drive closes only after driveEndDate
-                        const driveEnded =
-                          new Date(drive.driveEndDate) < now;
+                const assessmentEnded =
+                    drive.assessmentEndDate
+                        ? new Date(drive.assessmentEndDate) < now
+                        : false;
+
+                const driveEnded =
+                    drive.driveEndDate
+                        ? new Date(drive.driveEndDate) < now
+                        : false;
                         
                         if (driveEnded) {
                           status = "Completed";
@@ -77,60 +80,67 @@ export const getAllDrives = async (req, res) => {
                 const assignedCount =
                     drive.assignedCandidates?.length || 0;
                         
-                        return {
-                        
-                            _id: drive._id,
-                        
-                            hiringPositionName: drive.hiringPositionName,
-                            assignedCandidates:
-                                drive.assignedCandidates || [],
-                        
-                            tag: drive.driveType,
-                        
-                            status,
-                        
-                            visibility:
-                                assignedCount > 0
-                                    ? "Public"
-                                    : "Private",
-                        
-                                    startDate: drive.assessmentStartDate,
+                    return {
 
-                                    endDate: drive.assessmentEndDate,
-                                    
-                                    driveEndDate: drive.driveEndDate,
-                        
-                            totalCandidates,
-                        
-                            attempted,
-                        
-                            avgScore,
-                        
-                            topScore,
-                        
-                            duration: drive.timeDurationInMin,
-                        
-                            questionCount:
-                                drive.mcqCount + drive.codeCount,
-                        
-                            mcqCount: drive.mcqCount,
-                        
-                            codeCount: drive.codeCount,
-                        
-                            marksPerMcq: drive.mcqMarks,
-                        
-                            marksPerCode: drive.codeMarks,
-                        
-                            type: drive.driveType,
-                        
-                            createdAt: drive.createdAt,
-                        
-                            difficulty: "Medium",
-                        
-                            tags: [],
-                        
-                            completionRate,
-                        };
+                        _id: drive._id,
+                    
+                        hiringPositionName: drive.hiringPositionName,
+                    
+                        assignedCandidates:
+                            drive.assignedCandidates || [],
+                    
+                        tag: drive.driveType,
+                    
+                        status,
+                    
+                        visibility:
+                            assignedCount > 0
+                                ? "Public"
+                                : "Private",
+                    
+                        assessmentStartDate:
+                            drive.assessmentStartDate,
+                    
+                        assessmentEndDate:
+                            drive.assessmentEndDate,
+                    
+                        driveEndDate:
+                            drive.driveEndDate,
+                    
+                        totalCandidates,
+                    
+                        attempted,
+                    
+                        avgScore,
+                    
+                        topScore,
+                    
+                        duration:
+                            drive.timeDurationInMin,
+                    
+                        questionCount:
+                            drive.mcqCount + drive.codeCount,
+                    
+                        mcqCount: drive.mcqCount,
+                    
+                        codeCount: drive.codeCount,
+                    
+                        marksPerMcq: drive.mcqMarks,
+                    
+                        marksPerCode: drive.codeMarks,
+
+                        totalMarks: drive.totalMarks,
+                    
+                        type: drive.driveType,
+                    
+                        createdAt: drive.createdAt,
+                    
+                        difficulty: "Medium",
+                    
+                        tags: [],
+                    
+                        completionRate,
+                    };
             })
         );
 
@@ -521,3 +531,5 @@ export const createInterview = async (req, res) => {
       });
     }
   };
+
+  

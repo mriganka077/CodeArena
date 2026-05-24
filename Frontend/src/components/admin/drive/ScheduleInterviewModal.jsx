@@ -289,25 +289,64 @@ const DrivePanel = ({
           <div className="space-y-1.5">
             {candidates.map((c) => {
               const selected = form.selectedCandidates.includes(c._id);
-              const color = avatarColor(c._id);
+              const color =
+                AVATAR_COLORS[
+                candidates.findIndex(
+                  (candidate) => candidate._id === c._id
+                ) % AVATAR_COLORS.length
+                ];
               return (
                 <button
                   key={c._id}
                   onClick={() => toggleCandidate(c._id)}
                   className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-left"
                   style={{
-                    background: selected ? `${color}12` : "rgba(255,255,255,0.025)",
-                    border: selected ? `1px solid ${color}45` : "1px solid rgba(255,255,255,0.06)",
+                    background: selected
+                      ? `linear-gradient(135deg, ${color}18, rgba(99,102,241,0.08))`
+                      : "rgba(255,255,255,0.025)",
+                  
+                    border: selected
+                      ? `1px solid ${color}55`
+                      : "1px solid rgba(255,255,255,0.06)",
+                  
+                    boxShadow: selected
+                      ? `0 0 0 1px ${color}20, 0 8px 24px ${color}15`
+                      : "none",
                   }}
                 >
-                  <Avatar initials={c._id} size={28} />
+                  <div
+                    className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center shrink-0 border border-white/10"
+                    style={{
+                      background: selected
+                        ? `linear-gradient(135deg, ${color}, ${color}aa)`
+                        : `${color}18`,
+                    }}
+                  >
+                    {c?.picture ? (
+                      <img
+                        src={
+                          c.picture.startsWith("http")
+                            ? c.picture
+                            : `http://localhost:4000${c.picture}`
+                        }
+                        alt={`${c.firstName} ${c.lastName}`}
+                        referrerPolicy="no-referrer"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <Avatar
+                        initials={`${c.firstName?.[0] || ""}${c.lastName?.[0] || ""}`}
+                        size={28}
+                      />
+                    )}
+                  </div>
                   <div className="flex-1 min-w-0">
                           <p
                               className="text-xs font-semibold"
                               style={{
-                                  color: selected
-                                      ? color
-                                      : "rgba(255,255,255,0.7)",
+                                color: selected
+                                  ? "#ffffff"
+                                  : "rgba(255,255,255,0.7)",
                               }}
                           >
                               {c.firstName} {c.lastName}

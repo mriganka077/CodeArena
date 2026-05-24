@@ -28,6 +28,12 @@ const driveSchema = new mongoose.Schema({
     required: true,
   },
 
+  difficulty: {
+    type: String,
+    enum: ["Beginner", "Intermediate", "Advanced"],
+    default: "Intermediate",
+  },
+
   status: {
     type: String,
     enum: ["Active", "Completed", "On-Hold", "Draft"],

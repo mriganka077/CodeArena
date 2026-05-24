@@ -9,7 +9,7 @@ const interviewScheduleSchema = new mongoose.Schema({
   },
 
   candidates: [{
-    type: mongoose.Schema.Types.ObjectId,
+    type: mongoose.Schema.Types.ObjectId, 
     ref: "User",
   }],
   createdBy: {
