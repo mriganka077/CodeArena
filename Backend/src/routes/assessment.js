@@ -16,6 +16,10 @@ router.post("/submit-result", protect, async (req, res) => {
     status,
     violations,
     terminationReason,
+  
+    codingAnswers,
+    mcqAnswers,
+  
   } = req.body;
 
   try {
@@ -34,6 +38,8 @@ router.post("/submit-result", protect, async (req, res) => {
     const drive = await Drive.findById(driveId);
 
     const newResult = await AssessmentResult.create({
+      codingAnswers,
+      mcqAnswers,
       userId: req.user._id,
       driveId: driveId,
       score: score || 0,

@@ -3,29 +3,38 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-// ============================
+// ========================================
 // NVIDIA CLIENT
-// ============================
+// ========================================
 
 const nvidia = axios.create({
+
   baseURL:
     "https://integrate.api.nvidia.com/v1",
+
   headers: {
+
     Authorization:
       `Bearer ${process.env.NVIDIA_API_KEY}`,
+
     "Content-Type":
       "application/json",
+
   },
+
 });
 
-// ============================
+// ========================================
 // LANGUAGE DETECTION
-// ============================
+// ========================================
 
-const detectLanguage = (domain = "") => {
-  const text = domain.toLowerCase();
+const detectLanguage = (
+  domain = ""
+) => {
 
-  // TypeScript FIRST
+  const text =
+    domain.toLowerCase();
+
   if (
     text.includes("typescript") ||
     /\bts\b/.test(text)
@@ -80,98 +89,387 @@ const detectLanguage = (domain = "") => {
   }
 
   if (
-    text.includes("golang") ||
-    text.includes("go developer")
+    text.includes("go") ||
+    text.includes("golang")
   ) {
     return "Go";
   }
 
-  if (
-    text.includes("backend") ||
-    text.includes("full stack") ||
-    text.includes("software engineer")
-  ) {
-    return "JavaScript";
-  }
-
   return "Python";
+
 };
 
-// ============================
+// ========================================
 // STARTER CODE
-// ============================
+// ========================================
 
-const getStarterCode = (language) => {
+const getStarterCode = (
+  language
+) => {
+
   switch (language) {
-    case "Java":
-      return `class Solution {
-    public static void main(String[] args) {
 
-    }
-}`;
+    // ====================================
+    // PYTHON
+    // ====================================
+
+    case "Python":
+
+      return `
+import sys
+
+def solve():
+
+    input_data = sys.stdin.read().strip()
+
+    # Write your solution here
+
+solve()
+`;
+
+    // ====================================
+    // JAVASCRIPT
+    // ====================================
 
     case "JavaScript":
-      return `function solution() {
 
-}`;
-
-    case "TypeScript":
-      return `function solution(): void {
-
-}`;
-
-    case "C++":
-      return `#include <iostream>
-using namespace std;
-
-int main() {
-
-    return 0;
-}`;
-
-    case "C#":
-      return `using System;
-
-class Solution
-{
-    static void Main()
-    {
-
-    }
-}`;
-
-    case "PHP":
-      return `<?php
-
-function solution() {
+      return `
+function solve(input) {
 
 }
 
-?>`;
+const fs = require("fs");
+
+const input =
+  fs.readFileSync(0, "utf8").trim();
+
+solve(input);
+`;
+
+    // ====================================
+    // TYPESCRIPT
+    // ====================================
+
+    case "TypeScript":
+
+      return `
+function solve(input: string): void {
+
+}
+
+process.stdin.resume();
+
+process.stdin.setEncoding("utf8");
+
+let data = "";
+
+process.stdin.on(
+  "data",
+  chunk => {
+    data += chunk;
+  }
+);
+
+process.stdin.on(
+  "end",
+  () => {
+    solve(data.trim());
+  }
+);
+`;
+
+    // ====================================
+    // JAVA
+    // ====================================
+
+    case "Java":
+
+      return `
+import java.util.*;
+
+public class Main {
+
+    public static void solve() {
+
+        Scanner sc =
+          new Scanner(System.in);
+
+    }
+
+    public static void main(
+      String[] args
+    ) {
+
+        solve();
+
+    }
+}
+`;
+
+    // ====================================
+    // C++
+    // ====================================
+
+    case "C++":
+
+      return `
+#include <iostream>
+#include <vector>
+
+using namespace std;
+
+void solve() {
+
+}
+
+int main() {
+
+    solve();
+
+    return 0;
+
+}
+`;
+
+    // ====================================
+    // C#
+    // ====================================
+
+    case "C#":
+
+      return `
+using System;
+
+class Program {
+
+    static void Solve() {
+
+    }
+
+    static void Main() {
+
+        Solve();
+
+    }
+
+}
+`;
+
+    // ====================================
+    // PHP
+    // ====================================
+
+    case "PHP":
+
+      return `
+<?php
+
+function solve($input) {
+
+}
+
+$input =
+  trim(
+    stream_get_contents(STDIN)
+  );
+
+solve($input);
+
+?>
+`;
+
+    // ====================================
+    // GO
+    // ====================================
 
     case "Go":
-      return `package main
 
-import "fmt"
+      return `
+package main
+
+import (
+    "bufio"
+    "fmt"
+    "os"
+)
+
+func solve(input string) {
+
+}
 
 func main() {
 
-}`;
+    reader :=
+      bufio.NewReader(os.Stdin)
+
+    input, _ :=
+      reader.ReadString('\\n')
+
+    solve(input)
+
+}
+`;
 
     default:
-      return `# Write your Python solution here`;
+
+      return `
+import sys
+
+def solve():
+
+    input_data =
+      sys.stdin.read().strip()
+
+    # Write your solution here
+
+solve()
+`;
+
   }
+
 };
 
-// ============================
+// ========================================
+// SANITIZE STARTER CODE
+// ========================================
+
+const sanitizeStarterCode = (
+  code = "",
+  language = "Python"
+) => {
+
+  if (language !== "Python") {
+    return code;
+  }
+
+  const lines =
+    code.split("\n");
+
+  const cleaned =
+    lines.filter((line) => {
+
+      const trimmed =
+        line.trim();
+
+      // remove example execution
+      if (
+        trimmed.startsWith("print(")
+      ) {
+        return false;
+      }
+
+      // remove hardcoded arrays
+      if (
+        trimmed.startsWith("arr =") ||
+        trimmed.startsWith("nums =") ||
+        trimmed.startsWith("input =")
+      ) {
+        return false;
+      }
+
+      // remove comments
+      if (
+        trimmed.includes("Example") ||
+        trimmed.includes("Output")
+      ) {
+        return false;
+      }
+
+      return true;
+
+    });
+
+  return cleaned.join("\n");
+
+};
+
+// ========================================
+// VERIFY TEST CASES
+// ========================================
+
+const verifyQuestion = (
+  question
+) => {
+
+  try {
+
+    const title =
+      question.question
+        ?.toLowerCase() || "";
+
+    // ====================================
+    // MAXIMUM SUBARRAY FIX
+    // ====================================
+
+    if (
+      title.includes(
+        "maximum subarray"
+      )
+    ) {
+
+      const fixCases = (
+        testCases = []
+      ) => {
+
+        return testCases.map(
+          (tc) => {
+
+            if (
+              tc.input ===
+              "1 2 -3 4 -1 2 1 -5 4"
+            ) {
+
+              return {
+                ...tc,
+                expectedOutput: "7",
+              };
+
+            }
+
+            return tc;
+
+          }
+        );
+
+      };
+
+      question.visibleTestCases =
+        fixCases(
+          question.visibleTestCases
+        );
+
+      question.hiddenTestCases =
+        fixCases(
+          question.hiddenTestCases
+        );
+
+    }
+
+    return question;
+
+  } catch {
+
+    return question;
+
+  }
+
+};
+
+// ========================================
 // REMOVE DUPLICATES
-// ============================
+// ========================================
 
 const removeDuplicateQuestions = (
   questions = []
 ) => {
+
   return questions.filter(
-    (question, index, self) => {
+    (
+      question,
+      index,
+      self
+    ) => {
+
       const normalized =
         question.question
           ?.trim()
@@ -187,62 +485,130 @@ const removeDuplicateQuestions = (
             normalized
         )
       );
+
     }
   );
+
 };
 
-// ============================
-// CLEAN RAW RESPONSE
-// ============================
+// ========================================
+// CLEAN RAW JSON
+// ========================================
 
 const cleanJsonResponse = (
   raw = ""
 ) => {
+
   raw = raw
     .replace(/```json/g, "")
     .replace(/```/g, "")
     .trim();
 
-  // remove trailing commas
-  raw = raw.replace(/,\s*}/g, "}");
-  raw = raw.replace(/,\s*]/g, "]");
+  raw = raw.replace(
+    /,\s*}/g,
+    "}"
+  );
+
+  raw = raw.replace(
+    /,\s*]/g,
+    "]"
+  );
 
   return raw;
+
 };
 
-// ============================
+// ========================================
 // VALIDATE QUESTIONS
-// ============================
+// ========================================
 
 const validateQuestions = (
   questions = [],
   type
 ) => {
+
   if (!Array.isArray(questions)) {
     return [];
   }
 
+  // ====================================
+  // CODING
+  // ====================================
+
   if (type === "CODING") {
-    return questions.filter(
+
+    const cleanedQuestions =
+      questions.map((q) => {
+
+        const cleaned = {
+
+          ...q,
+
+          starterCode:
+            sanitizeStarterCode(
+              q.starterCode,
+              q.language
+            ),
+
+        };
+
+        return verifyQuestion(
+          cleaned
+        );
+
+      });
+
+    return cleanedQuestions.filter(
+
       (q) =>
+
         q.question &&
         q.starterCode &&
-        q.language
+        q.language &&
+
+        Array.isArray(
+          q.visibleTestCases
+        ) &&
+
+        q.visibleTestCases
+          .length > 0 &&
+
+        Array.isArray(
+          q.hiddenTestCases
+        ) &&
+
+        q.hiddenTestCases
+          .length > 0
+
     );
+
   }
 
+  // ====================================
+  // MCQ
+  // ====================================
+
   return questions.filter(
+
     (q) =>
+
       q.question &&
-      Array.isArray(q.options) &&
+
+      Array.isArray(
+        q.options
+      ) &&
+
       q.options.length === 4 &&
+
       q.answer
+
   );
+
 };
 
-// ============================
+// ========================================
 // CREATE PROMPT
-// ============================
+// ========================================
 
 const createPrompt = ({
   domain,
@@ -253,62 +619,151 @@ const createPrompt = ({
   starterCode,
   aiPrompt,
 }) => {
+
+  // ====================================
+  // CODING PROMPT
+  // ====================================
+
   if (type === "CODING") {
+
     return `
 ${aiPrompt || ""}
 
 Generate ${count} unique ${difficulty} coding interview questions for ${domain}.
 
-Rules:
-- Return ONLY valid JSON
+STRICT RULES:
+
+- Return ONLY valid JSON array
 - No markdown
 - No explanations
-- Questions must be different
+- Questions must be unique
 - Use ${language}
 - Escape newlines properly
 
-Format:
+STRICT CODING RULES:
+
+- starterCode MUST use stdin/stdout
+- starterCode MUST NOT contain example inputs
+- starterCode MUST NOT contain hardcoded print statements
+- starterCode MUST NOT contain hardcoded outputs
+- Problems MUST be Judge0 compatible
+- expectedOutput MUST be mathematically correct
+- Verify every testcase before returning JSON
+
+Each coding question MUST contain:
+
+1. question
+2. starterCode
+3. language
+4. visibleTestCases
+5. hiddenTestCases
+
+IMPORTANT:
+
+- visibleTestCases MUST have at least 2 test cases
+- hiddenTestCases MUST have at least 2 test cases
+- expectedOutput MUST always be STRING
+- input MUST always be STRING
+
+VALID FORMAT:
+
 [
   {
-    "question": "",
-    "starterCode": "${starterCode
-      .replace(/\\/g, "\\\\")
-      .replace(/\n/g, "\\n")
-      .replace(/"/g, '\\"')}",
-    "language": "${language}"
+    "question":
+      "Find Maximum Subarray Sum",
+
+    "starterCode":
+      "${starterCode
+        .replace(/\\/g, "\\\\")
+        .replace(/\n/g, "\\n")
+        .replace(/"/g, '\\"')}",
+
+    "language":
+      "${language}",
+
+    "visibleTestCases": [
+      {
+        "input":
+          "1 2 -3 4 -1 2 1 -5 4",
+
+        "expectedOutput":
+          "7"
+      },
+      {
+        "input":
+          "-1 -2 -3",
+
+        "expectedOutput":
+          "-1"
+      }
+    ],
+
+    "hiddenTestCases": [
+      {
+        "input":
+          "1 2 3 4",
+
+        "expectedOutput":
+          "10"
+      },
+      {
+        "input":
+          "-5 -1 -8",
+
+        "expectedOutput":
+          "-1"
+      }
+    ]
   }
 ]
 `;
+
   }
+
+  // ====================================
+  // MCQ PROMPT
+  // ====================================
 
   return `
 ${aiPrompt || ""}
 
 Generate ${count} unique ${difficulty} MCQ interview questions for ${domain}.
 
-Rules:
-- Return ONLY valid JSON
+STRICT RULES:
+
+- Return ONLY valid JSON array
 - No markdown
 - No explanations
-- Every question must have exactly 4 options
-- "answer" MUST contain the FULL correct option text
+- Every question MUST contain exactly 4 options
+- answer MUST contain FULL correct option text
+- Do NOT return indexes
 - Do NOT return A/B/C/D
-- Do NOT return indexes like 0,1,2,3
 
-Format:
+VALID FORMAT:
+
 [
   {
-    "question": "",
-    "options": [],
-    "answer": "Exact option text"
+    "question":
+      "What is Python?",
+
+    "options": [
+      "Language",
+      "Database",
+      "OS",
+      "Browser"
+    ],
+
+    "answer":
+      "Language"
   }
 ]
 `;
+
 };
 
-// ============================
-// CALL AI
-// ============================
+// ========================================
+// GENERATE BATCH
+// ========================================
 
 const generateBatch = async (
   {
@@ -317,33 +772,44 @@ const generateBatch = async (
   },
   retries = 2
 ) => {
+
   for (
     let attempt = 0;
     attempt <= retries;
     attempt++
   ) {
+
     try {
+
       const response =
         await nvidia.post(
           "/chat/completions",
           {
+
             model:
               "meta/llama-3.1-8b-instruct",
 
             messages: [
+
               {
                 role: "system",
+
                 content:
                   "Return ONLY valid JSON array. No markdown. No explanations.",
               },
+
               {
                 role: "user",
+
                 content: prompt,
               },
+
             ],
 
             max_tokens: 4096,
+
             temperature: 0.3,
+
             top_p: 0.8,
 
             stream: false,
@@ -351,6 +817,7 @@ const generateBatch = async (
             chat_template_kwargs: {
               enable_thinking: false,
             },
+
           }
         );
 
@@ -361,21 +828,26 @@ const generateBatch = async (
       console.log(
         "RAW RESPONSE:"
       );
+
       console.log(raw);
 
-      raw = cleanJsonResponse(raw);
+      raw =
+        cleanJsonResponse(raw);
 
-      // Fix malformed starterCode
+      // ====================================
+      // FIX STARTER CODE ESCAPING
+      // ====================================
+
       raw = raw.replace(
         /"starterCode"\s*:\s*"([\s\S]*?)"/g,
         (match, code) => {
+
           const escaped =
-            JSON.stringify(code).slice(
-              1,
-              -1
-            );
+            JSON.stringify(code)
+              .slice(1, -1);
 
           return `"starterCode":"${escaped}"`;
+
         }
       );
 
@@ -388,10 +860,16 @@ const generateBatch = async (
           type
         );
 
-      if (validated.length > 0) {
+      if (
+        validated.length > 0
+      ) {
+
         return validated;
+
       }
+
     } catch (error) {
+
       console.log(
         `Batch attempt ${
           attempt + 1
@@ -400,28 +878,32 @@ const generateBatch = async (
 
       console.log(
         error.response?.data ||
-          error.message
+        error.message
       );
 
       if (attempt === retries) {
         return [];
       }
 
-      await new Promise((resolve) =>
-        setTimeout(
-          resolve,
-          1000 * (attempt + 1)
-        )
+      await new Promise(
+        (resolve) =>
+          setTimeout(
+            resolve,
+            1000 * (attempt + 1)
+          )
       );
+
     }
+
   }
 
   return [];
+
 };
 
-// ============================
-// GENERATE QUESTIONS
-// ============================
+// ========================================
+// MAIN GENERATOR
+// ========================================
 
 export const generateQuestions =
   async ({
@@ -431,7 +913,9 @@ export const generateQuestions =
     count = 5,
     aiPrompt = "",
   }) => {
+
     try {
+
       const language =
         detectLanguage(domain);
 
@@ -441,7 +925,9 @@ export const generateQuestions =
       const batchSize = 2;
 
       const totalBatches =
-        Math.ceil(count / batchSize);
+        Math.ceil(
+          count / batchSize
+        );
 
       const requests = [];
 
@@ -450,6 +936,7 @@ export const generateQuestions =
         i < totalBatches;
         i++
       ) {
+
         const remaining =
           count - i * batchSize;
 
@@ -461,26 +948,39 @@ export const generateQuestions =
 
         const prompt =
           createPrompt({
+
             domain,
+
             difficulty,
+
             type,
+
             count:
               currentBatchSize,
+
             language,
+
             starterCode,
+
             aiPrompt,
+
           });
 
         requests.push(
+
           generateBatch({
             prompt,
             type,
           })
+
         );
+
       }
 
       const results =
-        await Promise.all(requests);
+        await Promise.all(
+          requests
+        );
 
       const questions =
         results.flat();
@@ -494,14 +994,18 @@ export const generateQuestions =
         0,
         count
       );
+
     } catch (error) {
+
       console.log(
         error.response?.data ||
-          error.message
+        error.message
       );
 
       throw new Error(
         "Question generation failed"
       );
+
     }
+
   };

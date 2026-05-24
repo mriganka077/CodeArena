@@ -9,7 +9,9 @@ import remarkGfm from "remark-gfm";
 
 const CodeEditor = ({
   currentQuestion,
-  fixedLanguage = false
+  fixedLanguage = false,
+  assessmentMode = false,
+  onCodeSubmit
 }) => {
   const starterCodes = {
     python3: `print("Hello World")`,
@@ -47,7 +49,8 @@ const CodeEditor = ({
   const [output, setOutput] = useState('Run code to see output here...');
   const [status, setStatus] = useState('idle');
   const [metaText, setMetaText] = useState('');
-  const [submitState, setSubmitState] = useState('idle'); // idle | loading | done | error
+  const [submitState, setSubmitState] = useState('idle'); 
+  const [customInput, setCustomInput] = useState("");
   const [aiReview, setAiReview] = useState('');
   const outputRef = useRef('');   // track output for submit
 
@@ -184,7 +187,7 @@ const CodeEditor = ({
         {
           code,
           language,
-          input: ""
+          input: customInput
         }
       );
 
@@ -217,6 +220,117 @@ const CodeEditor = ({
           : errorData || err.message || "Execution failed";
 
       setOutput(errorMessage);
+    }
+  };
+
+  const submitSolution = async () => {
+
+    try {
+  
+      setStatus("running");
+  
+      setOutput(
+        "Checking test cases..."
+      );
+  
+      const res = await axios.post(
+        
+        "http://localhost:4000/api/compiler/submit",
+        {
+          code,
+          language,
+  
+          testCases: [
+  
+            ...(currentQuestion?.visibleTestCases || []),
+  
+            ...(currentQuestion?.hiddenTestCases || []),
+  
+          ],
+        }
+      );
+      console.log(res.data);
+  
+      const d = res.data;
+  
+      const results = d.results || [];
+
+      if (results.length === 0) {
+
+        setOutput(
+          "No test case results returned from server."
+        );
+      
+        setStatus("error");
+      
+        return;
+      }
+
+      const passedCount =
+        results.filter(
+          (r) => r.passed
+        ).length;
+  
+      const totalCount =
+        results.length;
+  
+      const summary =
+        results.map((r, i) => `
+  Test Case ${i + 1}
+  
+  Input:
+  ${r.input}
+  
+  Expected:
+  ${r.expected}
+  
+  Actual:
+  ${r.actual}
+  
+  ${r.passed ? "PASS" : "FAIL"}
+  `).join("\n");
+  
+      setOutput(summary);
+  
+      setStatus(
+        d.accepted
+          ? "success"
+          : "error"
+      );
+  
+      // =====================
+      // SEND TO ASSESSMENT
+      // =====================
+  
+      if (onCodeSubmit) {
+  
+        onCodeSubmit({
+  
+          code,
+          language,
+  
+          passed:
+            passedCount,
+  
+          total:
+            totalCount,
+  
+          accepted:
+            d.accepted,
+  
+          results:
+            results,
+        });
+      }
+  
+    } catch (err) {
+  
+      setStatus("error");
+  
+      setOutput(
+        err.response?.data?.message ||
+        err.message
+      );
     }
   };
 
@@ -373,7 +487,7 @@ const CodeEditor = ({
             ▶ Run
           </button>
           <button
-            onClick={handleSubmit}
+            onClick={submitSolution}
             disabled={submitState === 'loading' || status === 'running'}
             className="rounded-xl bg-[#22C55E] px-4 py-2 text-sm font-semibold text-white hover:bg-[#16a34a] transition-all shadow-[0_0_0_1px_rgba(34,197,94,0.16),_0_10px_30px_rgba(0,0,0,0.28)] disabled:opacity-50"
           >
@@ -386,10 +500,10 @@ const CodeEditor = ({
       <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
 
         {/* Editor + Output */}
-        <div className="flex-1 min-h-0 overflow-hidden grid grid-rows-[minmax(0,1fr)_180px]">
+        <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
 
           {/* Code area */}
-          <div className="min-h-0 bg-[#07101d] overflow-hidden">
+          <div className="flex-1 min-h-0 bg-[#07101d] overflow-hidden">
             <Editor
               height="100%"
               beforeMount={handleEditorWillMount}
@@ -419,38 +533,70 @@ const CodeEditor = ({
             />
           </div>
 
-          {/* Output panel */}
-          <div className="border-t border-white/10 bg-[#050816]/80 flex flex-col min-h-0 overflow-hidden">
+          {/* Bottom Panels */}
+          <div className="h-[200px] shrink-0 border-t border-white/10 grid grid-cols-2">
 
-            <div className="h-11 shrink-0 px-4 border-b border-white/10 flex items-center justify-between">
+            {/* Custom Input */}
+            <div className="bg-[#0b1220] border-r border-white/10 flex flex-col overflow-hidden">
 
-              <div className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-[#A1A1AA]">
-
-                <span
-                  className={`h-2.5 w-2.5 rounded-full transition-all ${status === 'running'
-                      ? 'bg-yellow-400 animate-pulseDot'
-                      : status === 'success'
-                        ? 'bg-[#22C55E]'
-                        : status === 'error'
-                          ? 'bg-red-400'
-                          : 'bg-white/30'
-                    }`}
-                />
-
-                Output
+              <div className="h-11 px-4 border-b border-white/10 flex items-center">
+                <span className="text-xs uppercase tracking-[0.18em] text-[#A1A1AA] font-bold">
+                  Custom Input
+                </span>
               </div>
 
-              <div className="text-xs text-[#A1A1AA] font-mono">
-                {metaText}
+              <div className="flex-1 p-4 overflow-hidden">
+
+                <textarea
+                  value={customInput}
+                  onChange={(e) =>
+                    setCustomInput(e.target.value)
+                  }
+                  placeholder="Enter custom stdin input..."
+                  className="w-full h-full rounded-xl bg-black/30 border border-white/10 p-3 text-sm text-white outline-none resize-none"
+                />
+
               </div>
 
             </div>
 
-            <pre className="min-h-0 flex-1 overflow-auto scrollbar-thin p-4 font-mono text-[13px] leading-7 text-slate-200 whitespace-pre-wrap">
-              {output}
-            </pre>
+            {/* Output */}
+            <div className="bg-[#050816]/80 flex flex-col overflow-hidden">
+
+              <div className="h-11 px-4 border-b border-white/10 flex items-center justify-between">
+
+                <div className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-[#A1A1AA]">
+
+                  <span
+                    className={`h-2.5 w-2.5 rounded-full transition-all ${status === 'running'
+                        ? 'bg-yellow-400 animate-pulseDot'
+                        : status === 'success'
+                          ? 'bg-[#22C55E]'
+                          : status === 'error'
+                            ? 'bg-red-400'
+                            : 'bg-white/30'
+                      }`}
+                  />
+
+                  Output
+
+                </div>
+
+                <div className="text-xs text-[#A1A1AA] font-mono">
+                  {metaText}
+                </div>
+
+              </div>
+
+              <pre className="flex-1 overflow-auto scrollbar-thin p-4 font-mono text-[13px] leading-7 text-slate-200 whitespace-pre-wrap">
+                {output}
+              </pre>
+
+            </div>
 
           </div>
+
+        
         </div>
 
         {/* AI Review Panel Here */}

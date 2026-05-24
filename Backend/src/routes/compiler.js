@@ -44,82 +44,113 @@ router.post("/run", async (req, res) => {
 });
 
 router.post("/submit", async (req, res) => {
+
   try {
 
     const {
       code,
       language,
-      testCases,
+      testCases
     } = req.body;
+
+    if (
+      !testCases ||
+      testCases.length === 0
+    ) {
+
+      return res.status(400).json({
+        success: false,
+        message: "No test cases provided"
+      });
+
+    }
 
     const language_id =
       LANGUAGE_IDS[language];
 
     if (!language_id) {
+
       return res.status(400).json({
         success: false,
-        message: "Unsupported language",
+        message: "Unsupported language"
       });
-    }
 
-    const normalize = (str = "") =>
-      str.replace(/\s+/g, " ").trim();
+    }
 
     const results = [];
 
     for (const tc of testCases) {
 
-      const result = await submitCode({
-        source_code: code,
-        language_id,
-        stdin: tc.input,
-      });
+      const result =
+        await submitCode({
 
-      const actual =
-        result.stdout || "";
+          source_code: code,
 
-      const expected =
-        tc.expectedOutput || "";
+          language_id,
+
+          stdin: tc.input || "",
+
+        });
+
+      const actualOutput =
+        (
+          result.stdout || ""
+        ).trim();
+
+      const expectedOutput =
+        (
+          tc.expectedOutput || ""
+        ).trim();
 
       const passed =
-        normalize(actual) ===
-        normalize(expected);
+        actualOutput === expectedOutput;
 
       results.push({
+
         input: tc.input,
-        expected,
-        actual,
+
+        expected: expectedOutput,
+
+        actual: actualOutput,
+
         passed,
-        stderr: result.stderr,
-        compile_output:
-          result.compile_output,
-        status: result.status,
+
       });
+
     }
 
-    const passedCount =
-      results.filter(r => r.passed).length;
-
     const accepted =
-      passedCount === results.length;
+      results.every(
+        (r) => r.passed
+      );
 
     return res.json({
+
       success: true,
+
       accepted,
-      passedCount,
-      total: results.length,
+
       results,
+
     });
 
   } catch (error) {
 
-    console.error(error);
+    console.error(
+      "Submit route error:",
+      error
+    );
 
     return res.status(500).json({
+
       success: false,
-      message: "Judge failed",
+
+      message: "Submission failed",
+
     });
+
   }
+
 });
 
 export default router;
