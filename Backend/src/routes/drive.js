@@ -11,6 +11,7 @@ import {
   endDrive,
   createInterview,
   getMyInterviews,
+  getAllAdminInterviews,
 } from "../controllers/drive.js";
 
 const router = express.Router();
@@ -43,5 +44,11 @@ router.get(
 );
 
 router.put("/:id/end-drive", endDrive);
+
+router.get(
+  "/admin",
+  protect,
+  getAllAdminInterviews
+);
 
 export default router;

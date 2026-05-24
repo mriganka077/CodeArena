@@ -18,128 +18,7 @@ import {
 import ScheduleInterviewModal from "../drive/ScheduleInterviewModal";
 
 // ── mock data ─────────────────────────────────────────────────────────────────
-const INTERVIEWS = [
-  {
-    id: "i001", candidate: "Aryan Mehta", role: "Senior ML Engineer",
-    drive: "Senior ML Engineer Drive", avatar: "AM",
-    scheduledAt: "2026-05-14T10:00:00Z", endDate: "2026-05-14T11:00:00Z", duration: 60,
-    status: "Scheduled", type: "Technical", round: "Round 2",
-    score: null, recommendation: null,
-    assessmentScore: 91, rank: 3,
-    tags: ["Machine Learning", "Python", "System Design"],
-    difficulty: "hard",
-    focusAreas: ["Algorithms", "System Design", "APIs"],
-    instructions: "Focus on distributed systems design and scalability trade-offs.",
-    emailSubject: "Interview Invitation — Senior ML Engineer Round 2",
-    emailBody: "Dear Aryan,\n\nWe are pleased to invite you to Round 2 of the interview process for the Senior ML Engineer position.\n\nBest regards,\nThe Hiring Team",
-    notes: "",
-  },
-  {
-    id: "i002", candidate: "Sanya Kapoor", role: "Frontend Dev Q2",
-    drive: "Frontend Dev Q2 Drive", avatar: "SK",
-    scheduledAt: "2026-05-13T14:30:00Z", endDate: "2026-05-13T15:15:00Z", duration: 45,
-    status: "Completed", type: "Technical", round: "Round 1",
-    score: 87, recommendation: "Strong Hire",
-    assessmentScore: 95, rank: 1,
-    tags: ["React", "TypeScript", "CSS"],
-    difficulty: "medium",
-    focusAreas: ["Data Structures", "Algorithms", "OOP"],
-    instructions: "",
-    emailSubject: "Interview Invitation — Frontend Assessment Drive",
-    emailBody: "Dear Sanya,\n\nWe are pleased to invite you to the technical interview for the Frontend Developer position.\n\nBest regards,\nThe Hiring Team",
-    notes: "Excellent problem-solving approach. Strong grasp of React internals.",
-  },
-  {
-    id: "i003", candidate: "Karan Joshi", role: "Data Scientist",
-    drive: "Data Scientist Drive", avatar: "KJ",
-    scheduledAt: "2026-05-13T11:00:00Z", endDate: "2026-05-13T12:00:00Z", duration: 60,
-    status: "Completed", type: "HR", round: "HR Round",
-    score: 72, recommendation: "Hire",
-    assessmentScore: 83, rank: 7,
-    tags: ["Python", "Statistics", "ML"],
-    difficulty: "easy",
-    focusAreas: ["Behavioural", "SQL / DB"],
-    instructions: "Check cultural alignment and growth mindset.",
-    emailSubject: "HR Interview — Data Scientist Role",
-    emailBody: "Dear Karan,\n\nKindly join us for an HR round for the Data Scientist position.\n\nBest regards,\nThe Hiring Team",
-    notes: "Good culture fit. Salary expectations within range.",
-  },
-  {
-    id: "i004", candidate: "Preethi Rajan", role: "QA Specialist",
-    drive: "QA Specialist Drive", avatar: "PR",
-    scheduledAt: "2026-05-15T09:00:00Z", endDate: "2026-05-15T09:45:00Z", duration: 45,
-    status: "Scheduled", type: "Technical", round: "Round 1",
-    score: null, recommendation: null,
-    assessmentScore: 88, rank: 2,
-    tags: ["QA", "Selenium", "JIRA"],
-    difficulty: "medium",
-    focusAreas: ["APIs", "SQL / DB"],
-    instructions: "",
-    emailSubject: "Technical Interview — QA Specialist",
-    emailBody: "Dear Preethi,\n\nPlease join us for the technical interview for the QA Specialist position.\n\nBest regards,\nThe Hiring Team",
-    notes: "",
-  },
-  {
-    id: "i005", candidate: "Nikhil Tiwari", role: "DevOps Engineer",
-    drive: "DevOps Engineer Drive", avatar: "NT",
-    scheduledAt: "2026-05-12T15:00:00Z", endDate: "2026-05-12T16:00:00Z", duration: 60,
-    status: "No-Show", type: "Technical", round: "Round 1",
-    score: null, recommendation: "No Hire",
-    assessmentScore: 79, rank: 5,
-    tags: ["Kubernetes", "AWS", "Terraform"],
-    difficulty: "expert",
-    focusAreas: ["Cloud", "System Design", "APIs"],
-    instructions: "Focus on infrastructure-as-code and incident management.",
-    emailSubject: "Technical Interview — DevOps Engineer Round 1",
-    emailBody: "Dear Nikhil,\n\nWe look forward to speaking with you about the DevOps Engineer role.\n\nBest regards,\nThe Hiring Team",
-    notes: "Candidate did not join. Reschedule requested.",
-  },
-  {
-    id: "i006", candidate: "Divya Sharma", role: "Senior ML Engineer",
-    drive: "Senior ML Engineer Drive", avatar: "DS",
-    scheduledAt: "2026-05-14T13:00:00Z", endDate: "2026-05-14T14:30:00Z", duration: 90,
-    status: "In Progress", type: "Technical", round: "Final Round",
-    score: null, recommendation: null,
-    assessmentScore: 97, rank: 1,
-    tags: ["Deep Learning", "MLOps", "Python"],
-    difficulty: "expert",
-    focusAreas: ["Algorithms", "System Design", "Cloud"],
-    instructions: "Final round — evaluate leadership and architecture decision making.",
-    emailSubject: "Final Round Interview — Senior ML Engineer",
-    emailBody: "Dear Divya,\n\nCongratulations on progressing to the final round! Please find your interview details below.\n\nBest regards,\nThe Hiring Team",
-    notes: "",
-  },
-  {
-    id: "i007", candidate: "Rahul Gupta", role: "Marketing Lead",
-    drive: "Marketing Lead Drive", avatar: "RG",
-    scheduledAt: "2026-05-11T10:00:00Z", endDate: "2026-05-11T10:30:00Z", duration: 30,
-    status: "Completed", type: "HR", round: "Final Round",
-    score: 90, recommendation: "Strong Hire",
-    assessmentScore: 88, rank: 2,
-    tags: ["Marketing", "Analytics", "Strategy"],
-    difficulty: "easy",
-    focusAreas: ["Behavioural"],
-    instructions: "",
-    emailSubject: "Final Round — Marketing Lead",
-    emailBody: "Dear Rahul,\n\nWe're excited to have you for the final round interview.\n\nBest regards,\nThe Hiring Team",
-    notes: "Outstanding communication. Immediate joiner.",
-  },
-  {
-    id: "i008", candidate: "Tanvi Bhat", role: "Frontend Dev Q2",
-    drive: "Frontend Dev Q2 Drive", avatar: "TB",
-    scheduledAt: "2026-05-16T11:30:00Z", endDate: "2026-05-16T12:30:00Z", duration: 60,
-    status: "Scheduled", type: "Design", round: "Round 2",
-    score: null, recommendation: null,
-    assessmentScore: 93, rank: 2,
-    tags: ["React", "Figma", "Accessibility"],
-    difficulty: "medium",
-    focusAreas: ["OOP", "APIs"],
-    instructions: "Bring portfolio links. Discuss a past design system project in depth.",
-    emailSubject: "Design Interview — Frontend Dev Q2",
-    emailBody: "Dear Tanvi,\n\nPlease join us for a design-focused interview for the Frontend Developer role.\n\nBest regards,\nThe Hiring Team",
-    notes: "",
-  },
-];
+
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 const STATUS_META = {
@@ -887,7 +766,8 @@ const TableRow = ({ iv, i, onClick }) => {
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
 const AdminInterview = () => {
-  const [interviews]                = useState(INTERVIEWS);
+  const [interviews, setInterviews] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch]         = useState("");
   const [filterStatus, setStatus]   = useState("All");
   const [filterType, setType]       = useState("All");
@@ -923,6 +803,71 @@ const AdminInterview = () => {
   const avgScore   = scored.length ? Math.round(scored.reduce((s, iv) => s + iv.score, 0) / scored.length) : 0;
   const strongHires = interviews.filter((iv) => iv.recommendation === "Strong Hire").length;
   const todayCount  = interviews.filter((iv) => isToday(iv.scheduledAt)).length;
+
+  useEffect(() => {
+
+    let interval;
+  
+    const startRealtime = async () => {
+  
+      await fetchInterviews();
+  
+      interval = setInterval(() => {
+  
+        fetchInterviews();
+  
+      }, 1000); // every 1 second
+    };
+  
+    startRealtime();
+  
+    return () => clearInterval(interval);
+  
+  }, []);
+  
+  const fetchInterviews = async () => {
+
+    try {
+  
+      const token = localStorage.getItem("token");
+  
+      const response = await fetch(
+        "http://localhost:4000/api/drives/admin",
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+  
+          cache: "no-store",
+        }
+      );
+  
+      const data = await response.json();
+  
+      if (data.success) {
+  
+        setInterviews((prev) => {
+  
+          const oldData = JSON.stringify(prev);
+          const newData = JSON.stringify(data.interviews);
+  
+          return oldData !== newData
+            ? data.interviews
+            : prev;
+        });
+      }
+  
+    } catch (error) {
+  
+      console.log(error);
+  
+    } finally {
+  
+      setLoading(false);
+    }
+  };
 
   return (
     <>

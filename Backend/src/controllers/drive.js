@@ -532,4 +532,124 @@ export const createInterview = async (req, res) => {
     }
   };
 
+  export const getAllAdminInterviews = async (
+    req,
+    res
+  ) => {
   
+    try {
+  
+      const interviews =
+        await InterviewSchedule.find()
+  
+          .populate(
+            "drive",
+            `
+            hiringPositionName
+            difficulty
+            driveType
+            `
+          )
+  
+          .populate(
+            "candidates",
+            `
+            firstName
+            lastName
+            email
+            picture
+            profilePhoto
+            `
+          )
+  
+          .sort({ createdAt: -1 });
+  
+      const formatted =
+        interviews.flatMap((iv) =>
+  
+          iv.candidates.map((candidate) => ({
+  
+            id: iv._id,
+  
+            candidate:
+              `${candidate.firstName || ""}
+               ${candidate.lastName || ""}`,
+  
+            avatar:
+              `${candidate.firstName?.[0] || ""}
+               ${candidate.lastName?.[0] || ""}`,
+  
+            candidateImage:
+              candidate.picture ||
+              candidate.profilePhoto ||
+              "",
+  
+            email: candidate.email,
+  
+            role:
+              iv.drive?.hiringPositionName ||
+              "Interview",
+  
+            drive:
+              iv.drive?.hiringPositionName ||
+              "Interview Drive",
+  
+            scheduledAt: iv.startDate,
+  
+            endDate: iv.endDate,
+  
+            duration:
+              iv.timeDurationInMin || 0,
+  
+            status: iv.status,
+  
+            type: iv.interviewType,
+  
+            round: "AI Interview",
+  
+            difficulty:
+              iv.difficulty || "medium",
+  
+            focusAreas:
+              iv.focusAreas || [],
+  
+            instructions:
+              iv.instructions || "",
+  
+            emailSubject:
+              iv.emailSubject || "",
+  
+            emailBody:
+              iv.emailBody || "",
+  
+            tags:
+              iv.focusAreas || [],
+  
+            score: null,
+  
+            recommendation: null,
+  
+            assessmentScore: 0,
+  
+            rank: 0,
+  
+            notes: "",
+          }))
+        );
+  
+      res.status(200).json({
+        success: true,
+        interviews: formatted,
+      });
+  
+    } catch (error) {
+  
+      console.log(error);
+  
+      res.status(500).json({
+        success: false,
+        message:
+          "Failed to fetch interviews",
+      });
+    }
+  };
