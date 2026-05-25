@@ -2,6 +2,8 @@ import Drive from "../models/Drive.js";
 import User from "../models/User.js";
 import AssessmentResult from "../models/AssessmentResult.js";
 import InterviewSchedule from "../models/InterviewSchedule.js";
+import InterviewResult from "../models/InterviewResult.js";
+
 
 export const getAllDrives = async (req, res) => {
 
@@ -14,7 +16,7 @@ export const getAllDrives = async (req, res) => {
             )
             .sort({ createdAt: -1 })
             .lean();
-            
+
 
         const formattedDrives = await Promise.all(
 
@@ -33,32 +35,32 @@ export const getAllDrives = async (req, res) => {
                 const avgScore =
                     results.length > 0
                         ? Math.round(
-                              results.reduce(
-                                  (sum, r) => sum + (r.score || 0),
-                                  0
-                              ) / results.length
-                          )
+                            results.reduce(
+                                (sum, r) => sum + (r.score || 0),
+                                0
+                            ) / results.length
+                        )
                         : 0;
 
                 const topScore =
                     results.length > 0
                         ? Math.max(
-                              ...results.map((r) => r.score || 0)
-                          )
+                            ...results.map((r) => r.score || 0)
+                        )
                         : 0;
 
                 const completionRate =
                     totalCandidates > 0
                         ? Math.round(
-                              (attempted / totalCandidates) * 100
-                          )
+                            (attempted / totalCandidates) * 100
+                        )
                         : 0;
 
-                        const now = new Date();
+                const now = new Date();
 
-                        let status = drive.status || "Draft";
-                        
-                        // Only auto-close assessment
+                let status = drive.status || "Draft";
+
+                // Only auto-close assessment
                 const assessmentEnded =
                     drive.assessmentEndDate
                         ? new Date(drive.assessmentEndDate) < now
@@ -68,79 +70,92 @@ export const getAllDrives = async (req, res) => {
                     drive.driveEndDate
                         ? new Date(drive.driveEndDate) < now
                         : false;
-                        
-                        if (driveEnded) {
-                          status = "Completed";
-                        } else if (assessmentEnded) {
-                          status = "On-Hold";
-                        } else {
-                          status = "Active";
-                        }
+
+                if (driveEnded) {
+                    status = "Completed";
+                } else if (assessmentEnded) {
+                    status = "On-Hold";
+                } else {
+                    status = "Active";
+                }
 
                 const assignedCount =
                     drive.assignedCandidates?.length || 0;
-                        
-                    return {
 
-                        _id: drive._id,
-                    
-                        hiringPositionName: drive.hiringPositionName,
-                    
-                        assignedCandidates:
-                            drive.assignedCandidates || [],
-                    
-                        tag: drive.driveType,
-                    
-                        status,
-                    
-                        visibility:
-                            assignedCount > 0
-                                ? "Public"
-                                : "Private",
-                    
-                        assessmentStartDate:
-                            drive.assessmentStartDate,
-                    
-                        assessmentEndDate:
-                            drive.assessmentEndDate,
-                    
-                        driveEndDate:
-                            drive.driveEndDate,
-                    
-                        totalCandidates,
-                    
-                        attempted,
-                    
-                        avgScore,
-                    
-                        topScore,
-                    
-                        duration:
-                            drive.timeDurationInMin,
-                    
-                        questionCount:
-                            drive.mcqCount + drive.codeCount,
-                    
-                        mcqCount: drive.mcqCount,
-                    
-                        codeCount: drive.codeCount,
-                    
-                        marksPerMcq: drive.mcqMarks,
-                    
-                        marksPerCode: drive.codeMarks,
+                return {
 
-                        totalMarks: drive.totalMarks,
-                    
-                        type: drive.driveType,
-                    
-                        createdAt: drive.createdAt,
-                    
-                        difficulty: "Medium",
-                    
-                        tags: [],
-                    
-                        completionRate,
-                    };
+                    interviews:
+                        drive.interviews || [],
+
+                    interviewStartDate:
+                        drive.interviews?.length > 0
+                            ? drive.interviews[0]?.startDate
+                            : null,
+
+                    interviewEndDate:
+                        drive.interviews?.length > 0
+                            ? drive.interviews[0]?.endDate
+                            : null,
+
+                    _id: drive._id,
+
+                    hiringPositionName: drive.hiringPositionName,
+
+                    assignedCandidates:
+                        drive.assignedCandidates || [],
+
+                    tag: drive.driveType,
+
+                    status,
+
+                    visibility:
+                        assignedCount > 0
+                            ? "Public"
+                            : "Private",
+
+                    assessmentStartDate:
+                        drive.assessmentStartDate,
+
+                    assessmentEndDate:
+                        drive.assessmentEndDate,
+
+                    driveEndDate:
+                        drive.driveEndDate,
+
+                    totalCandidates,
+
+                    attempted,
+
+                    avgScore,
+
+                    topScore,
+
+                    duration:
+                        drive.timeDurationInMin,
+
+                    questionCount:
+                        drive.mcqCount + drive.codeCount,
+
+                    mcqCount: drive.mcqCount,
+
+                    codeCount: drive.codeCount,
+
+                    marksPerMcq: drive.mcqMarks,
+
+                    marksPerCode: drive.codeMarks,
+
+                    totalMarks: drive.totalMarks,
+
+                    type: drive.driveType,
+
+                    createdAt: drive.createdAt,
+
+                    difficulty: "Medium",
+
+                    tags: [],
+
+                    completionRate,
+                };
             })
         );
 
@@ -239,6 +254,7 @@ export const getDriveCandidates = async (req, res) => {
         const { id } = req.params;
 
         const drive = await Drive.findById(id)
+
             .populate(
                 "assignedCandidates",
                 "firstName lastName email picture profilePhoto"
@@ -247,25 +263,75 @@ export const getDriveCandidates = async (req, res) => {
         if (!drive) {
 
             return res.status(404).json({
+
                 success: false,
+
                 message: "Drive not found",
+
             });
         }
 
-        const results =
+        // ==========================
+        // FETCH ASSESSMENT RESULTS
+        // ==========================
+
+        const assessmentResults =
             await AssessmentResult.find({
+
                 driveId: id,
+
             });
+
+        // ==========================
+        // FETCH INTERVIEW RESULTS
+        // ==========================
+
+        const interviewResults =
+            await InterviewResult.find({
+
+                driveId: id,
+
+            });
+
+        // ==========================
+        // BUILD CANDIDATE DATA
+        // ==========================
 
         const candidates =
             drive.assignedCandidates.map((u) => {
 
-                const result =
-                    results.find(
+                // Assessment
+                const assessment =
+                    assessmentResults.find(
+
                         (r) =>
+
                             r.userId?.toString() ===
                             u._id.toString()
                     );
+
+                // Interview
+                const interview =
+                    interviewResults.find(
+
+                        (r) =>
+
+                            r.userId?.toString() ===
+                            u._id.toString()
+                    );
+
+                // Total Violations
+                const totalInterviewViolations =
+                    interview?.violations
+
+                        ? Object.values(
+                            interview.violations
+                        ).reduce(
+                            (a, b) => a + b,
+                            0
+                        )
+
+                        : 0;
 
                 return {
 
@@ -285,18 +351,57 @@ export const getDriveCandidates = async (req, res) => {
                         u.profilePhoto ||
                         "",
 
+                    // ==========================
+                    // ASSESSMENT
+                    // ==========================
+
                     score:
-                        result?.score ?? null,
+                        assessment?.score ?? null,
+
+                    percentage:
+                        assessment?.percentage ?? null,
+
+                    totalMarks:
+                        drive.totalMarks ?? null,
 
                     status:
-                        result?.status ||
+                        assessment?.status ||
                         "Assigned",
+
+                    // ==========================
+                    // INTERVIEW
+                    // ==========================
+
+                    interviewStatus:
+                        interview?.status || null,
+
+                    interviewTimeTaken:
+                        interview?.timeTaken || 0,
+
+                    interviewViolations:
+                        interview?.violations || {},
+
+                    interviewViolationCount:
+                        totalInterviewViolations,
+
+                    interviewTranscript:
+                        interview?.transcript || [],
+
+                    interviewTranscriptCount:
+                        interview?.transcript?.length || 0,
+
+                    interviewCreatedAt:
+                        interview?.createdAt || null,
+
                 };
             });
 
         res.status(200).json({
+
             success: true,
+
             candidates,
+
         });
 
     } catch (error) {
@@ -304,9 +409,12 @@ export const getDriveCandidates = async (req, res) => {
         console.log(error);
 
         res.status(500).json({
+
             success: false,
+
             message:
                 "Failed to fetch candidates",
+
         });
     }
 };
@@ -467,11 +575,11 @@ export const createInterview = async (req, res) => {
 
         if (!req.body.candidates?.length) {
             return res.status(400).json({
-              success: false,
-              message: "Select at least one candidate",
+                success: false,
+                message: "Select at least one candidate",
             });
-          }
-  
+        }
+
         const interview =
             await InterviewSchedule.create({
                 ...req.body,
@@ -491,165 +599,270 @@ export const createInterview = async (req, res) => {
             success: true,
             interview,
         });
-  
+
     } catch (err) {
-  
-      res.status(500).json({
-        success: false,
-        message: err.message,
-      });
-    }
-  };
 
-  export const getMyInterviews = async (
+        res.status(500).json({
+            success: false,
+            message: err.message,
+        });
+    }
+};
+
+export const getMyInterviews = async (
     req,
     res
-  ) => {
-  
+) => {
+
     try {
-  
-      const interviews =
-        await InterviewSchedule.find({
-          candidates: req.user._id,
-        })
-        .populate("drive")
-        .sort({ createdAt: -1 });
-  
-      res.status(200).json({
-        success: true,
-        interviews,
-      });
-  
+
+        const interviews =
+            await InterviewSchedule.find({
+                candidates: req.user._id,
+            })
+                .populate("drive")
+                .sort({ createdAt: -1 });
+
+        res.status(200).json({
+            success: true,
+            interviews,
+        });
+
     } catch (error) {
-  
-      console.log(error);
-  
-      res.status(500).json({
-        success: false,
-        message:
-          "Failed to fetch interviews",
-      });
-    }
-  };
 
-  export const getAllAdminInterviews = async (
+        console.log(error);
+
+        res.status(500).json({
+            success: false,
+            message:
+                "Failed to fetch interviews",
+        });
+    }
+};
+
+export const getAllAdminInterviews = async (
     req,
     res
-  ) => {
-  
+) => {
+
     try {
-  
-      const interviews =
-        await InterviewSchedule.find()
-  
-          .populate(
-            "drive",
-            `
+
+        const interviews =
+            await InterviewSchedule.find()
+
+                .populate(
+                    "drive",
+                    `
             hiringPositionName
             difficulty
             driveType
             `
-          )
-  
-          .populate(
-            "candidates",
-            `
+                )
+
+                .populate(
+                    "candidates",
+                    `
             firstName
             lastName
             email
             picture
             profilePhoto
             `
-          )
-  
-          .sort({ createdAt: -1 });
-  
-      const formatted =
-        interviews.flatMap((iv) =>
-  
-          iv.candidates.map((candidate) => ({
-  
-            id: iv._id,
-  
-            candidate:
-              `${candidate.firstName || ""}
-               ${candidate.lastName || ""}`,
-  
-            avatar:
-              `${candidate.firstName?.[0] || ""}
-               ${candidate.lastName?.[0] || ""}`,
-  
-            candidateImage:
-              candidate.picture ||
-              candidate.profilePhoto ||
-              "",
-  
-            email: candidate.email,
-  
-            role:
-              iv.drive?.hiringPositionName ||
-              "Interview",
-  
-            drive:
-              iv.drive?.hiringPositionName ||
-              "Interview Drive",
-  
-            scheduledAt: iv.startDate,
-  
-            endDate: iv.endDate,
-  
-            duration:
-              iv.timeDurationInMin || 0,
-  
-            status: iv.status,
-  
-            type: iv.interviewType,
-  
-            round: "AI Interview",
-  
-            difficulty:
-              iv.difficulty || "medium",
-  
-            focusAreas:
-              iv.focusAreas || [],
-  
-            instructions:
-              iv.instructions || "",
-  
-            emailSubject:
-              iv.emailSubject || "",
-  
-            emailBody:
-              iv.emailBody || "",
-  
-            tags:
-              iv.focusAreas || [],
-  
-            score: null,
-  
-            recommendation: null,
-  
-            assessmentScore: 0,
-  
-            rank: 0,
-  
-            notes: "",
-          }))
-        );
-  
-      res.status(200).json({
-        success: true,
-        interviews: formatted,
-      });
-  
+                )
+
+                .sort({ createdAt: -1 });
+
+        const interviewResults =
+            await InterviewResult.find();
+
+        const assessmentResults =
+            await AssessmentResult.find();
+
+        const formatted =
+            interviews.flatMap((iv) =>
+
+                iv.candidates.map((candidate) => {
+
+                    // ==========================
+                    // FIND INTERVIEW RESULT
+                    // ==========================
+
+                    const interviewResult =
+                        interviewResults.find(
+
+                            (r) =>
+
+                                r.userId?.toString() ===
+                                candidate._id.toString()
+
+                                &&
+
+                                r.driveId?.toString() ===
+                                iv.drive?._id?.toString()
+
+                        );
+
+                    // ==========================
+                    // FIND ASSESSMENT RESULT
+                    // ==========================
+
+                    const assessmentResult =
+                        assessmentResults.find(
+
+                            (r) =>
+
+                                r.userId?.toString() ===
+                                candidate._id.toString()
+
+                                &&
+
+                                r.driveId?.toString() ===
+                                iv.drive?._id?.toString()
+
+                        );
+
+                    // ==========================
+                    // TOTAL VIOLATIONS
+                    // ==========================
+
+                    const totalViolations =
+                        interviewResult?.violations
+
+                            ? Object.values(
+                                interviewResult.violations
+                            ).reduce(
+                                (a, b) => a + b,
+                                0
+                            )
+
+                            : 0;
+
+                    return {
+
+                        id: iv._id,
+
+                        candidate:
+                            `${candidate.firstName || ""}
+                         ${candidate.lastName || ""}`,
+
+                        avatar:
+                            `${candidate.firstName?.[0] || ""}
+                         ${candidate.lastName?.[0] || ""}`,
+
+                        candidateImage:
+                            candidate.picture ||
+                            candidate.profilePhoto ||
+                            "",
+
+                        email:
+                            candidate.email,
+
+                        role:
+                            iv.drive?.hiringPositionName ||
+                            "Interview",
+
+                        drive:
+                            iv.drive?.hiringPositionName ||
+                            "Interview Drive",
+
+                        scheduledAt:
+                            iv.startDate,
+
+                        endDate:
+                            iv.endDate,
+
+                        duration:
+                            iv.timeDurationInMin || 0,
+
+                        // ==========================
+                        // INTERVIEW STATUS
+                        // ==========================
+
+                        status:
+                            interviewResult?.status ||
+                            iv.status,
+
+                        type:
+                            iv.interviewType,
+
+                        round:
+                            "AI Interview",
+
+                        difficulty:
+                            iv.difficulty || "medium",
+
+                        focusAreas:
+                            iv.focusAreas || [],
+
+                        instructions:
+                            iv.instructions || "",
+
+                        emailSubject:
+                            iv.emailSubject || "",
+
+                        emailBody:
+                            iv.emailBody || "",
+
+                        tags:
+                            iv.focusAreas || [],
+
+                        // ==========================
+                        // REAL INTERVIEW DATA
+                        // ==========================
+
+                        transcript:
+                            interviewResult?.transcript || [],
+
+                        transcriptCount:
+                            interviewResult?.transcript?.length || 0,
+
+                        timeTaken:
+                            interviewResult?.timeTaken || 0,
+
+                        violations:
+                            interviewResult?.violations || {},
+
+                        violationCount:
+                            totalViolations,
+
+                        terminationReason:
+                            interviewResult?.terminationReason || "",
+
+                        // ==========================
+                        // ASSESSMENT
+                        // ==========================
+
+                        assessmentScore:
+                            assessmentResult?.percentage || 0,
+
+                        score:
+                            assessmentResult?.score || 0,
+
+                        percentage:
+                            assessmentResult?.percentage || 0,
+
+                        rank: 0,
+
+                        recommendation: null,
+
+                        notes: "",
+                    };
+                })
+            );
+
+        res.status(200).json({
+            success: true,
+            interviews: formatted,
+        });
+
     } catch (error) {
-  
-      console.log(error);
-  
-      res.status(500).json({
-        success: false,
-        message:
-          "Failed to fetch interviews",
-      });
+
+        console.log(error);
+
+        res.status(500).json({
+            success: false,
+            message:
+                "Failed to fetch interviews",
+        });
     }
-  };
+};

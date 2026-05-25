@@ -1,21 +1,22 @@
 import axios from "axios";
 import dotenv from "dotenv";
 
+import {
+  verifyQuestion
+} from "../utils/verifyQuestion.js";
+
 dotenv.config();
 
 // ========================================
-// NVIDIA CLIENT
+// GEMINI CLIENT
 // ========================================
 
-const nvidia = axios.create({
+const gemini = axios.create({
 
   baseURL:
-    "https://integrate.api.nvidia.com/v1",
+    "https://generativelanguage.googleapis.com/v1beta",
 
   headers: {
-
-    Authorization:
-      `Bearer ${process.env.NVIDIA_API_KEY}`,
 
     "Content-Type":
       "application/json",
@@ -95,6 +96,12 @@ const detectLanguage = (
     return "Go";
   }
 
+  if (
+    text.includes("c")
+  ) {
+    return "C";
+  }
+
   return "Python";
 
 };
@@ -109,10 +116,6 @@ const getStarterCode = (
 
   switch (language) {
 
-    // ====================================
-    // PYTHON
-    // ====================================
-
     case "Python":
 
       return `
@@ -120,67 +123,61 @@ import sys
 
 def solve():
 
-    input_data = sys.stdin.read().strip()
+    input_data =
+      sys.stdin.read().strip()
 
-    # Write your solution here
+    # Write your code here
 
 solve()
 `;
-
-    // ====================================
-    // JAVASCRIPT
-    // ====================================
 
     case "JavaScript":
 
       return `
 function solve(input) {
 
+    // Write your code here
+
 }
 
-const fs = require("fs");
+const fs =
+  require("fs");
 
 const input =
-  fs.readFileSync(0, "utf8").trim();
+  fs.readFileSync(
+    0,
+    "utf8"
+  ).trim();
 
 solve(input);
 `;
 
-    // ====================================
-    // TYPESCRIPT
-    // ====================================
-
-    case "TypeScript":
+    case "C":
 
       return `
-function solve(input: string): void {
+#include <stdio.h>
 
+int main() {
+
+    // Write your code here
+
+    return 0;
 }
-
-process.stdin.resume();
-
-process.stdin.setEncoding("utf8");
-
-let data = "";
-
-process.stdin.on(
-  "data",
-  chunk => {
-    data += chunk;
-  }
-);
-
-process.stdin.on(
-  "end",
-  () => {
-    solve(data.trim());
-  }
-);
 `;
 
-    // ====================================
-    // JAVA
-    // ====================================
+    case "C++":
+
+      return `
+#include <bits/stdc++.h>
+using namespace std;
+
+int main() {
+
+    // Write your code here
+
+    return 0;
+}
+`;
 
     case "Java":
 
@@ -189,123 +186,11 @@ import java.util.*;
 
 public class Main {
 
-    public static void solve() {
+    public static void main(String[] args) {
 
-        Scanner sc =
-          new Scanner(System.in);
-
-    }
-
-    public static void main(
-      String[] args
-    ) {
-
-        solve();
+        // Write your code here
 
     }
-}
-`;
-
-    // ====================================
-    // C++
-    // ====================================
-
-    case "C++":
-
-      return `
-#include <iostream>
-#include <vector>
-
-using namespace std;
-
-void solve() {
-
-}
-
-int main() {
-
-    solve();
-
-    return 0;
-
-}
-`;
-
-    // ====================================
-    // C#
-    // ====================================
-
-    case "C#":
-
-      return `
-using System;
-
-class Program {
-
-    static void Solve() {
-
-    }
-
-    static void Main() {
-
-        Solve();
-
-    }
-
-}
-`;
-
-    // ====================================
-    // PHP
-    // ====================================
-
-    case "PHP":
-
-      return `
-<?php
-
-function solve($input) {
-
-}
-
-$input =
-  trim(
-    stream_get_contents(STDIN)
-  );
-
-solve($input);
-
-?>
-`;
-
-    // ====================================
-    // GO
-    // ====================================
-
-    case "Go":
-
-      return `
-package main
-
-import (
-    "bufio"
-    "fmt"
-    "os"
-)
-
-func solve(input string) {
-
-}
-
-func main() {
-
-    reader :=
-      bufio.NewReader(os.Stdin)
-
-    input, _ :=
-      reader.ReadString('\\n')
-
-    solve(input)
 
 }
 `;
@@ -320,136 +205,10 @@ def solve():
     input_data =
       sys.stdin.read().strip()
 
-    # Write your solution here
+    # Write your code here
 
 solve()
 `;
-
-  }
-
-};
-
-// ========================================
-// SANITIZE STARTER CODE
-// ========================================
-
-const sanitizeStarterCode = (
-  code = "",
-  language = "Python"
-) => {
-
-  if (language !== "Python") {
-    return code;
-  }
-
-  const lines =
-    code.split("\n");
-
-  const cleaned =
-    lines.filter((line) => {
-
-      const trimmed =
-        line.trim();
-
-      // remove example execution
-      if (
-        trimmed.startsWith("print(")
-      ) {
-        return false;
-      }
-
-      // remove hardcoded arrays
-      if (
-        trimmed.startsWith("arr =") ||
-        trimmed.startsWith("nums =") ||
-        trimmed.startsWith("input =")
-      ) {
-        return false;
-      }
-
-      // remove comments
-      if (
-        trimmed.includes("Example") ||
-        trimmed.includes("Output")
-      ) {
-        return false;
-      }
-
-      return true;
-
-    });
-
-  return cleaned.join("\n");
-
-};
-
-// ========================================
-// VERIFY TEST CASES
-// ========================================
-
-const verifyQuestion = (
-  question
-) => {
-
-  try {
-
-    const title =
-      question.question
-        ?.toLowerCase() || "";
-
-    // ====================================
-    // MAXIMUM SUBARRAY FIX
-    // ====================================
-
-    if (
-      title.includes(
-        "maximum subarray"
-      )
-    ) {
-
-      const fixCases = (
-        testCases = []
-      ) => {
-
-        return testCases.map(
-          (tc) => {
-
-            if (
-              tc.input ===
-              "1 2 -3 4 -1 2 1 -5 4"
-            ) {
-
-              return {
-                ...tc,
-                expectedOutput: "7",
-              };
-
-            }
-
-            return tc;
-
-          }
-        );
-
-      };
-
-      question.visibleTestCases =
-        fixCases(
-          question.visibleTestCases
-        );
-
-      question.hiddenTestCases =
-        fixCases(
-          question.hiddenTestCases
-        );
-
-    }
-
-    return question;
-
-  } catch {
-
-    return question;
 
   }
 
@@ -492,33 +251,6 @@ const removeDuplicateQuestions = (
 };
 
 // ========================================
-// CLEAN RAW JSON
-// ========================================
-
-const cleanJsonResponse = (
-  raw = ""
-) => {
-
-  raw = raw
-    .replace(/```json/g, "")
-    .replace(/```/g, "")
-    .trim();
-
-  raw = raw.replace(
-    /,\s*}/g,
-    "}"
-  );
-
-  raw = raw.replace(
-    /,\s*]/g,
-    "]"
-  );
-
-  return raw;
-
-};
-
-// ========================================
 // VALIDATE QUESTIONS
 // ========================================
 
@@ -531,62 +263,61 @@ const validateQuestions = (
     return [];
   }
 
-  // ====================================
-  // CODING
-  // ====================================
-
   if (type === "CODING") {
 
-    const cleanedQuestions =
-      questions.map((q) => {
+    const hasRunnableCode = (
+      q
+    ) => {
 
-        const cleaned = {
+      const code =
+        q.solutionCode || "";
 
-          ...q,
+      return (
 
-          starterCode:
-            sanitizeStarterCode(
-              q.starterCode,
-              q.language
-            ),
+        code.includes("main") ||
 
-        };
+        code.includes(
+          "def solve"
+        ) ||
 
-        return verifyQuestion(
-          cleaned
-        );
+        code.includes(
+          "console.log"
+        ) ||
 
-      });
+        code.includes(
+          "process.stdin"
+        )
 
-    return cleanedQuestions.filter(
+      );
+
+    };
+
+    return questions.filter(
 
       (q) =>
 
         q.question &&
         q.starterCode &&
+        q.solutionCode &&
         q.language &&
+
+        hasRunnableCode(q) &&
 
         Array.isArray(
           q.visibleTestCases
         ) &&
 
-        q.visibleTestCases
-          .length > 0 &&
+        q.visibleTestCases.length > 0 &&
 
         Array.isArray(
           q.hiddenTestCases
         ) &&
 
-        q.hiddenTestCases
-          .length > 0
+        q.hiddenTestCases.length > 0
 
     );
 
   }
-
-  // ====================================
-  // MCQ
-  // ====================================
 
   return questions.filter(
 
@@ -614,22 +345,75 @@ const createPrompt = ({
   domain,
   difficulty,
   type,
-  count,
+  count: finalCount,
   language,
   starterCode,
   aiPrompt,
 }) => {
 
-  // ====================================
-  // CODING PROMPT
-  // ====================================
+  let solutionExample = "";
+
+  if (language === "Python") {
+
+    solutionExample = `
+import sys
+
+def solve():
+
+    s = sys.stdin.readline().strip()
+
+    print(len(s))
+
+solve()
+`;
+
+  }
+
+  else if (
+    language === "JavaScript"
+  ) {
+
+    solutionExample = `
+const fs = require("fs");
+
+const input =
+  fs.readFileSync(
+    0,
+    "utf8"
+  ).trim();
+
+console.log(
+  input.length
+);
+`;
+
+  }
+
+  else {
+
+    solutionExample = `
+#include <stdio.h>
+
+int main() {
+
+    int a,b;
+
+    scanf("%d %d",&a,&b);
+
+    printf("%d",a+b);
+
+    return 0;
+}
+`;
+
+  }
 
   if (type === "CODING") {
 
     return `
 ${aiPrompt || ""}
 
-Generate ${count} unique ${difficulty} coding interview questions for ${domain}.
+Generate ${finalCount} unique ${difficulty} coding interview questions for ${domain}.
 
 STRICT RULES:
 
@@ -638,42 +422,43 @@ STRICT RULES:
 - No explanations
 - Questions must be unique
 - Use ${language}
-- Escape newlines properly
-
-STRICT CODING RULES:
-
-- starterCode MUST use stdin/stdout
-- starterCode MUST NOT contain example inputs
-- starterCode MUST NOT contain hardcoded print statements
-- starterCode MUST NOT contain hardcoded outputs
 - Problems MUST be Judge0 compatible
-- expectedOutput MUST be mathematically correct
-- Verify every testcase before returning JSON
+- solutionCode MUST contain complete runnable program
+- solutionCode MUST compile independently
+- starterCode MUST use stdin/stdout
+- expectedOutput MUST exactly match actual output
+- Keep questions SHORT
+- Keep solutionCode concise
+- Keep starterCode minimal
+- Avoid long explanations
+- Avoid linked list/tree/graph struct problems
+- Prefer stdin/stdout algorithm problems
+- Python solutions MUST include import sys if using sys.stdin
 
 Each coding question MUST contain:
 
 1. question
 2. starterCode
-3. language
-4. visibleTestCases
-5. hiddenTestCases
-
-IMPORTANT:
-
-- visibleTestCases MUST have at least 2 test cases
-- hiddenTestCases MUST have at least 2 test cases
-- expectedOutput MUST always be STRING
-- input MUST always be STRING
+3. solutionCode
+4. language
+5. visibleTestCases
+6. hiddenTestCases
 
 VALID FORMAT:
 
 [
   {
     "question":
-      "Find Maximum Subarray Sum",
+      "Find length of string",
 
     "starterCode":
       "${starterCode
+        .replace(/\\/g, "\\\\")
+        .replace(/\n/g, "\\n")
+        .replace(/"/g, '\\"')}",
+
+    "solutionCode":
+      "${solutionExample
         .replace(/\\/g, "\\\\")
         .replace(/\n/g, "\\n")
         .replace(/"/g, '\\"')}",
@@ -684,34 +469,20 @@ VALID FORMAT:
     "visibleTestCases": [
       {
         "input":
-          "1 2 -3 4 -1 2 1 -5 4",
+          "hello",
 
         "expectedOutput":
-          "7"
-      },
-      {
-        "input":
-          "-1 -2 -3",
-
-        "expectedOutput":
-          "-1"
+          "5"
       }
     ],
 
     "hiddenTestCases": [
       {
         "input":
-          "1 2 3 4",
+          "python",
 
         "expectedOutput":
-          "10"
-      },
-      {
-        "input":
-          "-5 -1 -8",
-
-        "expectedOutput":
-          "-1"
+          "6"
       }
     ]
   }
@@ -720,26 +491,17 @@ VALID FORMAT:
 
   }
 
-  // ====================================
-  // MCQ PROMPT
-  // ====================================
-
   return `
 ${aiPrompt || ""}
 
-Generate ${count} unique ${difficulty} MCQ interview questions for ${domain}.
+Generate ${finalCount} unique ${difficulty} MCQ interview questions for ${domain}.
 
 STRICT RULES:
 
 - Return ONLY valid JSON array
 - No markdown
 - No explanations
-- Every question MUST contain exactly 4 options
-- answer MUST contain FULL correct option text
-- Do NOT return indexes
-- Do NOT return A/B/C/D
-
-VALID FORMAT:
+- Ensure only ONE correct answer exists
 
 [
   {
@@ -770,7 +532,7 @@ const generateBatch = async (
     prompt,
     type,
   },
-  retries = 2
+  retries = 1
 ) => {
 
   for (
@@ -782,74 +544,100 @@ const generateBatch = async (
     try {
 
       const response =
-        await nvidia.post(
-          "/chat/completions",
+        await gemini.post(
+          `/models/gemini-2.5-flash-lite:generateContent?key=${process.env.GEMINI_API_KEY}`,
           {
 
-            model:
-              "meta/llama-3.1-8b-instruct",
-
-            messages: [
-
-              {
-                role: "system",
-
-                content:
-                  "Return ONLY valid JSON array. No markdown. No explanations.",
-              },
+            contents: [
 
               {
                 role: "user",
 
-                content: prompt,
-              },
+                parts: [
+
+                  {
+                    text:
+`
+You are a JSON API.
+
+Return ONLY valid JSON.
+
+DO NOT:
+- explain
+- think
+- reason
+- add markdown
+- add comments
+- add text before JSON
+- add text after JSON
+
+IMPORTANT:
+- Output must start with [
+- Output must end with ]
+- No trailing commas
+- No code fences
+
+${prompt}
+`
+                  }
+
+                ]
+
+              }
 
             ],
 
-            max_tokens: 4096,
+            generationConfig: {
 
-            temperature: 0.3,
+              temperature: 0,
 
-            top_p: 0.8,
+              topP: 0.1,
 
-            stream: false,
+              maxOutputTokens: 1600,
 
-            chat_template_kwargs: {
-              enable_thinking: false,
+              responseMimeType:
+                "application/json",
+
             },
 
           }
         );
 
       let raw =
-        response.data?.choices?.[0]
-          ?.message?.content || "[]";
+        response.data?.candidates?.[0]
+          ?.content?.parts?.[0]
+          ?.text || "[]";
 
-      console.log(
-        "RAW RESPONSE:"
-      );
-
+      console.log("RAW RESPONSE:");
       console.log(raw);
 
+      raw = raw
+        .replace(/```json/g, "")
+        .replace(/```/g, "")
+        .trim();
+
+      const start =
+        raw.indexOf("[");
+
+      const end =
+        raw.lastIndexOf("]");
+
+      if (
+        start === -1 ||
+        end === -1
+      ) {
+
+        throw new Error(
+          "No valid JSON array found"
+        );
+
+      }
+
       raw =
-        cleanJsonResponse(raw);
-
-      // ====================================
-      // FIX STARTER CODE ESCAPING
-      // ====================================
-
-      raw = raw.replace(
-        /"starterCode"\s*:\s*"([\s\S]*?)"/g,
-        (match, code) => {
-
-          const escaped =
-            JSON.stringify(code)
-              .slice(1, -1);
-
-          return `"starterCode":"${escaped}"`;
-
-        }
-      );
+        raw.substring(
+          start,
+          end + 1
+        );
 
       const parsed =
         JSON.parse(raw);
@@ -860,13 +648,7 @@ const generateBatch = async (
           type
         );
 
-      if (
-        validated.length > 0
-      ) {
-
-        return validated;
-
-      }
+      return validated;
 
     } catch (error) {
 
@@ -876,10 +658,43 @@ const generateBatch = async (
         } failed`
       );
 
-      console.log(
-        error.response?.data ||
-        error.message
-      );
+      const errorData =
+  error.response?.data;
+
+console.log(
+  errorData || error.message
+);
+
+if (
+  errorData?.error?.code === 429
+) {
+
+  const retryText =
+    errorData.error.message;
+
+  const match =
+    retryText.match(
+      /retry in ([\d.]+)s/i
+    );
+
+  const waitSeconds =
+    match
+      ? parseFloat(match[1])
+      : 40;
+
+  console.log(
+    `Waiting ${waitSeconds}s due to quota...`
+  );
+
+  await new Promise(
+    (resolve) =>
+      setTimeout(
+        resolve,
+        waitSeconds * 1000
+      )
+  );
+
+}
 
       if (attempt === retries) {
         return [];
@@ -887,10 +702,7 @@ const generateBatch = async (
 
       await new Promise(
         (resolve) =>
-          setTimeout(
-            resolve,
-            1000 * (attempt + 1)
-          )
+          setTimeout(resolve, 1000)
       );
 
     }
@@ -922,85 +734,113 @@ export const generateQuestions =
       const starterCode =
         getStarterCode(language);
 
-      const batchSize = 2;
+        const finalCount = count;
 
-      const totalBatches =
-        Math.ceil(
-          count / batchSize
-        );
+      const prompt =
+        createPrompt({
 
-      const requests = [];
+          domain,
+          difficulty,
+          type,
+          count: finalCount,
+          language,
+          starterCode,
+          aiPrompt,
 
-      for (
-        let i = 0;
-        i < totalBatches;
-        i++
-      ) {
+        });
 
-        const remaining =
-          count - i * batchSize;
+      const questions =
+        await generateBatch({
 
-        const currentBatchSize =
-          Math.min(
-            batchSize,
-            remaining
-          );
+          prompt,
+          type,
 
-        const prompt =
-          createPrompt({
+        });
 
-            domain,
+      const verifiedQuestions = [];
 
-            difficulty,
+      if (type === "CODING") {
 
-            type,
+        for (const q of questions) {
 
-            count:
-              currentBatchSize,
+          const verification =
+            await verifyQuestion(q);
 
-            language,
+          if (verification.valid) {
 
-            starterCode,
+            verifiedQuestions.push(q);
 
-            aiPrompt,
+          } else {
 
-          });
+            console.log(
+              "Rejected Question:"
+            );
 
-        requests.push(
+            console.log(
+              verification
+            );
 
-          generateBatch({
-            prompt,
-            type,
-          })
+          }
 
+        }
+
+      } else {
+
+        verifiedQuestions.push(
+          ...questions
         );
 
       }
 
-      const results =
-        await Promise.all(
-          requests
-        );
-
-      const questions =
-        results.flat();
-
       const uniqueQuestions =
         removeDuplicateQuestions(
-          questions
+          verifiedQuestions
         );
 
       return uniqueQuestions.slice(
         0,
-        count
+        finalCount
       );
 
     } catch (error) {
 
-      console.log(
-        error.response?.data ||
-        error.message
-      );
+      const errorData =
+  error.response?.data;
+
+console.log(
+  errorData || error.message
+);
+
+if (
+  errorData?.error?.code === 429
+) {
+
+  const retryText =
+    errorData.error.message;
+
+  const match =
+    retryText.match(
+      /retry in ([\d.]+)s/i
+    );
+
+  const waitSeconds =
+    match
+      ? parseFloat(match[1])
+      : 40;
+
+  console.log(
+    `Waiting ${waitSeconds}s due to quota...`
+  );
+
+  await new Promise(
+    (resolve) =>
+      setTimeout(
+        resolve,
+        waitSeconds * 1000
+      )
+  );
+
+}
 
       throw new Error(
         "Question generation failed"

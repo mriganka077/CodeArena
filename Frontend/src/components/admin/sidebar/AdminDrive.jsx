@@ -519,7 +519,15 @@ const endDrive = async () => {
                                       color:drive.status==="Active"?"#4ade80":drive.status==="Completed"?"#38bdf8":drive.status==="On-Hold"?"#fbbf24":"#6b7280" },
                                     { Icon:Globe,   label:"Visibility",val:drive.visibility },
                                     { Icon:Timer,   label:"Duration",  val:`${drive.duration} min` },
-                                    { Icon:Code2,   label:"Questions", val:`${drive.questionCount} total` },
+                                    {
+                                        Icon: Code2,
+                                        label: "Questions",
+                                        val: `${drive.questionCount} total`,
+                                        extra: [
+                                            `${drive.mcqCount} MCQ × ${drive.marksPerMcq} marks`,
+                                            `${drive.codeCount} Coding × ${drive.marksPerCode} marks`,
+                                        ],
+                                    },
                                     {
                                         Icon: Calendar,
                                         label: "Assessment Starting Date",
@@ -552,7 +560,7 @@ const endDrive = async () => {
                                               })
                                               : "Not Available",
                                       },
-                                ].map(({ Icon,label,val,color }) => (
+                                ].map(({ Icon,label,val,color,extra }) => (
                                     <div key={label} className="flex items-center gap-3">
                                         <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
                                             style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.07)" }}>
@@ -560,7 +568,31 @@ const endDrive = async () => {
                                         </div>
                                         <div className="flex-1 flex items-center justify-between">
                                             <p className="text-white/35 text-[11px]">{label}</p>
-                                            <p className="text-xs font-medium" style={{ color:color||"rgba(255,255,255,0.65)" }}>{val}</p>
+                                            <div className="text-right">
+                                                <p
+                                                    className="text-xs font-medium"
+                                                    style={{
+                                                        color:
+                                                            color ||
+                                                            "rgba(255,255,255,0.65)",
+                                                    }}
+                                                >
+                                                    {val}
+                                                </p>
+
+                                                {extra?.length > 0 && (
+                                                    <div className="mt-1 space-y-0.5">
+                                                        {extra.map((item, idx) => (
+                                                            <p
+                                                                key={idx}
+                                                                className="text-[10px] text-white/30"
+                                                            >
+                                                                {item}
+                                                            </p>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 ))}
@@ -584,320 +616,628 @@ const endDrive = async () => {
                         </section>
                     </>)}
 
-                    {tab === "candidates" && (
-                        <div className="space-y-3">
-                            <div className="flex items-center justify-between">
-                                <p className="text-white/35 text-[10px] uppercase tracking-widest font-semibold">
-                                    Enrolled Candidates
-                                </p>
-
-                                {candidates.length > 0 && (
+                    {
+                        tab === "candidates" && (
+                            <div className="space-y-3">
+                                {/* Header */}
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-7 h-7 rounded-lg flex items-center justify-center"
+                                            style={{ background: "rgba(99,102,241,0.12)", border: "1px solid rgba(99,102,241,0.2)" }}>
+                                            <Users size={13} className="text-indigo-400" />
+                                        </div>
+                                        <p className="text-white font-semibold text-sm">Enrolled Candidates</p>
+                                    </div>
                                     <div className="flex items-center gap-3">
-
-                                        <span className="text-white/25 text-[10px]">
-                                            {candidates.length} total
-                                        </span>
-
+                                        {candidates.length > 0 && (
+                                            <span className="text-white/40 text-xs font-medium">
+                                                {candidates.length} Total
+                                            </span>
+                                        )}
                                         <button
                                             onClick={openAssignModal}
                                             disabled={isDriveEnded}
-                                            className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-semibold text-indigo-300 border border-indigo-500/25 hover:bg-indigo-500/10 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                                            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold text-indigo-300 border border-indigo-500/30 hover:bg-indigo-500/15 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                                            style={{ background: "rgba(99,102,241,0.1)" }}
                                         >
-                                            <Plus size={11} />
+                                            <Plus size={12} />
                                             Assign
                                         </button>
+                                    </div>
+                                </div>
 
+                                {/* Loading */}
+                                {candLoading && (
+                                    <div className="flex justify-center py-12">
+                                        <div className="w-8 h-8 rounded-full border-2 border-indigo-500/30 border-t-indigo-400 animate-spin" />
                                     </div>
                                 )}
-                            </div>
-                            {candLoading && (
-                                <div className="flex justify-center py-12">
-                                    <div className="w-8 h-8 rounded-full border-2 border-indigo-500/30 border-t-indigo-400 animate-spin" />
-                                </div>
-                            )}
-                            {candError && !candLoading && (
-                                <div className="flex flex-col items-center py-10 gap-2 text-center">
-                                    <AlertCircle size={22} className="text-rose-400/60" />
-                                    <p className="text-rose-400/70 text-xs">{candError}</p>
-                                </div>
-                            )}
-                            {!candLoading && !candError && candidates.length === 0 && (
-                                <div className="flex flex-col items-center py-14 gap-3 text-center">
-                                    <div className="w-11 h-11 rounded-2xl flex items-center justify-center"
-                                        style={{ background:"rgba(99,102,241,0.08)", border:"1px solid rgba(99,102,241,0.18)" }}>
-                                        <Users size={18} className="text-indigo-400/60" />
+
+                                {/* Error */}
+                                {candError && !candLoading && (
+                                    <div className="flex flex-col items-center py-10 gap-2 text-center">
+                                        <AlertCircle size={22} className="text-rose-400/60" />
+                                        <p className="text-rose-400/70 text-xs">{candError}</p>
                                     </div>
-                                    <p className="text-white/40 text-sm font-semibold">No candidates enrolled yet</p>
-                                    <p className="text-white/20 text-xs max-w-[220px]">Candidates will appear here once they join this drive.</p>
+                                )}
 
-                                    <button
-                                        onClick={openAssignModal}
-                                        disabled={isDriveEnded}
-                                        className="mt-3 flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-indigo-300 border border-indigo-500/25 hover:bg-indigo-500/10 transition"
-                                    >
-                                        <Plus size={12} />
-                                        Assign Candidates
-                                    </button>
-                                    
-                                </div>
-
-                                
-                            )}
-                            {!candLoading && !candError && candidates.length > 0 && (
-                                <div className="space-y-2">
-                                    {candidates.map((c, i) => {
-                                        const initials = `${c.firstName?.[0]??""}${c.lastName?.[0]??""}`.toUpperCase();
-                                        const st = STATUS_STYLE[c.status] ?? STATUS_STYLE["Active"];
-                                        const score = c.avgScore ?? c.score ?? null;
-                                        return (
-                                            <motion.div key={c._id ?? i}
-                                                initial={{ opacity:0, y:6 }} animate={{ opacity:1, y:0 }}
-                                                transition={{ delay: i * 0.035 }}
-                                                className="flex items-center gap-3 rounded-xl px-3 py-2.5 border border-white/5 hover:border-indigo-500/20 hover:bg-white/[0.02] transition group"
-                                                style={{ background:"rgba(255,255,255,0.018)" }}>
-                                                <div className="w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center shrink-0 text-[11px] font-bold text-white/70 border border-white/8"
-                                                    style={{ background:"rgba(99,102,241,0.14)" }}>
-                                                    {c?.picture ? (
-                                                        <img src={c.picture.startsWith("http") ? c.picture : `http://localhost:4000${c.picture}`}
-                                                            alt={`${c.firstName} ${c.lastName}`} referrerPolicy="no-referrer" className="w-full h-full object-cover" />
-                                                    ) : (initials || <Users size={13} className="text-indigo-400" />)}
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="text-white/85 text-xs font-semibold truncate">{c.firstName} {c.lastName}</p>
-                                                    <p className="text-white/30 text-[10px] truncate">{c.email}</p>
-                                                </div>
-                                                <div className="text-right shrink-0">
-                                                    {score !== null ? (
-                                                        <><p className="text-xs font-bold" style={{ color:scoreColor(score) }}>{score}</p>
-                                                        <p className="text-white/20 text-[9px]">score</p></>
-                                                    ) : <p className="text-white/20 text-[10px]">—</p>}
-                                                </div>
-                                                <span className={`px-2 py-0.5 rounded-full text-[9px] font-semibold shrink-0 ${st.cls}`}>
-                                                    {c.status ?? "Enrolled"}
-                                                </span>
-                                            </motion.div>
-                                        );
-                                    })}
-                                </div>
-                            )}
-
-                            <AnimatePresence>
-                                {showAssignModal && (
-                                    <motion.div
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        exit={{ opacity: 0 }}
-                                        className="fixed inset-0 z-[120] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
-                                    >
-                                        <motion.div
-                                            initial={{ opacity: 0, scale: 0.96, y: 20 }}
-                                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                                            exit={{ opacity: 0, scale: 0.96, y: 20 }}
-                                            transition={{ duration: 0.2 }}
-                                            className="w-full max-w-2xl rounded-3xl border border-white/10 overflow-hidden"
-                                            style={{
-                                                background: "rgba(15,15,25,0.96)",
-                                                backdropFilter: "blur(20px)",
-                                            }}
+                                {/* Empty State */}
+                                {!candLoading && !candError && candidates.length === 0 && (
+                                    <div className="flex flex-col items-center py-14 gap-3 text-center">
+                                        <div className="w-11 h-11 rounded-2xl flex items-center justify-center"
+                                            style={{ background: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.18)" }}>
+                                            <Users size={18} className="text-indigo-400/60" />
+                                        </div>
+                                        <p className="text-white/40 text-sm font-semibold">No candidates enrolled yet</p>
+                                        <p className="text-white/20 text-xs max-w-[220px]">Candidates will appear here once they join this drive.</p>
+                                        <button
+                                            onClick={openAssignModal}
+                                            disabled={isDriveEnded}
+                                            className="mt-3 flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-indigo-300 border border-indigo-500/25 hover:bg-indigo-500/10 transition"
                                         >
+                                            <Plus size={12} />
+                                            Assign Candidates
+                                        </button>
+                                    </div>
+                                )}
 
-                                            {/* Header */}
-                                            <div className="flex items-center justify-between px-6 py-5 border-b border-white/6">
+                                {/* Candidate Cards */}
+                                {!candLoading && !candError && candidates.length > 0 && (
+                                    <div className="space-y-3">
+                                        {candidates.map((c, i) => {
+                                            const initials = `${c.firstName?.[0] ?? ""}${c.lastName?.[0] ?? ""}`.toUpperCase();
+                                            const score = c.score ?? c.totalScore ?? null;
+                                            const maxScore = c.maxScore ?? c.totalMarks ?? null;
+                                            const percentage = c.percentage ?? null;
+                                            const isCompleted = c.status === "Completed";
+                                            const isTop = i === 0 && isCompleted;
 
-                                                <div>
-                                                    <h3 className="text-white text-lg font-semibold">
-                                                        Assign Candidates
-                                                    </h3>
+                                            return (
+                                                <motion.div
+                                                    key={c._id ?? i}
+                                                    initial={{ opacity: 0, y: 6 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    transition={{ delay: i * 0.05 }}
+                                                    className="rounded-2xl border border-white/8 overflow-hidden"
+                                                    style={{ background: "rgba(10,10,20,0.72)" }}
+                                                >
 
-                                                    <p className="text-white/35 text-xs mt-1">
-                                                        Select candidates to assign to this drive
-                                                    </p>
-                                                </div>
 
-                                                <div className="flex items-center gap-2">
+                                                    {/* Stats Footer Row */}
+                                                    {/* Candidate Cards */}
 
-                                                    {allCandidates.length > 0 && (
-                                                        <button
-                                                            onClick={() => {
+                                                    {!candLoading && !candError && candidates.length > 0 && (
+                                                        <div className="space-y-3">
+                                                            {candidates.map((c, i) => {
+                                                                const initials = `${c.firstName?.[0] ?? ""}${c.lastName?.[0] ?? ""}`.toUpperCase();
+                                                                const score = c.score ?? c.totalScore ?? null;
+                                                                const maxScore = c.maxScore ?? c.totalMarks ?? null;
+                                                                const percentage = c.percentage ?? null;
+                                                                const isCompleted = c.status === "Completed";
+                                                                const isTop = i === 0 && isCompleted;
 
-                                                                if (
-                                                                    selectedCandidates.length === allCandidates.length
-                                                                ) {
+                                                                // Interview data
+                                                                const interviewTimeTaken =
+                                                                    c.interviewTimeTaken ?? 0;
 
-                                                                    setSelectedCandidates([]);
+                                                                const interviewViolationCount =
+                                                                    c.interviewViolationCount ?? 0;
 
-                                                                } else {
+                                                                const interviewTranscriptCount =
+                                                                    c.interviewTranscriptCount ?? 0;
+                                                                const interviewStatus = c.interviewStatus ?? null;
+                                                                const hasInterview = interviewStatus !== null && interviewStatus !== undefined;
 
-                                                                    setSelectedCandidates(
-                                                                        allCandidates.map((c) => c._id)
-                                                                    );
-                                                                }
-                                                            }}
-                                                            className="px-3 py-2 rounded-xl border border-indigo-500/20 text-indigo-300 text-[11px] font-semibold hover:bg-indigo-500/10 transition"
-                                                        >
-                                                            {selectedCandidates.length === allCandidates.length
-                                                                ? "Deselect All"
-                                                                : "Select All"}
-                                                        </button>
+                                                                return (
+                                                                    <motion.div
+                                                                        key={c._id ?? i}
+                                                                        initial={{ opacity: 0, y: 6 }}
+                                                                        animate={{ opacity: 1, y: 0 }}
+                                                                        transition={{ delay: i * 0.05 }}
+                                                                        className="rounded-2xl border border-white/8 overflow-hidden"
+                                                                        style={{ background: "rgba(255,255,255,0.03)" }}
+                                                                    >
+                                                                        {/* Main Row */}
+                                                                        <div className="flex items-center gap-3 px-4 py-3.5">
+                                                                            {/* Avatar */}
+                                                                            <div className="relative shrink-0">
+                                                                                <div className="w-11 h-11 rounded-xl overflow-hidden flex items-center justify-center text-sm font-bold text-white/70 border border-white/10"
+                                                                                    style={{ background: "rgba(99,102,241,0.2)" }}>
+                                                                                    {c?.picture ? (
+                                                                                        <img
+                                                                                            src={c.picture.startsWith("http") ? c.picture : `http://localhost:4000${c.picture}`}
+                                                                                            alt={`${c.firstName} ${c.lastName}`}
+                                                                                            referrerPolicy="no-referrer"
+                                                                                            className="w-full h-full object-cover"
+                                                                                        />
+                                                                                    ) : (initials || <Users size={14} className="text-indigo-400" />)}
+                                                                                </div>
+                                                                                <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-[rgba(10,8,22,1)]"
+                                                                                    style={{ background: isCompleted ? "#4ade80" : "#6b7280" }} />
+                                                                            </div>
+
+                                                                            {/* Name + Email */}
+                                                                            <div className="flex-1 min-w-0">
+                                                                                <p className="text-white/90 text-sm font-semibold truncate">
+                                                                                    {c.firstName} {c.lastName}
+                                                                                </p>
+                                                                                <p className="text-white/35 text-[11px] truncate mt-0.5">{c.email}</p>
+                                                                            </div>
+
+                                                                            {/* Score */}
+                                                                            {score !== null && (
+                                                                                <div className="text-center shrink-0">
+                                                                                    <p className="text-[10px] text-white/30 mb-0.5">Score</p>
+                                                                                    <p className="text-sm font-bold" style={{ color: scoreColor(score) }}>
+                                                                                        {score}{maxScore !== null ? ` / ${maxScore}` : ""}
+                                                                                    </p>
+                                                                                    {percentage !== null && (
+                                                                                        <p className="text-[10px] text-indigo-300 font-semibold mt-0.5">{percentage}%</p>
+                                                                                    )}
+                                                                                </div>
+                                                                            )}
+
+                                                                            {/* Status Badge */}
+                                                                            <div className="shrink-0">
+                                                                                {isCompleted ? (
+                                                                                    <span className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold"
+                                                                                        style={{
+                                                                                            background: "rgba(74,222,128,0.12)",
+                                                                                            border: "1px solid rgba(74,222,128,0.25)",
+                                                                                            color: "#4ade80"
+                                                                                        }}>
+                                                                                        <CheckCircle2 size={11} />
+                                                                                        Completed
+                                                                                    </span>
+                                                                                ) : (
+                                                                                    <span className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold"
+                                                                                        style={{
+                                                                                            background: "rgba(99,102,241,0.1)",
+                                                                                            border: "1px solid rgba(99,102,241,0.2)",
+                                                                                            color: "#a5b4fc"
+                                                                                        }}>
+                                                                                        <Timer size={11} />
+                                                                                        {c.status ?? "Enrolled"}
+                                                                                    </span>
+                                                                                )}
+                                                                            </div>
+                                                                        </div>
+
+                                                                        {/* ── Assessment Stats Section ── */}
+                                                                        {isCompleted && (
+                                                                            <div className="border-t border-white/[0.06]">
+                                                                                {/* Section Label */}
+                                                                                <div className="flex items-center gap-2 px-4 pt-2.5 pb-1">
+                                                                                    <div className="w-1 h-3 rounded-full" style={{ background: "#818cf8" }} />
+                                                                                    <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-white/30">Assessment</p>
+                                                                                </div>
+
+                                                                                <div className="grid grid-cols-4 divide-x divide-white/[0.05] pb-2">
+                                                                                    {/* Percentage */}
+                                                                                    <div className="flex flex-col items-center justify-center py-2 gap-1">
+                                                                                        <div className="relative w-8 h-8">
+                                                                                            <svg viewBox="0 0 36 36" className="w-8 h-8 -rotate-90">
+                                                                                                <circle cx="18" cy="18" r="14" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="3" />
+                                                                                                <circle cx="18" cy="18" r="14" fill="none"
+                                                                                                    stroke="#818cf8" strokeWidth="3"
+                                                                                                    strokeDasharray={`${(percentage ?? 0) * 0.88} 88`}
+                                                                                                    strokeLinecap="round" />
+                                                                                            </svg>
+                                                                                            <span className="absolute inset-0 flex items-center justify-center text-[8px] font-bold text-white/70">
+                                                                                                {percentage ?? 0}
+                                                                                            </span>
+                                                                                        </div>
+                                                                                        <p className="text-white/25 text-[9px] uppercase tracking-wider">Percentage</p>
+                                                                                        <p className="text-white/70 text-[11px] font-semibold">{percentage ?? 0}%</p>
+                                                                                    </div>
+
+                                                                                    {/* Status */}
+                                                                                    <div className="flex flex-col items-center justify-center py-2 gap-1">
+                                                                                        <div className="w-8 h-8 rounded-full flex items-center justify-center"
+                                                                                            style={{ background: "rgba(74,222,128,0.12)", border: "1px solid rgba(74,222,128,0.2)" }}>
+                                                                                            <CheckCircle2 size={15} className="text-emerald-400" />
+                                                                                        </div>
+                                                                                        <p className="text-white/25 text-[9px] uppercase tracking-wider">Status</p>
+                                                                                        <p className="text-emerald-400 text-[11px] font-semibold">Completed</p>
+                                                                                    </div>
+
+                                                                                    {/* Score */}
+                                                                                    <div className="flex flex-col items-center justify-center py-2 gap-1">
+                                                                                        <div className="w-8 h-8 rounded-full flex items-center justify-center"
+                                                                                            style={{ background: "rgba(99,102,241,0.1)", border: "1px solid rgba(99,102,241,0.2)" }}>
+                                                                                            <BarChart2 size={15} className="text-indigo-400" />
+                                                                                        </div>
+                                                                                        <p className="text-white/25 text-[9px] uppercase tracking-wider">Score</p>
+                                                                                        <p className="text-white/70 text-[11px] font-semibold">
+                                                                                            {score ?? "—"}{maxScore !== null ? ` / ${maxScore}` : ""}
+                                                                                        </p>
+                                                                                    </div>
+
+                                                                                    {/* Rank */}
+                                                                                    <div className="flex flex-col items-center justify-center py-2 gap-1">
+                                                                                        <div className="w-8 h-8 rounded-full flex items-center justify-center"
+                                                                                            style={{ background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.2)" }}>
+                                                                                            <Trophy size={14} className="text-amber-400" />
+                                                                                        </div>
+                                                                                        <p className="text-white/25 text-[9px] uppercase tracking-wider">Rank</p>
+                                                                                        <p className="text-amber-400 text-[11px] font-semibold">
+                                                                                            {isTop ? "Top Score" : `#${i + 1}`}
+                                                                                        </p>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        )}
+
+                                                                        {/* ── Interview Stats Section ── */}
+                                                                        {hasInterview && (
+                                                                            <div className="border-t border-white/[0.06]">
+                                                                                {/* Section Label */}
+                                                                                <div className="flex items-center gap-2 px-4 pt-2.5 pb-1">
+                                                                                    <div className="w-1 h-3 rounded-full" style={{ background: "#f472b6" }} />
+                                                                                    <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-white/30">Interview</p>
+                                                                                </div>
+
+                                                                                <div className="grid grid-cols-4 divide-x divide-white/[0.05] pb-2">
+                                                                                    {/* Interview Percentage */}
+                                                                                    {/* Interview Duration */}
+                                                                                    <div className="flex flex-col items-center justify-center py-2 gap-1">
+
+                                                                                        <div
+                                                                                            className="w-8 h-8 rounded-full flex items-center justify-center"
+                                                                                            style={{
+                                                                                                background:
+                                                                                                    "rgba(244,114,182,0.12)",
+                                                                                                border:
+                                                                                                    "1px solid rgba(244,114,182,0.2)",
+                                                                                            }}
+                                                                                        >
+                                                                                            <Timer
+                                                                                                size={14}
+                                                                                                className="text-pink-400"
+                                                                                            />
+                                                                                        </div>
+
+                                                                                        <p className="text-white/25 text-[9px] uppercase tracking-wider">
+                                                                                            Duration
+                                                                                        </p>
+
+                                                                                        <p className="text-white/70 text-[11px] font-semibold">
+                                                                                            {Math.floor(interviewTimeTaken / 60)} min
+                                                                                        </p>
+
+                                                                                    </div>
+
+                                                                                    {/* Interview Status */}
+                                                                                    <div className="flex flex-col items-center justify-center py-2 gap-1">
+                                                                                        {interviewStatus === "Completed" ? (
+                                                                                            <>
+                                                                                                <div className="w-8 h-8 rounded-full flex items-center justify-center"
+                                                                                                    style={{ background: "rgba(74,222,128,0.12)", border: "1px solid rgba(74,222,128,0.2)" }}>
+                                                                                                    <CheckCircle2 size={15} className="text-emerald-400" />
+                                                                                                </div>
+                                                                                                <p className="text-white/25 text-[9px] uppercase tracking-wider">Status</p>
+                                                                                                <p className="text-emerald-400 text-[11px] font-semibold">Completed</p>
+                                                                                            </>
+                                                                                        ) : interviewStatus === "Scheduled" ? (
+                                                                                            <>
+                                                                                                <div className="w-8 h-8 rounded-full flex items-center justify-center"
+                                                                                                    style={{ background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.2)" }}>
+                                                                                                    <CalendarDays size={15} className="text-amber-400" />
+                                                                                                </div>
+                                                                                                <p className="text-white/25 text-[9px] uppercase tracking-wider">Status</p>
+                                                                                                <p className="text-amber-400 text-[11px] font-semibold">Scheduled</p>
+                                                                                            </>
+                                                                                        ) : (
+                                                                                            <>
+                                                                                                <div className="w-8 h-8 rounded-full flex items-center justify-center"
+                                                                                                    style={{ background: "rgba(99,102,241,0.1)", border: "1px solid rgba(99,102,241,0.2)" }}>
+                                                                                                    <Timer size={15} className="text-indigo-400" />
+                                                                                                </div>
+                                                                                                <p className="text-white/25 text-[9px] uppercase tracking-wider">Status</p>
+                                                                                                <p className="text-indigo-300 text-[11px] font-semibold">{interviewStatus}</p>
+                                                                                            </>
+                                                                                        )}
+                                                                                    </div>
+
+                                                                                    {/* Interview Score */}
+                                                                                    {/* Violations */}
+                                                                                    <div className="flex flex-col items-center justify-center py-2 gap-1">
+
+                                                                                        <div
+                                                                                            className="w-8 h-8 rounded-full flex items-center justify-center"
+                                                                                            style={{
+                                                                                                background:
+                                                                                                    "rgba(251,191,36,0.1)",
+                                                                                                border:
+                                                                                                    "1px solid rgba(251,191,36,0.2)",
+                                                                                            }}
+                                                                                        >
+                                                                                            <AlertTriangle
+                                                                                                size={14}
+                                                                                                className="text-amber-400"
+                                                                                            />
+                                                                                        </div>
+
+                                                                                        <p className="text-white/25 text-[9px] uppercase tracking-wider">
+                                                                                            Violations
+                                                                                        </p>
+
+                                                                                        <p className="text-amber-400 text-[11px] font-semibold">
+                                                                                            {interviewViolationCount}
+                                                                                        </p>
+
+                                                                                    </div>
+
+                                                                                    {/* Interview Feedback / Rating */}
+                                                                                        {/* Transcript */}
+                                                                                        <div className="flex flex-col items-center justify-center py-2 gap-1">
+
+                                                                                            <div
+                                                                                                className="w-8 h-8 rounded-full flex items-center justify-center"
+                                                                                                style={{
+                                                                                                    background:
+                                                                                                        "rgba(14,165,233,0.1)",
+                                                                                                    border:
+                                                                                                        "1px solid rgba(14,165,233,0.2)",
+                                                                                                }}
+                                                                                            >
+                                                                                                <FileText
+                                                                                                    size={14}
+                                                                                                    className="text-sky-400"
+                                                                                                />
+                                                                                            </div>
+
+                                                                                            <p className="text-white/25 text-[9px] uppercase tracking-wider">
+                                                                                                Transcript
+                                                                                            </p>
+
+                                                                                            <p className="text-sky-400 text-[11px] font-semibold">
+                                                                                                {interviewTranscriptCount}
+                                                                                            </p>
+
+                                                                                        </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        )}
+
+                                                                        {/* Show placeholder if no interview yet but assessment is done */}
+                                                                        {isCompleted && !hasInterview && (
+                                                                            <div className="border-t border-white/[0.06] px-4 py-3 flex items-center gap-2.5">
+                                                                                <div className="w-1 h-3 rounded-full" style={{ background: "rgba(244,114,182,0.3)" }} />
+                                                                                <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-white/20">Interview</p>
+                                                                                <span className="ml-auto text-[10px] text-white/20 italic">Not scheduled yet</span>
+                                                                            </div>
+                                                                        )}
+                                                                    </motion.div>
+                                                                );
+                                                            })}
+                                                        </div>
                                                     )}
+                                                </motion.div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
 
-                                                    <button
-                                                        onClick={() => setShowAssignModal(false)}
-                                                        className="w-9 h-9 rounded-xl border border-white/10 flex items-center justify-center text-white/60 hover:bg-white/5"
-                                                    >
-                                                        ✕
-                                                    </button>
+                                {/* Assign Modal — unchanged */}
+                                <AnimatePresence>
+                                    {showAssignModal && (
+                                        <motion.div
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            exit={{ opacity: 0 }}
+                                            className="fixed inset-0 z-[120] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+                                        >
+                                            <motion.div
+                                                initial={{ opacity: 0, scale: 0.96, y: 20 }}
+                                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                                exit={{ opacity: 0, scale: 0.96, y: 20 }}
+                                                transition={{ duration: 0.2 }}
+                                                className="w-full max-w-2xl rounded-3xl border border-white/10 overflow-hidden"
+                                                style={{
+                                                    background: "rgba(15,15,25,0.96)",
+                                                    backdropFilter: "blur(20px)",
+                                                }}
+                                            >
 
-                                                </div>
-                                            </div>
+                                                {/* Header */}
+                                                <div className="flex items-center justify-between px-6 py-5 border-b border-white/6">
 
-                                            {/* Candidate List */}
-                                            {/* Search */}
-                                            <div className="px-6 pt-4">
-                                                <div className="relative">
-                                                    <Search
-                                                        size={15}
-                                                        className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30"
-                                                    />
+                                                    <div>
+                                                        <h3 className="text-white text-lg font-semibold">
+                                                            Assign Candidates
+                                                        </h3>
 
-                                                    <input
-                                                        type="text"
-                                                        value={candidateSearch}
-                                                        onChange={(e) =>
-                                                            setCandidateSearch(e.target.value)
-                                                        }
-                                                        placeholder="Search candidates by name or email..."
-                                                        className="w-full pl-11 pr-10 py-3 rounded-2xl text-sm text-white/80 placeholder-white/25 border border-white/10 outline-none transition focus:border-indigo-500/40 focus:bg-indigo-500/[0.03]"
-                                                        style={{
-                                                            background:
-                                                                "linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02))",
-                                                            backdropFilter: "blur(10px)",
-                                                        }}
-                                                    />
-
-                                                    {candidateSearch && (
-                                                        <button
-                                                            onClick={() =>
-                                                                setCandidateSearch("")
-                                                            }
-                                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-white/25 hover:text-white/60 transition"
-                                                        >
-                                                            <X size={14} />
-                                                        </button>
-                                                    )}
-                                                </div>
-                                            </div>
-
-                                            {/* Candidate List */}
-                                            <div className="max-h-[420px] overflow-y-auto px-6 py-4 space-y-2">
-
-                                                {fetchingCandidates ? (
-                                                    <div className="flex justify-center py-12">
-                                                        <div className="w-8 h-8 rounded-full border-2 border-indigo-500/30 border-t-indigo-400 animate-spin" />
+                                                        <p className="text-white/35 text-xs mt-1">
+                                                            Select candidates to assign to this drive
+                                                        </p>
                                                     </div>
-                                                ) : (
-                                                    filteredAssignCandidates.map((candidate) => {
 
-                                                        const selected = selectedCandidates.includes(candidate._id);
+                                                    <div className="flex items-center gap-2">
 
-                                                        return (
+                                                        {allCandidates.length > 0 && (
                                                             <button
-                                                                key={candidate._id}
-                                                                onClick={() => toggleCandidate(candidate._id)}
-                                                                className={`w-full flex items-center gap-3 p-3 rounded-2xl border transition text-left
-                                                                             ${selected
-                                                                        ? "border-indigo-500/40 bg-indigo-500/10"
-                                                                        : "border-white/6 hover:border-white/15 hover:bg-white/[0.03]"
-                                                                    }`}
+                                                                onClick={() => {
+
+                                                                    if (
+                                                                        selectedCandidates.length === allCandidates.length
+                                                                    ) {
+
+                                                                        setSelectedCandidates([]);
+
+                                                                    } else {
+
+                                                                        setSelectedCandidates(
+                                                                            allCandidates.map((c) => c._id)
+                                                                        );
+                                                                    }
+                                                                }}
+                                                                className="px-3 py-2 rounded-xl border border-indigo-500/20 text-indigo-300 text-[11px] font-semibold hover:bg-indigo-500/10 transition"
                                                             >
+                                                                {selectedCandidates.length === allCandidates.length
+                                                                    ? "Deselect All"
+                                                                    : "Select All"}
+                                                            </button>
+                                                        )}
 
-                                                                <div
-                                                                    className="w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center text-xs font-bold text-white border border-white/10 shrink-0"
-                                                                    style={{
-                                                                        background: "rgba(99,102,241,0.18)",
-                                                                    }}
-                                                                >
-                                                                    {candidate?.picture ? (
-                                                                        <img
-                                                                            src={
-                                                                                candidate.picture.startsWith("http")
-                                                                                    ? candidate.picture
-                                                                                    : `http://localhost:4000${candidate.picture}`
-                                                                            }
-                                                                            alt={`${candidate.firstName} ${candidate.lastName}`}
-                                                                            referrerPolicy="no-referrer"
-                                                                            className="w-full h-full object-cover"
-                                                                        />
-                                                                    ) : (
-                                                                        <>
-                                                                            {candidate.firstName?.[0]}
-                                                                            {candidate.lastName?.[0]}
-                                                                        </>
-                                                                    )}
-                                                                </div>
+                                                        <button
+                                                            onClick={() => setShowAssignModal(false)}
+                                                            className="w-9 h-9 rounded-xl border border-white/10 flex items-center justify-center text-white/60 hover:bg-white/5"
+                                                        >
+                                                            ✕
+                                                        </button>
 
-                                                                <div className="flex-1 min-w-0">
-                                                                    <p className="text-white/85 text-sm font-semibold truncate">
-                                                                        {candidate.firstName} {candidate.lastName}
-                                                                    </p>
+                                                    </div>
+                                                </div>
 
-                                                                    <p className="text-white/35 text-xs truncate">
-                                                                        {candidate.email}
-                                                                    </p>
-                                                                </div>
+                                                {/* Candidate List */}
+                                                {/* Search */}
+                                                <div className="px-6 pt-4">
+                                                    <div className="relative">
+                                                        <Search
+                                                            size={15}
+                                                            className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30"
+                                                        />
 
-                                                                <div
-                                                                    className={`w-5 h-5 rounded-md border flex items-center justify-center
-                                                                                ${selected
-                                                                            ? "bg-indigo-500 border-indigo-400"
-                                                                            : "border-white/20"
+                                                        <input
+                                                            type="text"
+                                                            value={candidateSearch}
+                                                            onChange={(e) =>
+                                                                setCandidateSearch(e.target.value)
+                                                            }
+                                                            placeholder="Search candidates by name or email..."
+                                                            className="w-full pl-11 pr-10 py-3 rounded-2xl text-sm text-white/80 placeholder-white/25 border border-white/10 outline-none transition focus:border-indigo-500/40 focus:bg-indigo-500/[0.03]"
+                                                            style={{
+                                                                background:
+                                                                    "linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02))",
+                                                                backdropFilter: "blur(10px)",
+                                                            }}
+                                                        />
+
+                                                        {candidateSearch && (
+                                                            <button
+                                                                onClick={() =>
+                                                                    setCandidateSearch("")
+                                                                }
+                                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/25 hover:text-white/60 transition"
+                                                            >
+                                                                <X size={14} />
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                                {/* Candidate List */}
+                                                <div className="max-h-[420px] overflow-y-auto px-6 py-4 space-y-2">
+
+                                                    {fetchingCandidates ? (
+                                                        <div className="flex justify-center py-12">
+                                                            <div className="w-8 h-8 rounded-full border-2 border-indigo-500/30 border-t-indigo-400 animate-spin" />
+                                                        </div>
+                                                    ) : (
+                                                        filteredAssignCandidates.map((candidate) => {
+
+                                                            const selected = selectedCandidates.includes(candidate._id);
+
+                                                            return (
+                                                                <button
+                                                                    key={candidate._id}
+                                                                    onClick={() => toggleCandidate(candidate._id)}
+                                                                    className={`w-full flex items-center gap-3 p-3 rounded-2xl border transition text-left
+                                                                             ${selected
+                                                                            ? "border-indigo-500/40 bg-indigo-500/10"
+                                                                            : "border-white/6 hover:border-white/15 hover:bg-white/[0.03]"
                                                                         }`}
                                                                 >
-                                                                    {selected && (
-                                                                        <Check size={12} className="text-white" />
-                                                                    )}
-                                                                </div>
-                                                            </button>
-                                                        );
-                                                    })
-                                                )}
-                                            </div>
 
-                                            {/* Footer */}
-                                            <div className="px-6 py-4 border-t border-white/6 flex items-center justify-between">
-                                                <p className="text-white/35 text-xs">
-                                                    {selectedCandidates.length} selected
-                                                </p>
+                                                                    <div
+                                                                        className="w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center text-xs font-bold text-white border border-white/10 shrink-0"
+                                                                        style={{
+                                                                            background: "rgba(99,102,241,0.18)",
+                                                                        }}
+                                                                    >
+                                                                        {candidate?.picture ? (
+                                                                            <img
+                                                                                src={
+                                                                                    candidate.picture.startsWith("http")
+                                                                                        ? candidate.picture
+                                                                                        : `http://localhost:4000${candidate.picture}`
+                                                                                }
+                                                                                alt={`${candidate.firstName} ${candidate.lastName}`}
+                                                                                referrerPolicy="no-referrer"
+                                                                                className="w-full h-full object-cover"
+                                                                            />
+                                                                        ) : (
+                                                                            <>
+                                                                                {candidate.firstName?.[0]}
+                                                                                {candidate.lastName?.[0]}
+                                                                            </>
+                                                                        )}
+                                                                    </div>
 
-                                                <div className="flex items-center gap-2">
-                                                    <button
-                                                        onClick={() => setShowAssignModal(false)}
-                                                        className="px-4 py-2 rounded-xl text-xs font-semibold border border-white/10 text-white/60 hover:bg-white/5"
-                                                    >
-                                                        Cancel
-                                                    </button>
+                                                                    <div className="flex-1 min-w-0">
+                                                                        <p className="text-white/85 text-sm font-semibold truncate">
+                                                                            {candidate.firstName} {candidate.lastName}
+                                                                        </p>
 
-                                                    <button
-                                                        onClick={assignCandidatesToDrive}
-                                                        disabled={assignLoading || selectedCandidates.length === 0}
-                                                        className="px-5 py-2 rounded-xl text-xs font-semibold text-white disabled:opacity-50"
-                                                        style={{
-                                                            background:
-                                                                "linear-gradient(135deg,#6366f1,#8b5cf6)",
-                                                        }}
-                                                    >
-                                                        {assignLoading
-                                                            ? "Assigning..."
-                                                            : "Assign Candidates"}
-                                                    </button>
+                                                                        <p className="text-white/35 text-xs truncate">
+                                                                            {candidate.email}
+                                                                        </p>
+                                                                    </div>
+
+                                                                    <div
+                                                                        className={`w-5 h-5 rounded-md border flex items-center justify-center
+                                                                                ${selected
+                                                                                ? "bg-indigo-500 border-indigo-400"
+                                                                                : "border-white/20"
+                                                                            }`}
+                                                                    >
+                                                                        {selected && (
+                                                                            <Check size={12} className="text-white" />
+                                                                        )}
+                                                                    </div>
+                                                                </button>
+                                                            );
+                                                        })
+                                                    )}
                                                 </div>
-                                            </div>
+
+                                                {/* Footer */}
+                                                <div className="px-6 py-4 border-t border-white/6 flex items-center justify-between">
+                                                    <p className="text-white/35 text-xs">
+                                                        {selectedCandidates.length} selected
+                                                    </p>
+
+                                                    <div className="flex items-center gap-2">
+                                                        <button
+                                                            onClick={() => setShowAssignModal(false)}
+                                                            className="px-4 py-2 rounded-xl text-xs font-semibold border border-white/10 text-white/60 hover:bg-white/5"
+                                                        >
+                                                            Cancel
+                                                        </button>
+
+                                                        <button
+                                                            onClick={assignCandidatesToDrive}
+                                                            disabled={assignLoading || selectedCandidates.length === 0}
+                                                            className="px-5 py-2 rounded-xl text-xs font-semibold text-white disabled:opacity-50"
+                                                            style={{
+                                                                background:
+                                                                    "linear-gradient(135deg,#6366f1,#8b5cf6)",
+                                                            }}
+                                                        >
+                                                            {assignLoading
+                                                                ? "Assigning..."
+                                                                : "Assign Candidates"}
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </motion.div>
                                         </motion.div>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
-                        </div>
-                    )}
+                                    )}
+                                </AnimatePresence>
+                            </div>
+                        )
+                    }
 
                     {tab === "settings" && (
                         <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">

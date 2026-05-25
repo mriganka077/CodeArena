@@ -33,6 +33,11 @@ const assessmentResultSchema = new mongoose.Schema(
       type: Boolean,
     },
 
+    percentage: {
+      type: Number,
+      default: 0,
+    },
+
     timeTaken: {
       type: Number,
       default: 0,
@@ -139,11 +144,13 @@ assessmentResultSchema.pre("save", async function () {
 
   try {
 
-    const Drive = mongoose.model("Drive");
+    const Drive =
+      mongoose.model("Drive");
 
-    const driveInfo = await Drive.findById(
-      this.driveId
-    );
+    const driveInfo =
+      await Drive.findById(
+        this.driveId
+      );
 
     if (!driveInfo) {
 
@@ -153,12 +160,37 @@ assessmentResultSchema.pre("save", async function () {
 
     }
 
-    // 70% PASS MARK
+    // ==========================
+    // CALCULATE PERCENTAGE
+    // ==========================
+
+    this.percentage =
+
+      driveInfo.totalMarks > 0
+
+        ? Number(
+
+            (
+              (
+                this.score /
+                driveInfo.totalMarks
+              ) * 100
+            ).toFixed(2)
+
+          )
+
+        : 0;
+
+    // ==========================
+    // PASS / FAIL
+    // ==========================
 
     const passingThreshold =
-      driveInfo.totalMarks * 0.70;
+
+      driveInfo.totalMarks * 0.60;
 
     this.isPass =
+
       this.score >= passingThreshold;
 
   } catch (error) {
@@ -169,6 +201,7 @@ assessmentResultSchema.pre("save", async function () {
     );
 
     throw error;
+
   }
 
 });
