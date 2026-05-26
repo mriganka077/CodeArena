@@ -9,6 +9,86 @@ import {
   CheckCircle2, ChevronDown, Hash,
 } from "lucide-react";
 
+import { CalendarDays } from "lucide-react";
+
+
+
+const DARK_INPUT_STYLE = `
+  .dark-input, .dark-select {
+    color-scheme: dark;
+  }
+
+  .dark-select option {
+    background: #0f0d1f;
+    color: rgba(255,255,255,0.8);
+  }
+
+  .dark-input {
+    background: rgba(8, 6, 18, 0.85);
+    color: rgba(255,255,255,0.85);
+    color-scheme: dark;
+  }
+
+  .dark-input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+    opacity: 0;
+    position: absolute;
+    right: 0;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+  }
+`;
+
+
+const TInput = ({
+    value,
+    onChange,
+    placeholder,
+    type = "text",
+    error,
+    icon: Icon,
+    ...rest
+}) => {
+    const isDate = type === "datetime-local";
+
+    return (
+        <div className="relative">
+
+            {!isDate && Icon && (
+                <Icon
+                    size={15}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-white/35 pointer-events-none z-10"
+                />
+            )}
+
+            <input
+                type={type}
+                value={value}
+                onChange={onChange}
+                placeholder={placeholder}
+                className={`dark-input w-full ${Icon && !isDate
+                        ? "pl-10"
+                        : "pl-3"
+                    } ${isDate
+                        ? "pr-10"
+                        : "pr-3"
+                    } py-2.5 rounded-xl text-xs text-white/80 placeholder-white/20 outline-none transition border ${error
+                        ? "border-rose-500/50 focus:border-rose-500/70"
+                        : "border-white/8 focus:border-indigo-500/50"
+                    }`}
+                {...rest}
+            />
+
+            {isDate && (
+                <CalendarDays
+                    size={15}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white/35 pointer-events-none"
+                />
+            )}
+        </div>
+    );
+};
+
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 
@@ -387,14 +467,21 @@ const SchedulePanel = ({ form, setForm }) => (
     <SectionHeader Icon={Calendar} title="Interview Schedule" subtitle="Set the date, time window, round, and platform." />
 
     <div className="grid grid-cols-2 gap-3">
-      <div>
-        <FieldLabel>Start Date & Time</FieldLabel>
-        <StyledInput type="datetime-local" value={form.startDate} onChange={(v) => setForm((f) => ({ ...f, startDate: v }))} />
-      </div>
-      <div>
-        <FieldLabel>End Date & Time</FieldLabel>
-        <StyledInput type="datetime-local" value={form.endDate} onChange={(v) => setForm((f) => ({ ...f, endDate: v }))} />
-      </div>
+        <FieldLabel label="Start Date & Time" icon={Calendar} >
+          <TInput
+            type="datetime-local"
+            value={form.startDate}
+            onChange={(e) => setForm((f) => ({ ...f, startDate: e.target.value }))}
+          />
+        </FieldLabel>
+
+        <FieldLabel label="End Date & Time" icon={Calendar} >
+          <TInput
+            type="datetime-local"
+            value={form.endDate}
+            onChange={(e) => setForm((f) => ({ ...f, endDate: e.target.value }))}
+          />
+        </FieldLabel>
     </div>
 
 
@@ -596,6 +683,10 @@ const ScheduleInterviewModal = ({ onClose }) => {
         className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
         onClick={onClose}
       >
+
+        <style>{DARK_INPUT_STYLE}</style>
+
+
         {/* Modal */}
         <motion.div
           key="modal"
