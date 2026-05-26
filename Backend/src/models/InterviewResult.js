@@ -14,6 +14,12 @@ const interviewResultSchema = new mongoose.Schema({
     required: true,
   },
 
+  interviewId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "InterviewSchedule",
+    required: true,
+  },
+
   status: {
     type: String,
     enum: ["Completed", "Terminated"],
@@ -77,9 +83,47 @@ const interviewResultSchema = new mongoose.Schema({
     {
       role: String,
       text: String,
-      timestamp: String,
+      timestamp: {
+        type: Date,
+      },
     },
+    
   ],
+
+  score: {
+    type: Number,
+    default: 0,
+  },
+  
+  recommendation: {
+    type: String,
+    enum: ["Strong Hire", "Hire", "No Hire"],
+    default: "No Hire",
+  },
+  
+  feedback: {
+    type: String,
+    default: "",
+  },
+  technicalKnowledge: {
+    type: Number,
+    default: 0,
+  },
+  
+  communication: {
+    type: Number,
+    default: 0,
+  },
+  
+  problemSolving: {
+    type: Number,
+    default: 0,
+  },
+  
+  confidence: {
+    type: Number,
+    default: 0,
+  },
 
 }, { timestamps: true });
 

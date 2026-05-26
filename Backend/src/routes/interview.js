@@ -4,6 +4,8 @@ import { protect } from "../middleware/auth.js";
 import InterviewResult from "../models/InterviewResult.js";
 import InterviewSchedule from "../models/InterviewSchedule.js";
 
+import client from "../api/nvidia.js";
+
 const router = express.Router();
 
 // ========================================
@@ -13,7 +15,6 @@ const router = express.Router();
 router.post(
   "/submit-result",
   protect,
-
   async (req, res) => {
 
     try {
@@ -21,71 +22,256 @@ router.post(
       console.log("BODY:", req.body);
 
       const {
-
         driveId,
+        interviewId,
         timeTaken,
         status,
         violations,
         terminationReason,
         transcript,
-
       } = req.body;
 
       // ========================================
-      // VALIDATION
+      // CLEAN TRANSCRIPT
       // ========================================
 
-      if (!driveId) {
+      const cleanedTranscript = [];
 
-        return res.status(400).json({
+      for (const item of transcript || []) {
 
-          success: false,
+        if (
+          !item.text ||
+          !item.text.trim()
+        ) continue;
 
-          message: "Drive ID missing",
+        const text = item.text
+          .replace(/\s+/g, " ")
+          .trim();
 
+        const last =
+          cleanedTranscript[
+          cleanedTranscript.length - 1
+          ];
+
+        // first message
+        if (!last) {
+
+          cleanedTranscript.push({
+            role: item.role,
+            text,
+            timestamp: item.timestamp,
+          });
+
+          continue;
+        }
+
+        // same role
+        if (last.role === item.role) {
+
+          // exact duplicate
+          if (last.text === text) {
+            continue;
+          }
+
+          // streaming partial update
+          if (
+            text.startsWith(last.text)
+          ) {
+
+            last.text = text;
+
+            last.timestamp =
+              item.timestamp;
+
+            continue;
+          }
+
+          // smaller duplicate chunk
+          if (
+            last.text.startsWith(text)
+          ) {
+            continue;
+          }
+        }
+
+        cleanedTranscript.push({
+          role: item.role,
+          text,
+          timestamp: item.timestamp,
         });
-
       }
 
       // ========================================
-      // FRONTEND SENDS:
-      // InterviewSchedule._id
+      // AI EVALUATION USING LLAMA
       // ========================================
 
-      const interviewSchedule =
-        await InterviewSchedule.findById(
-          driveId
+      const userMessages =
+        cleanedTranscript.filter(
+          (m) =>
+            m.role === "user" &&
+            m.text.trim().length > 3
         );
 
-      if (!interviewSchedule) {
+      let parsed = null;
 
-        return res.status(404).json({
+      // ========================================
+      // NO USER RESPONSE
+      // ========================================
 
-          success: false,
+      if (userMessages.length === 0) {
 
-          message:
-            "Interview schedule not found",
+        parsed = {
 
-        });
+          score: 0,
 
+          recommendation: "No Hire",
+
+          feedback:
+            "Candidate did not provide any meaningful response.",
+
+          technicalKnowledge: 0,
+
+          communication: 0,
+
+          problemSolving: 0,
+
+          confidence: 0,
+        };
       }
 
+      // ========================================
+      // RUN AI ONLY IF USER RESPONDED
+      // ========================================
+
+      if (!parsed) {
+
+        const transcriptText =
+
+          cleanedTranscript
+            .map(
+              (m) =>
+                `${m.role.toUpperCase()}: ${m.text}`
+            )
+            .join("\n");
+
+        const prompt = `
+          You are an expert AI technical interviewer.
+
+          Analyze the following interview transcript.
+
+          Evaluate the candidate based ONLY on the transcript.
+
+          Rules:
+          - If the candidate gives weak, short, irrelevant, or no answers, give LOW scores.
+          - If the candidate does not answer technical questions, do NOT give high scores.
+          - Be strict and realistic.
+          - Do not hallucinate skills not present in transcript.
+          - Return ONLY valid JSON.
+          - Score range: 0 to 100.
+          - Be extremely strict and realistic.
+          - Evaluate ONLY the candidate responses.
+          - Ignore assistant questions when scoring.
+          - If there are NO meaningful user responses, recommendation MUST be "No Hire".
+          - If the candidate gives weak, short, irrelevant, or no answers, give LOW scores.
+          - If the candidate does not answer technical questions, technicalKnowledge MUST be below 30.
+          - If transcript contains only assistant messages, score MUST be below 20.
+          - Do not hallucinate skills not present in transcript.
+          - Return ONLY valid JSON.
+          - Score range: 0 to 100.
+
+          Transcript:
+          ${transcriptText}
+
+          Return JSON in this exact structure:
+
+          {
+          "score": number,
+          "recommendation": "Strong Hire" | "Hire" | "No Hire",
+          "feedback": "short feedback",
+          "technicalKnowledge": number,
+          "communication": number,
+          "problemSolving": number,
+          "confidence": number
+          }
+          `;
+
+        const completion =
+          await client.chat.completions.create({
+
+            model:
+              "meta/llama-3.1-8b-instruct",
+
+            messages: [
+              {
+                role: "user",
+                content: prompt,
+              },
+            ],
+
+            temperature: 0.2,
+
+            top_p: 0.7,
+
+            max_tokens: 500,
+          });
+
+        let aiResponse =
+          completion.choices[0]
+            .message.content;
+
+        aiResponse = aiResponse
+          .replace(/```json/g, "")
+          .replace(/```/g, "")
+          .trim();
+
+        try {
+
+          parsed =
+            JSON.parse(aiResponse);
+
+        } catch (error) {
+
+          console.log(
+            "AI Parse Error:",
+            error
+          );
+
+          parsed = {
+
+            score: 50,
+
+            recommendation:
+              "No Hire",
+
+            feedback:
+              "AI evaluation failed.",
+
+            technicalKnowledge: 50,
+
+            communication: 50,
+
+            problemSolving: 50,
+
+            confidence: 50,
+          };
+        }
+      }
       // ========================================
       // SAVE RESULT
       // ========================================
 
-      const result =
-        new InterviewResult({
+      console.log("driveId:", driveId);
+      console.log("interviewId:", interviewId);
+      console.log("transcript:", cleanedTranscript);
 
-          userId: req.user._id,
+      let result =
+        await InterviewResult.create({
 
-          // ========================================
-          // IMPORTANT FIX
-          // SAVE REAL DRIVE ID
-          // ========================================
+          userId: req.user.id,
 
-          driveId:
-            interviewSchedule.drive,
+          driveId,
+
+          interviewId,
 
           timeTaken,
 
@@ -95,52 +281,68 @@ router.post(
 
           terminationReason,
 
-          transcript:
-            transcript || [],
+          transcript: cleanedTranscript,
 
+          score: parsed.score,
+
+          recommendation:
+            parsed.recommendation,
+
+          feedback:
+            parsed.feedback,
+
+          technicalKnowledge:
+            parsed.technicalKnowledge,
+
+          communication:
+            parsed.communication,
+
+          problemSolving:
+            parsed.problemSolving,
+
+          confidence:
+            parsed.confidence,
         });
 
-      await result.save();
+      result =
+        await InterviewResult.findById(
+          result._id
+        )
 
-      console.log(
-        "INTERVIEW SAVED SUCCESSFULLY"
-      );
+        .populate(
+          "driveId",
+          "hiringPositionName difficulty status"
+        )
+    
+        .populate(
+          "interviewId"
+        )
+    
+        .populate(
+          "userId",
+          "firstName lastName"
+        );
 
       res.status(201).json({
 
         success: true,
 
-        message:
-          "Interview result stored successfully",
-
         result,
-
       });
 
     } catch (error) {
 
-      console.log(
-        "INTERVIEW SAVE ERROR:"
-      );
-
-      console.log(error);
+      console.error(error);
 
       res.status(500).json({
 
         success: false,
 
         message:
-          "Failed to store interview result",
-
-        error:
-          error.message,
-
+          "Server error",
       });
-
     }
-
   }
-
 );
 
 // ========================================
@@ -162,17 +364,16 @@ router.get(
 
         })
 
-        .populate(
-          "driveId",
-          "hiringPositionName difficulty status"
-        );
+          .populate(
+            "driveId",
+            "hiringPositionName difficulty status"
+          );
 
       res.status(200).json({
 
         success: true,
 
         results,
-
       });
 
     } catch (error) {
@@ -185,13 +386,9 @@ router.get(
 
         message:
           "Failed to fetch interview results",
-
       });
-
     }
-
   }
-
 );
 
 export default router;

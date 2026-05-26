@@ -225,11 +225,13 @@ const DrivePreview = () => {
         const interviewDrives =
           (interviewData.interviews || [])
             .map((interview) => ({
-    
+
               _id: interview._id,
-    
+
+              interviewId: interview._id,
+
               driveId:
-                interview.drive?.driveId,
+                interview.drive?._id,
     
               hiringPositionName:
                 interview.drive
@@ -302,7 +304,7 @@ const DrivePreview = () => {
     closeInstructionsModal();
     if (drive.driveType === "Interview") {
       navigate(
-        `/interview/${drive._id}`,
+        `/interview/${drive.driveId}`,
         { state: { drive } }
       );
     } else {
@@ -331,14 +333,24 @@ const DrivePreview = () => {
     
       // check completed interview
       const hasInterviewResult =
-        userResults.find(
-          (r) =>
-            r.driveId &&
-            (
-              r.driveId === drive._id ||
-              r.driveId?._id === drive._id
-            )
-        );
+        userResults.find((r) => {
+
+          const resultInterviewId =
+            String(
+              r.interviewId?._id ||
+              r.interviewId
+            );
+
+          const currentInterviewId =
+            String(
+              drive.interviewId
+            );
+
+          return (
+            resultInterviewId ===
+            currentInterviewId
+          );
+        });
     
       // already completed
       if (hasInterviewResult) {

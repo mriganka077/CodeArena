@@ -9,6 +9,8 @@ import { FaceDetector, ObjectDetector, FilesetResolver } from "@mediapipe/tasks-
 import vapi from "../../lib/vapi";
 import { useParams } from "react-router-dom";
 
+
+
 const CustomModal = ({ isOpen, title, message, type, onClose, onConfirm }) => {
   return (
     <AnimatePresence>
@@ -303,22 +305,30 @@ const Interview = () => {
 
             driveId,
           
+            interviewId:
+              location.state?.drive
+                ?.interviewId,
+          
             timeTaken: elapsed,
           
             status: finalStatus,
           
-            violations: violations.current,
+            violations:
+              violations.current,
           
             terminationReason: reason,
           
-            transcript: [...conversationTranscript],
-          }),
+            transcript:
+              [...conversationTranscript],
+          })
         }
       );
       
       const data = await response.json();
-      
+
       console.log(data);
+
+      return data;
     } catch (err) {
       console.error("Failed to submit interview result", err);
     }
@@ -417,7 +427,9 @@ useEffect(() => {
 
       console.log("VAPI MESSAGE:", message);
     
-      if (message.type !== "transcript") return;
+      if (
+        message.type !== "transcript"
+      ) return;
     
       const transcriptText = message.transcript?.trim();
     
@@ -586,27 +598,100 @@ useEffect(() => {
   }, []);
 
   const endInterview = async () => {
+
+    isEndingInterview.current = true;
+  
+    setStatus("ended");
+  
+    const tempResult = {
+      userId: {
+        firstName: user?.firstName,
+        lastName: user?.lastName,
+      },
+  
+      driveId: {
+        hiringPositionName:
+          location.state?.drive
+            ?.hiringPositionName ||
+          "Drive Interview",
+      },
+  
+      timeTaken: elapsed,
+  
+      score: 0,
+  
+      recommendation: "Processing",
+  
+      feedback:
+        "AI is analyzing your interview responses...",
+  
+      transcript: conversationTranscript,
+    };
+  
+    navigate(
+      "/interviewdone",
+      {
+        state: {
+          result: tempResult,
+        },
+      }
+    );
+  
     try {
-      isEndingInterview.current = true;
-      setStatus("ended");
-
+  
       if (streamRef.current) {
-        streamRef.current.getTracks().forEach((track) => track.stop());
+  
+        streamRef.current
+          .getTracks()
+          .forEach((track) =>
+            track.stop()
+          );
       }
-
-      if (document.fullscreenElement) {
-        await document.exitFullscreen().catch(() => {});
+  
+      if (
+        document.fullscreenElement
+      ) {
+  
+        await document
+          .exitFullscreen()
+          .catch(() => {});
       }
-
-      await submitInterviewResult("Completed", "User ended call");
-    } catch (err) {
-      console.error("Failed to end interview properly", err);
-    } finally {
+  
       window.speechSynthesis.cancel();
+  
       try {
+  
         await vapi.stop();
+  
       } catch (e) {}
-      navigate("/drive");
+  
+      const data =
+        await submitInterviewResult(
+          "Completed",
+          "User ended call"
+        );
+  
+        if (data?.result) {
+
+          localStorage.setItem(
+            "latestInterviewResult",
+            JSON.stringify(data.result)
+          );
+        
+          navigate(
+            "/interviewdone",
+            {
+              replace: true,
+              state: {
+                result: data.result,
+              },
+            }
+          );
+        }
+  
+    } catch (err) {
+  
+      console.error(err);
     }
   };
 

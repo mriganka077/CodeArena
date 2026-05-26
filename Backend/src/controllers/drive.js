@@ -313,11 +313,14 @@ export const getDriveCandidates = async (req, res) => {
                 // Interview
                 const interview =
                     interviewResults.find(
-
                         (r) =>
-
                             r.userId?.toString() ===
                             u._id.toString()
+
+                            &&
+
+                            r.driveId?.toString() ===
+                            id.toString()
                     );
 
                 // Total Violations
@@ -378,17 +381,23 @@ export const getDriveCandidates = async (req, res) => {
                     interviewTimeTaken:
                         interview?.timeTaken || 0,
 
-                    interviewViolations:
-                        interview?.violations || {},
+                    // AI Interview Score
+                    interviewScore:
+                        interview?.score || 0,
 
-                    interviewViolationCount:
-                        totalInterviewViolations,
-
-                    interviewTranscript:
-                        interview?.transcript || [],
-
-                    interviewTranscriptCount:
+                    // Interview Questions Count
+                    interviewQuestionCount:
                         interview?.transcript?.length || 0,
+
+                    // Interview Recommendation
+                    interviewRecommendation:
+                        interview?.recommendation || "No Hire",
+
+                    // Assessment Result
+                    assessmentResult:
+                        assessment?.percentage >= 40
+                            ? "Pass"
+                            : "Fail",
 
                     interviewCreatedAt:
                         interview?.createdAt || null,

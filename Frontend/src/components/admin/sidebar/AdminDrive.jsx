@@ -210,7 +210,7 @@ const DriveDrawer = ({
     const isDriveEnded = drive.status === "Completed";
     
 
-    const filteredAssignCandidates = allCandidates.filter((candidate) => {
+    const filteredAssignCandidates = (allCandidates || []).filter((candidate) => {
 
         const q = candidateSearch.toLowerCase().trim();
     
@@ -606,9 +606,16 @@ const endDrive = async () => {
                                     style={{ background:diff.bg, borderColor:diff.border, color:diff.cls.replace("text-","") }}>
                                     {drive.difficulty}
                                 </span>
-                                {drive.tags.map(t => (
-                                    <span key={t} className="px-2.5 py-1 rounded-lg text-[11px] font-medium border"
-                                        style={{ background:"rgba(99,102,241,0.1)", borderColor:"rgba(99,102,241,0.25)", color:"#a5b4fc" }}>
+                                {(drive.tags || []).map((t) => (
+                                    <span
+                                        key={t}
+                                        className="px-2.5 py-1 rounded-lg text-[11px] font-medium border"
+                                        style={{
+                                            background: "rgba(99,102,241,0.1)",
+                                            borderColor: "rgba(99,102,241,0.25)",
+                                            color: "#a5b4fc",
+                                        }}
+                                    >
                                         {t}
                                     </span>
                                 ))}
@@ -684,7 +691,7 @@ const endDrive = async () => {
                                 {/* Candidate Cards */}
                                 {!candLoading && !candError && candidates.length > 0 && (
                                     <div className="space-y-3">
-                                        {candidates.map((c, i) => {
+                                        {(candidates || []).map((c, i) => {
                                             const initials = `${c.firstName?.[0] ?? ""}${c.lastName?.[0] ?? ""}`.toUpperCase();
                                             const score = c.score ?? c.totalScore ?? null;
                                             const maxScore = c.maxScore ?? c.totalMarks ?? null;
@@ -692,325 +699,333 @@ const endDrive = async () => {
                                             const isCompleted = c.status === "Completed";
                                             const isTop = i === 0 && isCompleted;
 
+                                            // Interview data
+                                            const interviewTimeTaken =
+                                                c.interviewTimeTaken ?? 0;
+
+                                            const interviewViolationCount =
+                                                c.interviewViolationCount ?? 0;
+
+                                            const interviewTranscriptCount =
+                                                c.interviewTranscriptCount ?? 0;
+
+                                            const interviewStatus =
+                                                c.interviewStatus ?? null;
+
+                                            const hasInterview =
+                                                interviewStatus !== null;
+
                                             return (
                                                 <motion.div
                                                     key={c._id ?? i}
                                                     initial={{ opacity: 0, y: 6 }}
                                                     animate={{ opacity: 1, y: 0 }}
                                                     transition={{ delay: i * 0.05 }}
-                                                    className="rounded-2xl border border-white/8 overflow-hidden"
-                                                    style={{ background: "rgba(10,10,20,0.72)" }}
+                                                    className="
+                                                        rounded-2xl
+                                                        overflow-hidden
+                                                        relative
+                                                        border border-indigo-500/20
+                                                       
+                                                        "
+                                                        style={{
+                                                            background: `
+                                                                linear-gradient(
+                                                                    135deg,
+                                                                    rgba(31, 18, 61, 0.56),
+                                                                    rgba(17, 10, 36, 0.65)
+                                                                )
+                                                            `,
+                                                        backdropFilter: "blur(24px)",
+                                                        WebkitBackdropFilter: "blur(24px)",
+                                                    }}
                                                 >
+                                                    {/* Main Row */}
+                                                    <div className="flex items-center gap-3 px-4 py-3.5">
+                                                        {/* Avatar */}
+                                                        <div className="relative shrink-0">
+                                                            <div className="w-11 h-11 rounded-xl overflow-hidden flex items-center justify-center text-sm font-bold text-white/70 border border-white/10"
+                                                                style={{ background: "rgba(99,102,241,0.2)" }}>
+                                                                {c?.picture ? (
+                                                                    <img
+                                                                        src={c.picture.startsWith("http") ? c.picture : `http://localhost:4000${c.picture}`}
+                                                                        alt={`${c.firstName} ${c.lastName}`}
+                                                                        referrerPolicy="no-referrer"
+                                                                        className="w-full h-full object-cover"
+                                                                    />
+                                                                ) : (initials || <Users size={14} className="text-indigo-400" />)}
+                                                            </div>
+                                                            <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-[rgba(10,8,22,1)]"
+                                                                style={{ background: isCompleted ? "#4ade80" : "#6b7280" }} />
+                                                        </div>
 
+                                                        {/* Name + Email */}
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="text-white/90 text-sm font-semibold truncate">
+                                                                {c.firstName} {c.lastName}
+                                                            </p>
+                                                            <p className="text-white/35 text-[11px] truncate mt-0.5">{c.email}</p>
+                                                        </div>
 
-                                                    {/* Stats Footer Row */}
-                                                    {/* Candidate Cards */}
+                                                        {/* Score */}
+                                                        {score !== null && (
+                                                            <div className="text-center shrink-0">
+                                                                <p className="text-[10px] text-white/30 mb-0.5">Score</p>
+                                                                <p className="text-sm font-bold" style={{ color: scoreColor(score) }}>
+                                                                    {score}{maxScore !== null ? ` / ${maxScore}` : ""}
+                                                                </p>
+                                                                {percentage !== null && (
+                                                                    <p className="text-[10px] text-indigo-300 font-semibold mt-0.5">{percentage}%</p>
+                                                                )}
+                                                            </div>
+                                                        )}
 
-                                                    {!candLoading && !candError && candidates.length > 0 && (
-                                                        <div className="space-y-3">
-                                                            {candidates.map((c, i) => {
-                                                                const initials = `${c.firstName?.[0] ?? ""}${c.lastName?.[0] ?? ""}`.toUpperCase();
-                                                                const score = c.score ?? c.totalScore ?? null;
-                                                                const maxScore = c.maxScore ?? c.totalMarks ?? null;
-                                                                const percentage = c.percentage ?? null;
-                                                                const isCompleted = c.status === "Completed";
-                                                                const isTop = i === 0 && isCompleted;
+                                                        {/* Status Badge */}
+                                                        <div className="shrink-0">
+                                                            {isCompleted ? (
+                                                                <span className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold"
+                                                                    style={{
+                                                                        background: "rgba(74,222,128,0.12)",
+                                                                        border: "1px solid rgba(74,222,128,0.25)",
+                                                                        color: "#4ade80"
+                                                                    }}>
+                                                                    <CheckCircle2 size={11} />
+                                                                    Completed
+                                                                </span>
+                                                            ) : (
+                                                                <span className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold"
+                                                                    style={{
+                                                                        background: "rgba(99,102,241,0.1)",
+                                                                        border: "1px solid rgba(99,102,241,0.2)",
+                                                                        color: "#a5b4fc"
+                                                                    }}>
+                                                                    <Timer size={11} />
+                                                                    {c.status ?? "Enrolled"}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </div>
 
-                                                                // Interview data
-                                                                const interviewTimeTaken =
-                                                                    c.interviewTimeTaken ?? 0;
+                                                    {/* ── Assessment Stats Section ── */}
+                                                    {/* ── Assessment Stats Section ── */}
+                                                    {isCompleted && (
+                                                        <div className="border-t border-white/[0.06]">
 
-                                                                const interviewViolationCount =
-                                                                    c.interviewViolationCount ?? 0;
+                                                            <div className="flex items-center justify-between px-4 pt-2.5 pb-1">
 
-                                                                const interviewTranscriptCount =
-                                                                    c.interviewTranscriptCount ?? 0;
-                                                                const interviewStatus = c.interviewStatus ?? null;
-                                                                const hasInterview = interviewStatus !== null && interviewStatus !== undefined;
+                                                                <div className="flex items-center gap-2">
+                                                                    <div
+                                                                        className="w-1 h-3 rounded-full"
+                                                                        style={{ background: "#818cf8" }}
+                                                                    />
 
-                                                                return (
-                                                                    <motion.div
-                                                                        key={c._id ?? i}
-                                                                        initial={{ opacity: 0, y: 6 }}
-                                                                        animate={{ opacity: 1, y: 0 }}
-                                                                        transition={{ delay: i * 0.05 }}
-                                                                        className="rounded-2xl border border-white/8 overflow-hidden"
-                                                                        style={{ background: "rgba(255,255,255,0.03)" }}
+                                                                    <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-white/30">
+                                                                        Assessment
+                                                                    </p>
+                                                                </div>
+
+                                                                <span
+                                                                    className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${(percentage ?? 0) >= 40
+                                                                            ? "text-emerald-400 border-emerald-500/20 bg-emerald-500/10"
+                                                                            : "text-rose-400 border-rose-500/20 bg-rose-500/10"
+                                                                        }`}
+                                                                >
+                                                                    {(percentage ?? 0) >= 40 ? "Pass" : "Fail"}
+                                                                </span>
+
+                                                            </div>
+
+                                                            <div className="grid grid-cols-4 divide-x divide-white/[0.05] pb-2">
+                                                                {/* Percentage */}
+                                                                <div className="flex flex-col items-center justify-center py-2 gap-1">
+                                                                    <div className="relative w-8 h-8">
+                                                                        <svg viewBox="0 0 36 36" className="w-8 h-8 -rotate-90">
+                                                                            <circle cx="18" cy="18" r="14" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="3" />
+                                                                            <circle cx="18" cy="18" r="14" fill="none"
+                                                                                stroke="#818cf8" strokeWidth="3"
+                                                                                strokeDasharray={`${(percentage ?? 0) * 0.88} 88`}
+                                                                                strokeLinecap="round" />
+                                                                        </svg>
+                                                                        <span className="absolute inset-0 flex items-center justify-center text-[8px] font-bold text-white/70">
+                                                                            {percentage ?? 0}
+                                                                        </span>
+                                                                    </div>
+                                                                    <p className="text-white/25 text-[9px] uppercase tracking-wider">Percentage</p>
+                                                                    <p className="text-white/70 text-[11px] font-semibold">{percentage ?? 0}%</p>
+                                                                </div>
+
+                                                                {/* Status */}
+                                                                <div className="flex flex-col items-center justify-center py-2 gap-1">
+                                                                    <div className="w-8 h-8 rounded-full flex items-center justify-center"
+                                                                        style={{ background: "rgba(74,222,128,0.12)", border: "1px solid rgba(74,222,128,0.2)" }}>
+                                                                        <CheckCircle2 size={15} className="text-emerald-400" />
+                                                                    </div>
+                                                                    <p className="text-white/25 text-[9px] uppercase tracking-wider">Status</p>
+                                                                    <p className="text-emerald-400 text-[11px] font-semibold">Completed</p>
+                                                                </div>
+
+                                                                {/* Score */}
+                                                                <div className="flex flex-col items-center justify-center py-2 gap-1">
+                                                                    <div className="w-8 h-8 rounded-full flex items-center justify-center"
+                                                                        style={{ background: "rgba(99,102,241,0.1)", border: "1px solid rgba(99,102,241,0.2)" }}>
+                                                                        <BarChart2 size={15} className="text-indigo-400" />
+                                                                    </div>
+                                                                    <p className="text-white/25 text-[9px] uppercase tracking-wider">Score</p>
+                                                                    <p className="text-white/70 text-[11px] font-semibold">
+                                                                        {score ?? "—"}{maxScore !== null ? ` / ${maxScore}` : ""}
+                                                                    </p>
+                                                                </div>
+
+                                                                {/* Rank */}
+                                                                <div className="flex flex-col items-center justify-center py-2 gap-1">
+                                                                    <div className="w-8 h-8 rounded-full flex items-center justify-center"
+                                                                        style={{ background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.2)" }}>
+                                                                        <Trophy size={14} className="text-amber-400" />
+                                                                    </div>
+                                                                    <p className="text-white/25 text-[9px] uppercase tracking-wider">Rank</p>
+                                                                    <p className="text-amber-400 text-[11px] font-semibold">
+                                                                        {isTop ? "Top Score" : `#${i + 1}`}
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                    {/* ── Interview Stats Section ── */}
+                                                    {hasInterview && (
+                                                        <div className="border-t border-white/[0.06]">
+                                                            <div className="flex items-center justify-between px-4 pt-2.5 pb-1">
+
+                                                                <div className="flex items-center gap-2">
+                                                                    <div
+                                                                        className="w-1 h-3 rounded-full"
+                                                                        style={{ background: "#f472b6" }}
+                                                                    />
+
+                                                                    <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-white/30">
+                                                                        Interview
+                                                                    </p>
+                                                                </div>
+
+                                                                <span
+                                                                    className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${(c.interviewScore ?? 0) >= 80
+                                                                            ? "text-emerald-400 border-emerald-500/20 bg-emerald-500/10"
+                                                                            : (c.interviewScore ?? 0) >= 60
+                                                                                ? "text-cyan-400 border-cyan-500/20 bg-cyan-500/10"
+                                                                                : "text-rose-400 border-rose-500/20 bg-rose-500/10"
+                                                                        }`}
+                                                                >
+                                                                    {(c.interviewScore ?? 0) >= 80
+                                                                        ? "Strong Hire"
+                                                                        : (c.interviewScore ?? 0) >= 60
+                                                                            ? "Hire"
+                                                                            : "No Hire"}
+                                                                </span>
+
+                                                            </div>
+
+                                                            <div className="grid grid-cols-4 divide-x divide-white/[0.05] pb-2">
+                                                                {/* Duration */}
+                                                                <div className="flex flex-col items-center justify-center py-2 gap-1">
+                                                                    <div className="w-8 h-8 rounded-full flex items-center justify-center"
+                                                                        style={{ background: "rgba(244,114,182,0.12)", border: "1px solid rgba(244,114,182,0.2)" }}>
+                                                                        <Timer size={14} className="text-pink-400" />
+                                                                    </div>
+                                                                    <p className="text-white/25 text-[9px] uppercase tracking-wider">Duration</p>
+                                                                    <p className="text-white/70 text-[11px] font-semibold">
+                                                                    {interviewTimeTaken} min
+                                                                    </p>
+                                                                </div>
+
+                                                                {/* Interview Status */}
+                                                                <div className="flex flex-col items-center justify-center py-2 gap-1">
+                                                                    {interviewStatus === "Completed" ? (
+                                                                        <>
+                                                                            <div className="w-8 h-8 rounded-full flex items-center justify-center"
+                                                                                style={{ background: "rgba(74,222,128,0.12)", border: "1px solid rgba(74,222,128,0.2)" }}>
+                                                                                <CheckCircle2 size={15} className="text-emerald-400" />
+                                                                            </div>
+                                                                            <p className="text-white/25 text-[9px] uppercase tracking-wider">Status</p>
+                                                                            <p className="text-emerald-400 text-[11px] font-semibold">Completed</p>
+                                                                        </>
+                                                                    ) : interviewStatus === "Scheduled" ? (
+                                                                        <>
+                                                                            <div className="w-8 h-8 rounded-full flex items-center justify-center"
+                                                                                style={{ background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.2)" }}>
+                                                                                <CalendarDays size={15} className="text-amber-400" />
+                                                                            </div>
+                                                                            <p className="text-white/25 text-[9px] uppercase tracking-wider">Status</p>
+                                                                            <p className="text-amber-400 text-[11px] font-semibold">Scheduled</p>
+                                                                        </>
+                                                                    ) : (
+                                                                        <>
+                                                                            <div className="w-8 h-8 rounded-full flex items-center justify-center"
+                                                                                style={{ background: "rgba(99,102,241,0.1)", border: "1px solid rgba(99,102,241,0.2)" }}>
+                                                                                <Timer size={15} className="text-indigo-400" />
+                                                                            </div>
+                                                                            <p className="text-white/25 text-[9px] uppercase tracking-wider">Status</p>
+                                                                            <p className="text-indigo-300 text-[11px] font-semibold">{interviewStatus}</p>
+                                                                        </>
+                                                                    )}
+                                                                </div>
+
+                                                                {/* AI Interview Score */}
+                                                                <div className="flex flex-col items-center justify-center py-2 gap-1">
+                                                                    <div
+                                                                        className="w-8 h-8 rounded-full flex items-center justify-center"
+                                                                        style={{
+                                                                            background: "rgba(34,197,94,0.1)",
+                                                                            border: "1px solid rgba(34,197,94,0.2)",
+                                                                        }}
                                                                     >
-                                                                        {/* Main Row */}
-                                                                        <div className="flex items-center gap-3 px-4 py-3.5">
-                                                                            {/* Avatar */}
-                                                                            <div className="relative shrink-0">
-                                                                                <div className="w-11 h-11 rounded-xl overflow-hidden flex items-center justify-center text-sm font-bold text-white/70 border border-white/10"
-                                                                                    style={{ background: "rgba(99,102,241,0.2)" }}>
-                                                                                    {c?.picture ? (
-                                                                                        <img
-                                                                                            src={c.picture.startsWith("http") ? c.picture : `http://localhost:4000${c.picture}`}
-                                                                                            alt={`${c.firstName} ${c.lastName}`}
-                                                                                            referrerPolicy="no-referrer"
-                                                                                            className="w-full h-full object-cover"
-                                                                                        />
-                                                                                    ) : (initials || <Users size={14} className="text-indigo-400" />)}
-                                                                                </div>
-                                                                                <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-[rgba(10,8,22,1)]"
-                                                                                    style={{ background: isCompleted ? "#4ade80" : "#6b7280" }} />
-                                                                            </div>
+                                                                        <BarChart2
+                                                                            size={14}
+                                                                            className="text-emerald-400"
+                                                                        />
+                                                                    </div>
 
-                                                                            {/* Name + Email */}
-                                                                            <div className="flex-1 min-w-0">
-                                                                                <p className="text-white/90 text-sm font-semibold truncate">
-                                                                                    {c.firstName} {c.lastName}
-                                                                                </p>
-                                                                                <p className="text-white/35 text-[11px] truncate mt-0.5">{c.email}</p>
-                                                                            </div>
+                                                                    <p className="text-white/25 text-[9px] uppercase tracking-wider">
+                                                                        AI Score
+                                                                    </p>
 
-                                                                            {/* Score */}
-                                                                            {score !== null && (
-                                                                                <div className="text-center shrink-0">
-                                                                                    <p className="text-[10px] text-white/30 mb-0.5">Score</p>
-                                                                                    <p className="text-sm font-bold" style={{ color: scoreColor(score) }}>
-                                                                                        {score}{maxScore !== null ? ` / ${maxScore}` : ""}
-                                                                                    </p>
-                                                                                    {percentage !== null && (
-                                                                                        <p className="text-[10px] text-indigo-300 font-semibold mt-0.5">{percentage}%</p>
-                                                                                    )}
-                                                                                </div>
-                                                                            )}
+                                                                    <p className="text-emerald-400 text-[11px] font-semibold">
+                                                                        {c.interviewScore ?? 0}%
+                                                                    </p>
+                                                                </div>
 
-                                                                            {/* Status Badge */}
-                                                                            <div className="shrink-0">
-                                                                                {isCompleted ? (
-                                                                                    <span className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold"
-                                                                                        style={{
-                                                                                            background: "rgba(74,222,128,0.12)",
-                                                                                            border: "1px solid rgba(74,222,128,0.25)",
-                                                                                            color: "#4ade80"
-                                                                                        }}>
-                                                                                        <CheckCircle2 size={11} />
-                                                                                        Completed
-                                                                                    </span>
-                                                                                ) : (
-                                                                                    <span className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold"
-                                                                                        style={{
-                                                                                            background: "rgba(99,102,241,0.1)",
-                                                                                            border: "1px solid rgba(99,102,241,0.2)",
-                                                                                            color: "#a5b4fc"
-                                                                                        }}>
-                                                                                        <Timer size={11} />
-                                                                                        {c.status ?? "Enrolled"}
-                                                                                    </span>
-                                                                                )}
-                                                                            </div>
-                                                                        </div>
+                                                                {/* Interview Questions */}
+                                                                <div className="flex flex-col items-center justify-center py-2 gap-1">
+                                                                    <div
+                                                                        className="w-8 h-8 rounded-full flex items-center justify-center"
+                                                                        style={{
+                                                                            background: "rgba(99,102,241,0.1)",
+                                                                            border: "1px solid rgba(99,102,241,0.2)",
+                                                                        }}
+                                                                    >
+                                                                        <ClipboardList
+                                                                            size={14}
+                                                                            className="text-indigo-400"
+                                                                        />
+                                                                    </div>
 
-                                                                        {/* ── Assessment Stats Section ── */}
-                                                                        {isCompleted && (
-                                                                            <div className="border-t border-white/[0.06]">
-                                                                                {/* Section Label */}
-                                                                                <div className="flex items-center gap-2 px-4 pt-2.5 pb-1">
-                                                                                    <div className="w-1 h-3 rounded-full" style={{ background: "#818cf8" }} />
-                                                                                    <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-white/30">Assessment</p>
-                                                                                </div>
+                                                                    <p className="text-white/25 text-[9px] uppercase tracking-wider">
+                                                                        Questions
+                                                                    </p>
 
-                                                                                <div className="grid grid-cols-4 divide-x divide-white/[0.05] pb-2">
-                                                                                    {/* Percentage */}
-                                                                                    <div className="flex flex-col items-center justify-center py-2 gap-1">
-                                                                                        <div className="relative w-8 h-8">
-                                                                                            <svg viewBox="0 0 36 36" className="w-8 h-8 -rotate-90">
-                                                                                                <circle cx="18" cy="18" r="14" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="3" />
-                                                                                                <circle cx="18" cy="18" r="14" fill="none"
-                                                                                                    stroke="#818cf8" strokeWidth="3"
-                                                                                                    strokeDasharray={`${(percentage ?? 0) * 0.88} 88`}
-                                                                                                    strokeLinecap="round" />
-                                                                                            </svg>
-                                                                                            <span className="absolute inset-0 flex items-center justify-center text-[8px] font-bold text-white/70">
-                                                                                                {percentage ?? 0}
-                                                                                            </span>
-                                                                                        </div>
-                                                                                        <p className="text-white/25 text-[9px] uppercase tracking-wider">Percentage</p>
-                                                                                        <p className="text-white/70 text-[11px] font-semibold">{percentage ?? 0}%</p>
-                                                                                    </div>
+                                                                    <p className="text-indigo-300 text-[11px] font-semibold">
+                                                                        {c.interviewQuestionCount ?? 0}
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    )}
 
-                                                                                    {/* Status */}
-                                                                                    <div className="flex flex-col items-center justify-center py-2 gap-1">
-                                                                                        <div className="w-8 h-8 rounded-full flex items-center justify-center"
-                                                                                            style={{ background: "rgba(74,222,128,0.12)", border: "1px solid rgba(74,222,128,0.2)" }}>
-                                                                                            <CheckCircle2 size={15} className="text-emerald-400" />
-                                                                                        </div>
-                                                                                        <p className="text-white/25 text-[9px] uppercase tracking-wider">Status</p>
-                                                                                        <p className="text-emerald-400 text-[11px] font-semibold">Completed</p>
-                                                                                    </div>
-
-                                                                                    {/* Score */}
-                                                                                    <div className="flex flex-col items-center justify-center py-2 gap-1">
-                                                                                        <div className="w-8 h-8 rounded-full flex items-center justify-center"
-                                                                                            style={{ background: "rgba(99,102,241,0.1)", border: "1px solid rgba(99,102,241,0.2)" }}>
-                                                                                            <BarChart2 size={15} className="text-indigo-400" />
-                                                                                        </div>
-                                                                                        <p className="text-white/25 text-[9px] uppercase tracking-wider">Score</p>
-                                                                                        <p className="text-white/70 text-[11px] font-semibold">
-                                                                                            {score ?? "—"}{maxScore !== null ? ` / ${maxScore}` : ""}
-                                                                                        </p>
-                                                                                    </div>
-
-                                                                                    {/* Rank */}
-                                                                                    <div className="flex flex-col items-center justify-center py-2 gap-1">
-                                                                                        <div className="w-8 h-8 rounded-full flex items-center justify-center"
-                                                                                            style={{ background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.2)" }}>
-                                                                                            <Trophy size={14} className="text-amber-400" />
-                                                                                        </div>
-                                                                                        <p className="text-white/25 text-[9px] uppercase tracking-wider">Rank</p>
-                                                                                        <p className="text-amber-400 text-[11px] font-semibold">
-                                                                                            {isTop ? "Top Score" : `#${i + 1}`}
-                                                                                        </p>
-                                                                                    </div>
-                                                                                </div>
-                                                                            </div>
-                                                                        )}
-
-                                                                        {/* ── Interview Stats Section ── */}
-                                                                        {hasInterview && (
-                                                                            <div className="border-t border-white/[0.06]">
-                                                                                {/* Section Label */}
-                                                                                <div className="flex items-center gap-2 px-4 pt-2.5 pb-1">
-                                                                                    <div className="w-1 h-3 rounded-full" style={{ background: "#f472b6" }} />
-                                                                                    <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-white/30">Interview</p>
-                                                                                </div>
-
-                                                                                <div className="grid grid-cols-4 divide-x divide-white/[0.05] pb-2">
-                                                                                    {/* Interview Percentage */}
-                                                                                    {/* Interview Duration */}
-                                                                                    <div className="flex flex-col items-center justify-center py-2 gap-1">
-
-                                                                                        <div
-                                                                                            className="w-8 h-8 rounded-full flex items-center justify-center"
-                                                                                            style={{
-                                                                                                background:
-                                                                                                    "rgba(244,114,182,0.12)",
-                                                                                                border:
-                                                                                                    "1px solid rgba(244,114,182,0.2)",
-                                                                                            }}
-                                                                                        >
-                                                                                            <Timer
-                                                                                                size={14}
-                                                                                                className="text-pink-400"
-                                                                                            />
-                                                                                        </div>
-
-                                                                                        <p className="text-white/25 text-[9px] uppercase tracking-wider">
-                                                                                            Duration
-                                                                                        </p>
-
-                                                                                        <p className="text-white/70 text-[11px] font-semibold">
-                                                                                            {Math.floor(interviewTimeTaken / 60)} min
-                                                                                        </p>
-
-                                                                                    </div>
-
-                                                                                    {/* Interview Status */}
-                                                                                    <div className="flex flex-col items-center justify-center py-2 gap-1">
-                                                                                        {interviewStatus === "Completed" ? (
-                                                                                            <>
-                                                                                                <div className="w-8 h-8 rounded-full flex items-center justify-center"
-                                                                                                    style={{ background: "rgba(74,222,128,0.12)", border: "1px solid rgba(74,222,128,0.2)" }}>
-                                                                                                    <CheckCircle2 size={15} className="text-emerald-400" />
-                                                                                                </div>
-                                                                                                <p className="text-white/25 text-[9px] uppercase tracking-wider">Status</p>
-                                                                                                <p className="text-emerald-400 text-[11px] font-semibold">Completed</p>
-                                                                                            </>
-                                                                                        ) : interviewStatus === "Scheduled" ? (
-                                                                                            <>
-                                                                                                <div className="w-8 h-8 rounded-full flex items-center justify-center"
-                                                                                                    style={{ background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.2)" }}>
-                                                                                                    <CalendarDays size={15} className="text-amber-400" />
-                                                                                                </div>
-                                                                                                <p className="text-white/25 text-[9px] uppercase tracking-wider">Status</p>
-                                                                                                <p className="text-amber-400 text-[11px] font-semibold">Scheduled</p>
-                                                                                            </>
-                                                                                        ) : (
-                                                                                            <>
-                                                                                                <div className="w-8 h-8 rounded-full flex items-center justify-center"
-                                                                                                    style={{ background: "rgba(99,102,241,0.1)", border: "1px solid rgba(99,102,241,0.2)" }}>
-                                                                                                    <Timer size={15} className="text-indigo-400" />
-                                                                                                </div>
-                                                                                                <p className="text-white/25 text-[9px] uppercase tracking-wider">Status</p>
-                                                                                                <p className="text-indigo-300 text-[11px] font-semibold">{interviewStatus}</p>
-                                                                                            </>
-                                                                                        )}
-                                                                                    </div>
-
-                                                                                    {/* Interview Score */}
-                                                                                    {/* Violations */}
-                                                                                    <div className="flex flex-col items-center justify-center py-2 gap-1">
-
-                                                                                        <div
-                                                                                            className="w-8 h-8 rounded-full flex items-center justify-center"
-                                                                                            style={{
-                                                                                                background:
-                                                                                                    "rgba(251,191,36,0.1)",
-                                                                                                border:
-                                                                                                    "1px solid rgba(251,191,36,0.2)",
-                                                                                            }}
-                                                                                        >
-                                                                                            <AlertTriangle
-                                                                                                size={14}
-                                                                                                className="text-amber-400"
-                                                                                            />
-                                                                                        </div>
-
-                                                                                        <p className="text-white/25 text-[9px] uppercase tracking-wider">
-                                                                                            Violations
-                                                                                        </p>
-
-                                                                                        <p className="text-amber-400 text-[11px] font-semibold">
-                                                                                            {interviewViolationCount}
-                                                                                        </p>
-
-                                                                                    </div>
-
-                                                                                    {/* Interview Feedback / Rating */}
-                                                                                        {/* Transcript */}
-                                                                                        <div className="flex flex-col items-center justify-center py-2 gap-1">
-
-                                                                                            <div
-                                                                                                className="w-8 h-8 rounded-full flex items-center justify-center"
-                                                                                                style={{
-                                                                                                    background:
-                                                                                                        "rgba(14,165,233,0.1)",
-                                                                                                    border:
-                                                                                                        "1px solid rgba(14,165,233,0.2)",
-                                                                                                }}
-                                                                                            >
-                                                                                                <FileText
-                                                                                                    size={14}
-                                                                                                    className="text-sky-400"
-                                                                                                />
-                                                                                            </div>
-
-                                                                                            <p className="text-white/25 text-[9px] uppercase tracking-wider">
-                                                                                                Transcript
-                                                                                            </p>
-
-                                                                                            <p className="text-sky-400 text-[11px] font-semibold">
-                                                                                                {interviewTranscriptCount}
-                                                                                            </p>
-
-                                                                                        </div>
-                                                                                </div>
-                                                                            </div>
-                                                                        )}
-
-                                                                        {/* Show placeholder if no interview yet but assessment is done */}
-                                                                        {isCompleted && !hasInterview && (
-                                                                            <div className="border-t border-white/[0.06] px-4 py-3 flex items-center gap-2.5">
-                                                                                <div className="w-1 h-3 rounded-full" style={{ background: "rgba(244,114,182,0.3)" }} />
-                                                                                <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-white/20">Interview</p>
-                                                                                <span className="ml-auto text-[10px] text-white/20 italic">Not scheduled yet</span>
-                                                                            </div>
-                                                                        )}
-                                                                    </motion.div>
-                                                                );
-                                                            })}
+                                                    {/* Placeholder if no interview yet */}
+                                                    {isCompleted && !hasInterview && (
+                                                        <div className="border-t border-white/[0.06] px-4 py-3 flex items-center gap-2.5">
+                                                            <div className="w-1 h-3 rounded-full" style={{ background: "rgba(244,114,182,0.3)" }} />
+                                                            <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-white/20">Interview</p>
+                                                            <span className="ml-auto text-[10px] text-white/20 italic">Not scheduled yet</span>
                                                         </div>
                                                     )}
                                                 </motion.div>
@@ -1135,7 +1150,7 @@ const endDrive = async () => {
                                                             <div className="w-8 h-8 rounded-full border-2 border-indigo-500/30 border-t-indigo-400 animate-spin" />
                                                         </div>
                                                     ) : (
-                                                        filteredAssignCandidates.map((candidate) => {
+                                                        (filteredAssignCandidates || []).map((candidate) => {
 
                                                             const selected = selectedCandidates.includes(candidate._id);
 
@@ -1711,6 +1726,7 @@ const AdminDrive = () => {
             try {
                 const res = await axios.get("http://localhost:4000/api/drives");
                 setDrives(res.data.drives);
+                console.log(res.data);
             } catch (error) {
                 console.log(error);
             } finally {
