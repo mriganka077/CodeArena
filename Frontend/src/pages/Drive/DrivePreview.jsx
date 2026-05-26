@@ -223,36 +223,47 @@ const DrivePreview = () => {
     
         // Convert interviews into drive-like objects
         const interviewDrives =
-          (interviewData.interviews || [])
-            .map((interview) => ({
-
-              _id: interview._id,
-
-              interviewId: interview._id,
-
-              driveId:
-                interview.drive?._id,
-    
-              hiringPositionName:
-                interview.drive
-                  ?.hiringPositionName,
-    
-              driveType: "Interview",
-    
-              assessmentStartDate:
-                interview.startDate,
-    
-              assessmentEndDate:
-                interview.endDate,
-    
-              timeDurationInMin:
-                interview.timeDurationInMin,
-    
-              status:
-                interview.status,
-    
-              isInterview: true,
-            }));
+        (interviewData.interviews || [])
+          .map((interview) => ({
+      
+            _id: interview._id,
+      
+            interviewId:
+              interview._id,
+      
+            // REAL DRIVE OBJECT ID
+            driveMongoId:
+              interview.drive?._id,
+      
+            // DISPLAY DRIVE ID
+            driveId:
+              interview.drive?.driveId || "",
+      
+            hiringPositionName:
+              interview.drive
+                ?.hiringPositionName || "Interview",
+      
+            driveType: "Interview",
+      
+            assessmentStartDate:
+              interview.startDate,
+      
+            assessmentEndDate:
+              interview.endDate,
+      
+            timeDurationInMin:
+              interview.drive
+                ?.timeDurationInMin || 0,
+      
+            difficulty:
+              interview.drive
+                ?.difficulty || "Intermediate",
+      
+            status:
+              interview.status,
+      
+            isInterview: true,
+          }));
     
         // Merge both
         setAssignedDrives([
@@ -304,7 +315,7 @@ const DrivePreview = () => {
     closeInstructionsModal();
     if (drive.driveType === "Interview") {
       navigate(
-        `/interview/${drive.driveId}`,
+        `/interview/${drive.driveMongoId}`,
         { state: { drive } }
       );
     } else {

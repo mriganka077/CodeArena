@@ -1,4 +1,7 @@
-import React from "react";
+import React, {
+  useEffect,
+  useState,
+} from "react";
 import { motion } from "framer-motion";
 
 import {
@@ -30,6 +33,41 @@ const InterviewComplete = () => {
 
   const navigate =
     useNavigate();
+  const [redirectTimer, setRedirectTimer] =
+    useState(60);
+
+    useEffect(() => {
+
+      const redirectTimeout =
+        setTimeout(() => {
+    
+          navigate("/drive");
+    
+        }, 60000);
+    
+      const interval =
+        setInterval(() => {
+    
+          setRedirectTimer((prev) =>
+            prev > 0
+              ? prev - 1
+              : 0
+          );
+    
+        }, 1000);
+    
+      return () => {
+    
+        clearTimeout(
+          redirectTimeout
+        );
+    
+        clearInterval(
+          interval
+        );
+      };
+    
+    }, [navigate]);
 
     const result =
     location.state?.result ||
@@ -253,44 +291,6 @@ const InterviewComplete = () => {
             </div>
           </motion.div>
 
-          {/* AI SCORE */}
-          <motion.div
-            initial={{
-              opacity: 0,
-            }}
-
-            animate={{
-              opacity: 1,
-            }}
-
-            transition={{
-              delay: 0.55,
-            }}
-
-            className="mt-8 flex flex-col items-center"
-          >
-
-            <h2 className="text-6xl font-black text-emerald-400">
-              {result?.score || 0}%
-            </h2>
-
-            <p className="mt-2 text-sm text-white/45">
-              AI Interview Score
-            </p>
-
-            <div className="mt-4 px-5 py-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 text-emerald-300 text-xs font-bold tracking-widest uppercase">
-
-              {result?.recommendation ||
-                "No Hire"}
-
-            </div>
-
-            <p className="mt-5 text-sm text-white/55 leading-7 max-w-[500px]">
-              {result?.feedback}
-            </p>
-
-          </motion.div>
-
           {/* next steps */}
           <motion.div
             initial={{
@@ -379,12 +379,26 @@ const InterviewComplete = () => {
               delay: 0.9,
             }}
 
-            className="mt-5 flex items-center gap-2 text-white/25 text-xs"
+            className="mt-5 flex flex-col items-center gap-2"
           >
 
-            <Mail size={13} />
+            <div className="flex items-center gap-2 text-white/25 text-xs">
 
-            Check your email for confirmation
+              <Mail size={13} />
+
+              Check your email for confirmation
+
+            </div>
+
+            <div className="text-[11px] font-semibold text-amber-400">
+
+              Redirecting to drives in{" "}
+
+              <span className="text-white">
+                {redirectTimer}s
+              </span>
+
+            </div>
 
           </motion.div>
 

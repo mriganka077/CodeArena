@@ -8,6 +8,8 @@ import client from "../api/nvidia.js";
 
 const router = express.Router();
 
+import mongoose from "mongoose";
+
 // ========================================
 // SUBMIT INTERVIEW RESULT
 // ========================================
@@ -30,6 +32,8 @@ router.post(
         terminationReason,
         transcript,
       } = req.body;
+
+      
 
       // ========================================
       // CLEAN TRANSCRIPT
@@ -264,14 +268,33 @@ router.post(
       console.log("interviewId:", interviewId);
       console.log("transcript:", cleanedTranscript);
 
+      if (!mongoose.Types.ObjectId.isValid(driveId)) {
+
+        return res.status(400).json({
+          success: false,
+          message: "Invalid driveId",
+        });
+      }
+      
+      if (!mongoose.Types.ObjectId.isValid(interviewId)) {
+      
+        return res.status(400).json({
+          success: false,
+          message: "Invalid interviewId",
+        });
+      }
+
       let result =
         await InterviewResult.create({
 
           userId: req.user.id,
 
-          driveId,
+          driveId: new mongoose.Types.ObjectId(driveId),
 
-          interviewId,
+          interviewId:
+            new mongoose.Types.ObjectId(
+              interviewId
+            ),
 
           timeTaken,
 
