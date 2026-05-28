@@ -226,7 +226,12 @@ const Interview = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const { driveId } = useParams();
+  const params = useParams();
+
+const driveId =
+  location.state?.type === "domain"
+    ? null
+    : params.driveId;
 
   const [elapsed, setElapsed] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
@@ -252,7 +257,10 @@ const Interview = () => {
   const lastViolationTime = useRef(0);
   const isAnalyzing = useRef(false);
   const analysisTimeoutRef = useRef(null);
+  const transcriptRef = useRef([]);
   const [conversationTranscript, setConversationTranscript] = useState([]);
+  const selectedDomain =
+  location.state?.domain || "Full Stack Development";
 
   const [modalConfig, setModalConfig] = useState({
     isOpen: false,
@@ -288,13 +296,18 @@ const Interview = () => {
 
   const submitInterviewResult = async (
    
-    finalStatus = "Completed",
+    finalStatus = "completed",
     reason = "",
   ) => {
     try {
       const token = localStorage.getItem("token");
+      const apiUrl =
+        location.state?.type === "domain"
+          ? "http://localhost:4000/api/mockinterview/submit-result"
+          : "http://localhost:4000/api/interview/submit-result";
+
       const response = await fetch(
-        "http://localhost:4000/api/interview/submit-result",
+        apiUrl,
         {
           method: "POST",
           headers: {
@@ -306,8 +319,12 @@ const Interview = () => {
             driveId,
           
             interviewId:
-              location.state?.drive
-                ?.interviewId,
+              location.state?.drive?.interviewId,
+          
+            domain: selectedDomain,
+
+            sessionId:
+              location.state?.sessionId,
           
             timeTaken: elapsed,
           
@@ -319,7 +336,7 @@ const Interview = () => {
             terminationReason: reason,
           
             transcript:
-              [...conversationTranscript],
+              transcriptRef.current,
           })
         }
       );
@@ -346,7 +363,10 @@ const Interview = () => {
       await vapi.stop();
     } catch (e) {}
 
-    await submitInterviewResult("Terminated", reason);
+    await submitInterviewResult(
+      "abandoned",
+      reason
+    );
 
     triggerAlert("Interview Terminated", reason, "danger", () =>
       navigate("/drive"),
@@ -366,32 +386,63 @@ const Interview = () => {
     }
   };
 
-  const startVapiInterview = async () => {
+  const startVapiInterview =
+  async () => {
 
     try {
 
-        await vapi.start(
-            import.meta.env.VITE_VAPI_ASSISTANT_ID,
-            {
-                variableValues: {
-                  candidateName: user?.firstName || "Candidate",
-                },
-            }
-        );
+      const isDomainInterview =
+        location.state?.type === "domain";
 
-        setCallActive(true);
+      const assistantId =
+        isDomainInterview
+          ? import.meta.env
+              .VITE_VAPI_DOMAIN_ASSISTANT_ID
+          : import.meta.env
+              .VITE_VAPI_DRIVE_ASSISTANT_ID;
+
+      const variableValues = {
+
+        candidateName:
+          user?.firstName ||
+          "Candidate",
+      };
+
+      if (isDomainInterview) {
+
+        variableValues.domain =
+          selectedDomain;
+      }
+
+      await vapi.start(
+        assistantId,
+        {
+          variableValues,
+        }
+      );
+
+      setCallActive(true);
 
     } catch (error) {
-        console.log(error);
+
+      console.log(error);
     }
 };
 
 
 useEffect(() => {
 
-  if (!driveId) {
+  const isDomainInterview =
+    location.state?.type === "domain";
 
-    console.error("Drive ID missing");
+  if (
+    !isDomainInterview &&
+    !driveId
+  ) {
+
+    console.error(
+      "Drive ID missing"
+    );
 
     triggerAlert(
       "Drive Error",
@@ -427,53 +478,96 @@ useEffect(() => {
 
       console.log("VAPI MESSAGE:", message);
     
-      if (
-        message.type !== "transcript"
-      ) return;
+      if (message.type !== "transcript") return;
     
-      const transcriptText = message.transcript?.trim();
+      const transcriptText =
+        message.transcript?.trim();
     
       if (!transcriptText) return;
     
-      setConversationTranscript((prev) => {
+      const role =
+        message.role ||
+        message.speaker ||
+        "assistant";
     
-        const lastMessage = prev[prev.length - 1];
+        setConversationTranscript((prev) => {
+
+          const updated = [...prev];
+        
+          const lastMessage =
+            updated[updated.length - 1];
+        
+          // =====================================
+          // STREAMING TRANSCRIPT UPDATE
+          // =====================================
+        
+          if (
+            lastMessage &&
+            lastMessage.role === role &&
+            Date.now() -
+              new Date(
+                lastMessage.timestamp
+              ).getTime() <
+              4000
+          ){
+        
+            // Replace assistant/user streaming chunk
+            updated[updated.length - 1] = {
+        
+              ...lastMessage,
+        
+              text: transcriptText,
+        
+              timestamp:
+                new Date().toISOString(),
+            };
+            transcriptRef.current = updated;
+            return updated;
+          }
+        
+          // =====================================
+          // NEW MESSAGE
+          // =====================================
+          const newTranscript = [
+            ...prev,
+            {
+              role,
+              text: transcriptText,
+              timestamp:
+                new Date().toISOString(),
+            },
+          ];
+          
+          transcriptRef.current =
+            newTranscript;
+          
+          return newTranscript;
+          
+        });
     
-        // prevent duplicate consecutive transcript
-        if (
-          lastMessage &&
-          lastMessage.role === message.role &&
-          lastMessage.text === transcriptText
-        ) {
-          return prev;
-        }
+      // ========================================
+      // UI
+      // ========================================
     
-        return [
-          ...prev,
-          {
-            role: message.role,
-            text: transcriptText,
-            timestamp: new Date().toISOString(),
-          },
-        ];
-      });
+      if (role === "assistant") {
     
-      if (message.role === "assistant") {
-        setCurrentQuestion(transcriptText);
+        setCurrentQuestion(
+          transcriptText
+        );
       }
     
-      if (message.role === "user") {
+      if (role === "user") {
     
         setCandidateSpeaking(true);
     
-        setCandidateAnswer((prev) =>
-          prev
-            ? `${prev} ${transcriptText}`
-            : transcriptText
+        setCandidateAnswer(
+          transcriptText
         );
     
         setTimeout(() => {
+    
           setCandidateSpeaking(false);
+    
         }, 1200);
       }
     });
@@ -628,8 +722,13 @@ useEffect(() => {
       transcript: conversationTranscript,
     };
   
+    const isDomainInterview =
+      location.state?.type === "domain";
+
     navigate(
-      "/interviewdone",
+      isDomainInterview
+        ? "/interviewfeedback"
+        : "/interviewdone",
       {
         state: {
           result: tempResult,
@@ -667,7 +766,7 @@ useEffect(() => {
   
       const data =
         await submitInterviewResult(
-          "Completed",
+          "completed",
           "User ended call"
         );
   
@@ -679,7 +778,9 @@ useEffect(() => {
           );
         
           navigate(
-            "/interviewdone",
+            isDomainInterview
+              ? "/interviewfeedback"
+              : "/interviewdone",
             {
               replace: true,
               state: {

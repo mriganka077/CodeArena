@@ -414,4 +414,32 @@ router.get(
   }
 );
 
+
+export const createSession = async (req, res) => {
+  try {
+
+    const session = await MockInterview.create({
+      userId: req.user?._id || null,
+      domain: req.body.domain,
+      category: req.body.category,
+      startedAt: new Date(),
+      status: "started",
+    });
+
+    res.status(201).json({
+      success: true,
+      session,
+    });
+
+  } catch (error) {
+
+    console.log(error);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to create session",
+    });
+  }
+};
+
 export default router;

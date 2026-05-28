@@ -510,41 +510,95 @@ export default function DomainSelectorPage() {
   }, [search, groups]);
 
   // Replace handleCardClick
-  const handleCardClick = useCallback(async (domain, category) => {
+  const handleCardClick =
+  useCallback(async (
+    domain,
+    category
+  ) => {
+
     if (isInterview) {
+
       try {
-        const token = localStorage.getItem("token");
 
-        console.log("Saving to DB:", { domain, category }); // ← check this fires
-        console.log("API URL:", USER_API_URL);               // ← check URL is correct
-        console.log("Token:", token);                        // ← check token exists
+        const token =
+          localStorage.getItem(
+            "token"
+          );
 
-        const res = await fetch(`${USER_API_URL}/api/mockinterview`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            ...(token && { Authorization: `Bearer ${token}` }),
-          },
-          credentials: "include",
-          body: JSON.stringify({
-            domain,
-            category,
-            startedAt: new Date().toISOString(),
-            status: "started",
-          }),
-        });
+        const res = await fetch(
+          `${USER_API_URL}/api/mockinterview`,
+          {
+            method: "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+
+              ...(token && {
+                Authorization:
+                  `Bearer ${token}`,
+              }),
+            },
+
+            credentials:
+              "include",
+
+            body: JSON.stringify({
+              domain,
+              category,
+              startedAt:
+                new Date()
+                  .toISOString(),
+
+              status:
+                "started",
+            }),
+          }
+        );
 
         const data = await res.json();
-        console.log("DB response:", data); // ← check what backend returns
+
+        console.log(data);
+
+        if (!data?.data?._id) {
+
+          console.error(
+            "Session creation failed",
+            data
+          );
+
+          return;
+        }
+
+        navigate(
+          `/interview/${data.data._id}`,
+          {
+            state: {
+              domain,
+              category,
+              sessionId: data.data._id,
+              type: "domain",
+            },
+          }
+        );
 
       } catch (err) {
-        console.error("Failed to save mock interview session:", err);
+
+        console.error(err);
       }
-      navigate("/interview", { state: { domain, category } });
+
     } else {
-      setPopup({ domain, category });
+
+      setPopup({
+        domain,
+        category,
+      });
     }
-  }, [isInterview, navigate]);
+
+  }, [
+    isInterview,
+    navigate,
+  ]);
 
   // Replace handleConfirm (only used for practice now)
   const handleConfirm = useCallback(

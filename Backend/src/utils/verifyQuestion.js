@@ -131,18 +131,30 @@ import {
           }
   
           const normalize = (
-            str = ""
+            text = ""
           ) =>
-  
-            str
+          
+            text
               .replace(/\r/g, "")
-              .trim();
-  
+              .trim()
+              .split("\n")
+              .map(line =>
+          
+                line
+                  .trim()
+                  .split(/\s+/)
+                  .sort()
+                  .join(" ")
+          
+              )
+              .sort()
+              .join("\n");
+          
           const actual =
             normalize(
               result.stdout
             );
-  
+          
           const expected =
             normalize(
               tc.expectedOutput

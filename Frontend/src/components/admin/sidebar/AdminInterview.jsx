@@ -628,7 +628,7 @@ const InterviewDrawer = ({ interview: iv, onClose }) => {
                 <p className="text-white/35 text-[10px] uppercase tracking-widest font-semibold mb-3">Performance</p>
                 <div className="grid grid-cols-2 gap-2.5">
                   {[
-                    { label: "Assessment Score", val: iv.assessmentScore, color: "#818cf8", Icon: ClipboardList },
+                    { label: "Interview Score", val: iv.assessmentScore, color: "#818cf8", Icon: ClipboardList },
                     { label: "Drive Rank",       val: `#${iv.rank}`,      color: "#fbbf24", Icon: Award },
                   ].map((item, i) => (
                     <div key={i} className="rounded-xl p-3 border border-white/5 flex items-center gap-2.5"
@@ -648,17 +648,13 @@ const InterviewDrawer = ({ interview: iv, onClose }) => {
 
               <div className="rounded-xl p-4 border border-white/5" style={{ background: "rgba(255,255,255,0.02)" }}>
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-white/40 text-[11px] font-semibold uppercase tracking-widest">Assessment Score</p>
+                  <p className="text-white/40 text-[11px] font-semibold uppercase tracking-widest">Interview Score</p>
                   <span className="text-white font-bold text-sm">{iv.assessmentScore}/100</span>
                 </div>
                 <MiniBar pct={iv.assessmentScore} color="#818cf8" />
               </div>
 
-              
-
-              <button className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-semibold border border-white/8 text-white/50 hover:bg-white/5 hover:text-white transition">
-                <Eye size={13} /> Show All Candidates
-              </button>
+            
             </div>
           )}
         </div>

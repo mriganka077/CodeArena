@@ -118,7 +118,9 @@ const InstructionsModal = ({ isOpen, onClose, onConfirm, drive }) => {
                 onClick={() => onConfirm(drive)}
                 className="flex-1 py-4 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-black uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-indigo-500/20"
               >
-                I Understand, Start Interview
+                {drive?.driveType === "Interview"
+                  ? "I Understand, Start Interview"
+                  : "I Understand, Start Assessment"}
               </button>
               <button
                 onClick={onClose}
@@ -419,7 +421,7 @@ const DrivePreview = () => {
   
       return {
         state: "upcoming",
-        text: "Start Drive",
+        text: "Start Assessment",
       };
     }
   
@@ -436,7 +438,7 @@ const DrivePreview = () => {
   
       return {
         state: "active",
-        text: "Start Drive",
+        text: "Start Assessment",
       };
     }
   
@@ -457,19 +459,45 @@ const DrivePreview = () => {
 
   const handleAction = (statusInfo, drive) => {
     if (statusInfo.state === "upcoming") {
+
+      const isInterview =
+        drive.driveType === "Interview";
+    
       openInfoModal(
-        "Interview Not Started",
-        `This interview will be enabled at ${new Date(
+    
+        isInterview
+          ? "Interview Not Started"
+          : "Assessment Not Started",
+    
+        `${
+          isInterview
+            ? "This interview"
+            : "This assessment"
+        } will be enabled at ${new Date(
           drive.assessmentStartDate ||
           drive.startDate
         ).toLocaleString()}. Please return at the scheduled time.`
+    
       );
     } else if (statusInfo.state === "active") {
       setInstructionsModal({ isOpen: true, drive });
     } else if (statusInfo.state === "missed") {
+
+      const isInterview =
+        drive.driveType === "Interview";
+    
       openInfoModal(
-        "Not Attempted",
-        "You have not attempted this interview. The scheduled time window has passed."
+    
+        isInterview
+          ? "Interview Not Attempted"
+          : "Assessment Not Attempted",
+    
+        `${
+          isInterview
+            ? "You did not attempt this interview."
+            : "You did not attempt this assessment."
+        } The scheduled time window has passed.`
+    
       );
     } else if (statusInfo.state === "completed") {
       openInfoModal(

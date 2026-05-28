@@ -5,7 +5,7 @@ import Assessment from "./pages/InterView/Assessment.jsx";
 
 import PracticeSet from "./pages/Prcaticeset/PracticeSet.jsx";
 import DomainSelectorPage from "./pages/Prcaticeset/DomainSelectorPage";
-import FeedbackPanel from "./pages/LoginProfile/FeedbackPanel.jsx";
+import MockInterviewFeedback from "./pages/LoginProfile/MockInterviewFeedback.jsx";
 import ProfileDashboard from "./pages/LoginProfile/ProfileDashboard";
 import AuthPage from "./pages/LoginProfile/AuthPage";
 import ForgotPassword from "./pages/LoginProfile/ForgotPassword";
@@ -56,7 +56,7 @@ function App() {
       {/* <Route path="/dash" element={<Dash />} /> */}
       <Route path="/login" element={<AuthPage />} />
       <Route path="/forgot" element={<ForgotPassword />} />
-      <Route path="/feedback" element={<FeedbackPanel />} />
+      <Route path="/interviewfeedback" element={<MockInterviewFeedback />} />
 
       <Route path="/admin" element={<AdminDashboard />} />
       <Route

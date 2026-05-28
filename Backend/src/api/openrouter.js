@@ -11,15 +11,24 @@ dotenv.config();
 // GEMINI CLIENT
 // ========================================
 
-const gemini = axios.create({
+const openrouter = axios.create({
 
   baseURL:
-    "https://generativelanguage.googleapis.com/v1beta",
+    "https://openrouter.ai/api/v1",
 
   headers: {
 
+    Authorization:
+      `Bearer ${process.env.OPENROUTER_API_KEY}`,
+
     "Content-Type":
       "application/json",
+
+    "HTTP-Referer":
+      "http://localhost:5173",
+
+    "X-Title":
+      "CodeArena",
 
   },
 
@@ -265,31 +274,27 @@ const validateQuestions = (
 
   if (type === "CODING") {
 
-    const hasRunnableCode = (
-      q
-    ) => {
+    const hasRunnableCode = (q) => {
 
       const code =
         q.solutionCode || "";
-
+    
       return (
-
+    
         code.includes("main") ||
-
-        code.includes(
-          "def solve"
-        ) ||
-
-        code.includes(
-          "console.log"
-        ) ||
-
-        code.includes(
-          "process.stdin"
-        )
-
+    
+        code.includes("def solve") ||
+    
+        code.includes("process.stdin") ||
+    
+        code.includes("require(\"fs\")") ||
+    
+        code.includes("System.out") ||
+    
+        code.includes("#include")
+    
       );
-
+    
     };
 
     return questions.filter(
@@ -429,6 +434,10 @@ STRICT RULES:
 - expectedOutput MUST exactly match actual output
 - Keep questions SHORT
 - Keep solutionCode concise
+- NEVER print prompts like "Enter input"
+- NEVER print labels like "Answer:"
+- Output must contain ONLY the final answer
+- Use competitive programming style input/output
 - Keep starterCode minimal
 - Avoid long explanations
 - Avoid linked list/tree/graph struct problems
@@ -532,31 +541,36 @@ const generateBatch = async (
     prompt,
     type,
   },
-  retries = 1
+  retries = 3
 ) => {
 
-  for (
-    let attempt = 0;
-    attempt <= retries;
-    attempt++
-  ) {
+  const MODELS = [
+
+    "deepseek/deepseek-chat:free",
+
+    "openai/gpt-oss-20b:free",
+
+    "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free"
+
+  ];
+
+  for (const model of MODELS) {
 
     try {
 
       const response =
-        await gemini.post(
-          `/models/gemini-2.5-flash-lite:generateContent?key=${process.env.GEMINI_API_KEY}`,
+        await openrouter.post(
+          "/chat/completions",
           {
 
-            contents: [
+            model,
+
+            messages: [
 
               {
-                role: "user",
+                role: "system",
 
-                parts: [
-
-                  {
-                    text:
+                content:
 `
 You are a JSON API.
 
@@ -576,40 +590,32 @@ IMPORTANT:
 - Output must end with ]
 - No trailing commas
 - No code fences
-
-${prompt}
 `
-                  }
+              },
 
-                ]
-
-              }
+              {
+                role: "user",
+                content: prompt,
+              },
 
             ],
 
-            generationConfig: {
+            temperature: 0,
 
-              temperature: 0,
+            top_p: 0.1,
 
-              topP: 0.1,
-
-              maxOutputTokens: 1600,
-
-              responseMimeType:
-                "application/json",
-
-            },
+            max_tokens: 4000,
 
           }
         );
 
       let raw =
-        response.data?.candidates?.[0]
-          ?.content?.parts?.[0]
-          ?.text || "[]";
+        response.data?.choices?.[0]
+          ?.message?.content || "[]";
 
-      console.log("RAW RESPONSE:");
-      console.log(raw);
+      console.log(
+        `SUCCESS MODEL: ${model}`
+      );
 
       raw = raw
         .replace(/```json/g, "")
@@ -639,70 +645,33 @@ ${prompt}
           end + 1
         );
 
+      raw = raw.replace(
+        /,\s*}/g,
+        "}"
+      );
+
+      raw = raw.replace(
+        /,\s*]/g,
+        "]"
+      );
+
       const parsed =
         JSON.parse(raw);
 
-      const validated =
-        validateQuestions(
-          parsed,
-          type
-        );
-
-      return validated;
-
-    } catch (error) {
-
-      console.log(
-        `Batch attempt ${
-          attempt + 1
-        } failed`
+      return validateQuestions(
+        parsed,
+        type
       );
 
-      const errorData =
-  error.response?.data;
+    } catch (err) {
 
-console.log(
-  errorData || error.message
-);
+      console.log(
+        `MODEL FAILED: ${model}`
+      );
 
-if (
-  errorData?.error?.code === 429
-) {
-
-  const retryText =
-    errorData.error.message;
-
-  const match =
-    retryText.match(
-      /retry in ([\d.]+)s/i
-    );
-
-  const waitSeconds =
-    match
-      ? parseFloat(match[1])
-      : 40;
-
-  console.log(
-    `Waiting ${waitSeconds}s due to quota...`
-  );
-
-  await new Promise(
-    (resolve) =>
-      setTimeout(
-        resolve,
-        waitSeconds * 1000
-      )
-  );
-
-}
-
-      if (attempt === retries) {
-        return [];
-      }
-
-      await new Promise(
-        (resolve) =>
-          setTimeout(resolve, 1000)
+      console.log(
+        err.response?.data ||
+        err.message
       );
 
     }
@@ -722,7 +691,7 @@ export const generateQuestions =
     domain,
     difficulty = "Medium",
     type = "MCQ",
-    count = 5,
+    count = 1,
     aiPrompt = "",
   }) => {
 
@@ -797,6 +766,23 @@ export const generateQuestions =
           verifiedQuestions
         );
 
+        if (!questions.length) {
+
+          return [
+            {
+              question:
+                "Fallback Question",
+              options: [
+                "A",
+                "B",
+                "C",
+                "D"
+              ],
+              answer: "A"
+            }
+          ];
+        
+        }
       return uniqueQuestions.slice(
         0,
         finalCount

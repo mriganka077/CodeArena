@@ -1203,6 +1203,14 @@
                     <h2 className="text-2xl font-semibold leading-relaxed">
                       {questions[currentQ]?.question}
                     </h2>
+
+                    {questions[currentQ]?.code && (
+                      <pre className="bg-black/30 border border-white/10 rounded-2xl p-4 overflow-x-auto text-sm font-mono text-indigo-200 whitespace-pre-wrap">
+                        <code>
+                          {questions[currentQ].code}
+                        </code>
+                      </pre>
+                    )}
                     <div className="space-y-3 mt-8">
                       {questions[currentQ]?.options.map((opt, idx) => (
                         <label

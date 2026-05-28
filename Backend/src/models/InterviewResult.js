@@ -22,7 +22,11 @@ const interviewResultSchema = new mongoose.Schema({
 
   status: {
     type: String,
-    enum: ["Completed", "Terminated"],
+    enum: [
+      "started",
+      "completed",
+      "abandoned",
+    ],
     required: true,
   },
 
