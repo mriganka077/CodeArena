@@ -11,6 +11,7 @@ import AuthPage from "./pages/LoginProfile/AuthPage";
 import ForgotPassword from "./pages/LoginProfile/ForgotPassword";
 import "./App.css";
 import SignUp from "./pages/SignUp/SignUp";
+import NotFound from "./pages/NotFound";
 
 
 
@@ -110,6 +111,7 @@ function App() {
           </ProtectedRoute>
         }
       />
+      <Route path="*" element={<NotFound />} />
 
 
       {/* Default redirect */}

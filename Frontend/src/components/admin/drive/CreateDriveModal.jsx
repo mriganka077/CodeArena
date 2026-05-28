@@ -22,31 +22,92 @@ import {
 } from "lucide-react";
 
 import { CalendarDays } from "lucide-react";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 const DARK_INPUT_STYLE = `
-  .dark-input, .dark-select {
-    color-scheme: dark;
-  }
+.react-datepicker {
+  background: #0b0818 !important;
+  border: 1px solid rgba(99,102,241,0.2) !important;
+  border-radius: 16px !important;
+  overflow: hidden;
+}
 
-  .dark-select option {
-    background: #0f0d1f;
-    color: rgba(255,255,255,0.8);
-  }
+.react-datepicker__header {
+  background: #151028 !important;
+  border-bottom: 1px solid rgba(255,255,255,0.06) !important;
+}
 
-  .dark-input {
-    background: rgba(8, 6, 18, 0.85);
-    color: rgba(255,255,255,0.85);
-    color-scheme: dark;
-  }
+.react-datepicker__current-month,
+.react-datepicker-time__header,
+.react-datepicker-year-header {
+  color: white !important;
+}
 
-  .dark-input[type="datetime-local"]::-webkit-calendar-picker-indicator {
-    opacity: 0;
-    position: absolute;
-    right: 0;
-    width: 100%;
-    height: 100%;
-    cursor: pointer;
-  }
+.react-datepicker__day,
+.react-datepicker__time-name {
+  color: rgba(255,255,255,0.8) !important;
+}
+
+.react-datepicker__day--disabled,
+.react-datepicker__time-list-item--disabled {
+  opacity: 0.2 !important;
+  cursor: not-allowed !important;
+}
+
+.react-datepicker__time-container {
+  border-left: 1px solid rgba(255,255,255,0.06) !important;
+}
+
+.react-datepicker__time-box {
+  background: #0b0818 !important;
+}
+
+.react-datepicker__time-list-item {
+  color: rgba(255,255,255,0.8) !important;
+}
+.react-datepicker__time-list-item {
+  color: rgba(255,255,255,0.82) !important;
+  background: transparent !important;
+  transition: all 0.2s ease;
+}
+
+.react-datepicker__time-list-item:hover {
+  background: rgba(139,92,246,0.18) !important;
+  color: white !important;
+}
+
+.react-datepicker__time-list-item--selected {
+  background: #8b5cf6 !important;
+  color: white !important;
+  font-weight: 600 !important;
+}
+
+.react-datepicker__day--selected {
+  background: #8b5cf6 !important;
+  color: white !important;
+}
+
+.react-datepicker__triangle {
+  display: none !important;
+}
+
+.react-datepicker__day:hover {
+  background: rgba(139,92,246,0.18) !important;
+}
+
+.react-datepicker__day--keyboard-selected {
+  background: rgba(139,92,246,0.35) !important;
+  color: white !important;
+}
+  .react-datepicker-popper {
+  z-index: 99999 !important;
+}
+
+.react-datepicker {
+  z-index: 99999 !important;
+}
+  
 `;
 
 const EMPTY = {
@@ -144,32 +205,161 @@ const TInput = ({
 const SInput = ({
     value,
     onChange,
-    children,
+    options = [],
     error
-}) => (
-    <div className="relative">
-        <select
-            value={value}
-            onChange={onChange}
-            className={`dark-select w-full appearance-none px-3 py-2.5 pr-8 rounded-xl text-xs outline-none cursor-pointer transition ${error
-                    ? "border border-rose-500/50"
-                    : "border border-white/8 focus:border-indigo-500/50"
-                }`}
-            style={{
-                background: "rgba(8,6,18,0.85)",
-                color: "rgba(255,255,255,0.75)",
-                colorScheme: "dark"
-            }}
-        >
-            {children}
-        </select>
+}) => {
 
-        <ChevronDown
-            size={12}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 pointer-events-none"
-        />
-    </div>
-);
+    const [open, setOpen] =
+        React.useState(false);
+
+    const dropdownRef =
+        React.useRef(null);
+
+    React.useEffect(() => {
+
+        const handleClickOutside = (
+            event
+        ) => {
+
+            if (
+                dropdownRef.current &&
+                !dropdownRef.current.contains(
+                    event.target
+                )
+            ) {
+                setOpen(false);
+            }
+        };
+
+        document.addEventListener(
+            "mousedown",
+            handleClickOutside
+        );
+
+        return () => {
+
+            document.removeEventListener(
+                "mousedown",
+                handleClickOutside
+            );
+        };
+
+    }, []);
+
+    return (
+
+        <div
+            ref={dropdownRef}
+            className="relative z-[1]"
+        >
+
+            <button
+                type="button"
+                onClick={() =>
+                    setOpen(!open)
+                }
+                className={`w-full px-3 py-2.5 rounded-xl text-xs text-left outline-none transition flex items-center justify-between
+                ${
+                    error
+                        ? "border border-rose-500/50"
+                        : "border border-white/8 hover:border-indigo-500/40"
+                }`}
+                style={{
+                    background:
+                        "rgba(8,6,18,0.85)",
+                    color:
+                        "rgba(255,255,255,0.78)"
+                }}
+            >
+
+                <span>{value}</span>
+
+                <ChevronDown
+                    size={13}
+                    className={`text-white/30 transition duration-200 ${
+                        open
+                            ? "rotate-180"
+                            : ""
+                    }`}
+                />
+
+            </button>
+
+            <AnimatePresence>
+
+                {open && (
+
+                    <motion.div
+                    
+                        initial={{
+                            opacity: 0,
+                            y: -8,
+                            scale: 0.98
+                        }}
+                        animate={{
+                            opacity: 1,
+                            y: 0,
+                            scale: 1
+                        }}
+                        exit={{
+                            opacity: 0,
+                            y: -8,
+                            scale: 0.98
+                        }}
+                        transition={{
+                            duration: 0.18
+                        }}
+                        className="absolute left-0 top-[calc(100%+8px)] z-[50] w-full rounded-2xl border border-indigo-500/20"
+                        style={{
+                            background:
+                                "rgba(11,8,24,0.98)",
+                            backdropFilter:
+                                "blur(18px)",
+                            boxShadow:
+                                "0 20px 50px rgba(0,0,0,0.45)",
+                            position: "absolute",
+                            background: "rgba(11,8,24,0.98)",
+                            backdropFilter: "blur(18px)",
+                            boxShadow: "0 20px 50px rgba(0,0,0,0.45)"
+                              
+                        }}
+                    >
+
+                        {options.map((item) => (
+
+                            <button
+                                key={item}
+                                type="button"
+                                onClick={() => {
+
+                                    onChange({
+                                        target: {
+                                            value: item
+                                        }
+                                    });
+
+                                    setOpen(false);
+                                }}
+                                className={`w-full px-3 py-3 text-left text-xs transition
+                                ${
+                                    value === item
+                                        ? "bg-violet-500/20 text-violet-300"
+                                        : "text-white/75 hover:bg-white/5"
+                                }`}
+                            >
+                                {item}
+                            </button>
+
+                        ))}
+
+                    </motion.div>
+                )}
+
+            </AnimatePresence>
+
+        </div>
+    );
+};
 
 const CreateDriveModal = ({
     onClose,
@@ -236,6 +426,22 @@ const CreateDriveModal = ({
     const [errors, setErrors] = useState({});
     const [step, setStep] = useState(1);
     const [saving, setSaving] = useState(false);
+    const getLocalDateTime = () => {
+
+        const now = new Date();
+    
+        now.setMinutes(
+            now.getMinutes() -
+            now.getTimezoneOffset()
+        );
+    
+        return now
+            .toISOString()
+            .slice(0, 16);
+    };
+    
+    const todayDateTime =
+        getLocalDateTime();
     const [done, setDone] = useState(false);
     const [generating, setGenerating] = useState(false);
 
@@ -363,42 +569,39 @@ const CreateDriveModal = ({
                 driveId: Math.floor(
                     100000 + Math.random() * 900000
                 ).toString(),
-
+            
                 hiringPositionName: form.title,
-
+            
                 assessmentStartDate:
                     form.assessmentStartDate,
-
+            
                 assessmentEndDate:
                     form.assessmentEndDateend,
-
-                driveEndDate:
-                    form.assessmentEndDateend,
-
+            
                 driveType: form.type,
-
+            
                 difficulty: form.difficulty,
-
+            
                 timeDurationInMin: Number(form.duration),
-
+            
                 mcqCount: Number(form.mcqCount || 0),
-
+            
                 codeCount:
                     form.type === "Assessment"
                         ? Number(form.codeCount || 0)
                         : 0,
-
+            
                 mcqMarks: Number(form.marksPerMcq || 0),
-
+            
                 codeMarks:
                     form.type === "Assessment"
                         ? Number(form.marksPerCode || 0)
                         : 0,
-
+            
                 totalMarks:
                     (Number(form.mcqCount || 0) *
                         Number(form.marksPerMcq || 0)) +
-
+            
                     (Number(form.codeCount || 0) *
                         Number(form.marksPerCode || 0)),
             };
@@ -574,8 +777,15 @@ const CreateDriveModal = ({
                 </div>
 
                 {/* scrollable body */}
-                <div className="px-6 pb-2 overflow-y-auto max-h-[480px]"
-                    style={{ scrollbarWidth: "thin", scrollbarColor: "rgba(99,102,241,0.2) transparent" }}>
+                <div
+                    className="px-6 pb-2 overflow-x-visible overflow-y-auto max-h-[480px]"
+                    style={{
+                        scrollbarWidth: "thin",
+                        scrollbarColor:
+                            "rgba(99,102,241,0.2) transparent",
+                        overflow: "visible auto"
+                    }}
+                >
                     <AnimatePresence mode="wait">
 
                         {/* STEP 1 */}
@@ -595,40 +805,167 @@ const CreateDriveModal = ({
                                             placeholder="e.g. Engineering" error={errors.tag} />
                                     </Field>
                                     <Field label="Drive Type" icon={FileText}>
-                                        <SInput value={form.type} onChange={set("type")}>
-                                            <option>Aptitude</option>
-                                            <option>Assessment</option>
-                                        </SInput>
+                                        <SInput
+                                            value={form.type}
+                                            onChange={set("type")}
+                                            options={[
+                                                "Aptitude",
+                                                "Assessment"
+                                            ]}
+                                        />
                                     </Field>
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-3">
                                     <Field label="Start Date" icon={Calendar} error={errors.assessmentStartDate}>
-                                        <TInput
-                                            type="datetime-local"
-                                            value={form.assessmentStartDate}
-                                            onChange={set("assessmentStartDate")}
-                                            error={errors.assessmentStartDate}
+                                        <DatePicker
+                                            selected={
+                                                form.assessmentStartDate
+                                                    ? new Date(
+                                                        form.assessmentStartDate
+                                                    )
+                                                    : null
+                                            }
+
+                                            onChange={(date) => {
+
+                                                if (!date) return;
+
+                                                setForm((f) => ({
+
+                                                    ...f,
+
+                                                    assessmentStartDate:
+                                                        date.toISOString(),
+
+                                                    assessmentEndDateend:
+                                                        f.assessmentEndDateend &&
+                                                            new Date(
+                                                                f.assessmentEndDateend
+                                                            ) < date
+                                                            ? ""
+                                                            : f.assessmentEndDateend,
+                                                }));
+                                            }}
+
+                                            showTimeSelect
+
+                                            timeIntervals={5}
+
+                                            dateFormat="dd-MM-yyyy hh:mm aa"
+
+                                            minDate={new Date()}
+
+                                            minTime={
+                                                new Date().toDateString() ===
+                                                    new Date().toDateString()
+                                                    ? new Date()
+                                                    : new Date(
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0
+                                                    )
+                                            }
+
+                                            maxTime={
+                                                new Date(
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    23,
+                                                    59
+                                                )
+                                            }
+
+                                            className="dark-input w-full pl-3 pr-10 py-2.5 rounded-xl text-xs text-white/80 border border-white/8 outline-none"
+
+                                            placeholderText="Select start date"
                                         />
                                     </Field>
 
                                     <Field label="End Date" icon={Calendar} error={errors.assessmentEndDateend}>
-                                        <TInput
-                                            type="datetime-local"
-                                            value={form.assessmentEndDateend}
-                                            onChange={set("assessmentEndDateend")}
-                                            error={errors.assessmentEndDateend}
+                                        <DatePicker
+                                            selected={
+                                                form.assessmentEndDateend
+                                                    ? new Date(
+                                                        form.assessmentEndDateend
+                                                    )
+                                                    : null
+                                            }
+
+                                            onChange={(date) => {
+
+                                                if (!date) return;
+
+                                                setForm((f) => ({
+                                                    ...f,
+                                                    assessmentEndDateend:
+                                                        date.toISOString(),
+                                                }));
+                                            }}
+
+                                            showTimeSelect
+
+                                            timeIntervals={5}
+
+                                            dateFormat="dd-MM-yyyy hh:mm aa"
+
+                                            minDate={
+                                                form.assessmentStartDate
+                                                    ? new Date(
+                                                        form.assessmentStartDate
+                                                    )
+                                                    : new Date()
+                                            }
+
+                                            minTime={
+                                                form.assessmentStartDate &&
+                                                    new Date(
+                                                        form.assessmentStartDate
+                                                    ).toDateString() ===
+                                                    new Date().toDateString()
+                                                    ? new Date(
+                                                        form.assessmentStartDate
+                                                    )
+                                                    : new Date(
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0
+                                                    )
+                                            }
+
+                                            maxTime={
+                                                new Date(
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    23,
+                                                    59
+                                                )
+                                            }
+
+                                            className="dark-input w-full pl-3 pr-10 py-2.5 rounded-xl text-xs text-white/80 border border-white/8 outline-none"
+
+                                            placeholderText="Select end date"
                                         />
                                     </Field>
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-3">
                                     <Field label="Difficulty" icon={Gauge}>
-                                        <SInput value={form.difficulty} onChange={set("difficulty")}>
-                                            <option>Beginner</option>
-                                            <option>Intermediate</option>
-                                            <option>Advanced</option>
-                                        </SInput>
+                                        <SInput
+                                            value={form.difficulty}
+                                            onChange={set("difficulty")}
+                                            options={[
+                                                "Beginner",
+                                                "Intermediate",
+                                                "Advanced"
+                                            ]}
+                                        />
                                     </Field>
                                     <Field label="Duration (min)" icon={Timer} error={errors.duration}>
                                         <TInput type="number" value={form.duration} onChange={set("duration")}

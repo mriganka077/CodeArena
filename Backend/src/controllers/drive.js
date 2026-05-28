@@ -102,7 +102,16 @@ export const getAllDrives = async (req, res) => {
                     hiringPositionName: drive.hiringPositionName,
 
                     assignedCandidates:
-                        drive.assignedCandidates || [],
+                        drive.assignedCandidates.filter((candidate) => {
+
+                            const result = results.find(
+                                (r) =>
+                                    r.userId?.toString() ===
+                                    candidate._id.toString()
+                            );
+
+                            return result?.isPass === true;
+                        }) || [],
 
                     tag: drive.driveType,
 
@@ -852,9 +861,23 @@ export const getAllAdminInterviews = async (
 
                         rank: 0,
 
-                        recommendation: null,
+                        recommendation:
+                            interviewResult?.recommendation || "No Hire",
 
-                        notes: "",
+                        feedback:
+                            interviewResult?.feedback || "",
+
+                        technicalKnowledge:
+                            interviewResult?.technicalKnowledge || 0,
+
+                        communication:
+                            interviewResult?.communication || 0,
+
+                        problemSolving:
+                            interviewResult?.problemSolving || 0,
+
+                        confidence:
+                            interviewResult?.confidence || 0,
                     };
                 })
             );

@@ -6,7 +6,8 @@ import {
     Download, ChevronDown, SlidersHorizontal, Code2, Star, ArrowUpRight,
     Lock, Globe, Layers, Timer, Trophy, ClipboardList, FileText,
     Briefcase, AlignLeft, CheckSquare, Sparkles, Gauge, Wand2, Bot,
-    RefreshCw, ChevronLeft, Trash2, Check, AlertTriangle,
+    RefreshCw, ChevronLeft, Trash2, Check, AlertTriangle,   FolderOpen,
+    Video, Flag,
 } from "lucide-react";
 import axios from "axios";
 import { useEffect } from "react";
@@ -185,6 +186,7 @@ const EMPTY = {
 
 
 // ── Detail Drawer ──────────────────────────────────────────────────────────────
+
 const DriveDrawer = ({
     drive,
     drives,
@@ -413,7 +415,7 @@ const endDrive = async () => {
             <motion.aside key="dr"
                 initial={{ x:"100%" }} animate={{ x:0 }} exit={{ x:"100%" }}
                 transition={{ type:"spring", damping:28, stiffness:260 }}
-                className="fixed right-0 top-0 h-full w-full max-w-[440px] z-50 flex flex-col border-l border-white/8 overflow-y-auto"
+                className="fixed right-0 top-0 h-full w-full max-w-[440px] z-50 flex flex-col border-l border-white/8 overflow-visible"
                 style={{ background:"rgba(10,8,22,0.99)" }}
                 onClick={e => e.stopPropagation()}>
 
@@ -469,7 +471,7 @@ const endDrive = async () => {
                         </button>
                     </div>
                     <div className="flex gap-1 mt-4">
-                        {["overview","candidates","settings"].map(t => (
+                        {["overview","candidates", "timeline","settings"].map(t => (
                             <button key={t} onClick={() => setTab(t)}
                                 className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold capitalize transition border ${tab===t
                                     ? "bg-indigo-500/20 text-indigo-300 border-indigo-500/30"
@@ -480,7 +482,7 @@ const endDrive = async () => {
                     </div>
                 </div>
 
-                <div className="flex-1 px-6 py-5 space-y-5">
+                <div className="flex-1 px-6 py-5 space-y-5 overflow-y-auto overflow-x-visible">
                     {tab === "overview" && (<>
                         <div className="grid grid-cols-2 gap-2.5">
                             {[
@@ -806,7 +808,6 @@ const endDrive = async () => {
                                                         </div>
                                                     </div>
 
-                                                    {/* ── Assessment Stats Section ── */}
                                                     {/* ── Assessment Stats Section ── */}
                                                     {isCompleted && (
                                                         <div className="border-t border-white/[0.06]">
@@ -1253,6 +1254,664 @@ const endDrive = async () => {
                             </div>
                         )
                     }
+
+
+                    {tab === "timeline" && (() => {
+
+                        const PHASES = [
+                            {
+                                phase: "Setup",
+                                color: "#8b5cf6",
+                                steps: [
+                                    {
+                                        key: "created",
+                                        title: "Drive Created",
+                                        desc: "Drive configuration initialized",
+                                        time: drive.createdAt,
+                                        icon: FolderOpen,
+                                        color: "#8b5cf6",
+                                    },
+                                ],
+                            },
+                            {
+                                phase: "Assessment",
+                                color: "#3b82f6",
+                                steps: [
+                                    {
+                                        key: "assessmentStart",
+                                        title: "Assessment Started",
+                                        desc: "Candidates can now access the assessment",
+                                        time: drive.assessmentStartDate,
+                                        icon: ClipboardList,
+                                        color: "#3b82f6",
+                                    },
+                                    {
+                                        key: "assessmentEnd",
+                                        title: "Assessment Ended",
+                                        desc: "Submission window closed",
+                                        time: drive.assessmentEndDate,
+                                        icon: CheckCircle2,
+                                        color: "#10b981",
+                                    },
+                                ],
+                            },
+                            {
+                                phase: "Interview",
+                                color: "#ec4899",
+                                steps: [
+                                    {
+                                        key: "interviewStart",
+                                        title: "Interview Started",
+                                        desc: "Interview sessions are now live",
+                                        time: drive.interviewStartDate,
+                                        icon: Video,
+                                        color: "#ec4899",
+                                    },
+                                    {
+                                        key: "interviewEnd",
+                                        title: "Interview Completed",
+                                        desc: "Interview process completed",
+                                        time: drive.interviewEndDate,
+                                        icon: Trophy,
+                                        color: "#f59e0b",
+                                    },
+                                ],
+                            },
+                            {
+                                phase: "Closure",
+                                color: "#f43f5e",
+                                steps: [
+                                    {
+                                        key: "driveEnd",
+                                        title: "Drive Closed",
+                                        desc: "Recruitment drive officially ended",
+                                        time: drive.driveEndDate,
+                                        icon: Flag,
+                                        color: "#f43f5e",
+                                    },
+                                ],
+                            },
+                        ];
+
+                        const totalSteps = PHASES.flatMap((p) => p.steps).length;
+
+                        const completedSteps = PHASES.flatMap((p) => p.steps).filter(
+                            (s) => s.time
+                        ).length;
+
+                        const progress = Math.round(
+                            (completedSteps / totalSteps) * 100
+                        );
+
+                        return (
+                            <div className="space-y-5">
+
+                                {/* ───────────────── HEADER ───────────────── */}
+                                <div
+                                    className="
+                relative
+                overflow-hidden
+                rounded-3xl
+                border
+                border-white/[0.06]
+                p-5
+            "
+                                    style={{
+                                        background: `
+                    linear-gradient(
+                        135deg,
+                        rgba(99,102,241,0.14),
+                        rgba(139,92,246,0.05)
+                    )
+                `,
+                                        backdropFilter: "blur(20px)",
+                                    }}
+                                >
+
+                                    <div
+                                        className="absolute inset-0 pointer-events-none"
+                                        style={{
+                                            background: `
+                        radial-gradient(
+                            circle at top right,
+                            rgba(99,102,241,0.18),
+                            transparent 45%
+                        )
+                    `,
+                                        }}
+                                    />
+
+                                    <div className="relative flex items-center justify-between">
+
+                                        <div className="flex items-center gap-4">
+
+                                            <div
+                                                className="
+                            w-12
+                            h-12
+                            rounded-2xl
+                            flex
+                            items-center
+                            justify-center
+                            shrink-0
+                        "
+                                                style={{
+                                                    background:
+                                                        "rgba(99,102,241,0.12)",
+                                                    border:
+                                                        "1px solid rgba(99,102,241,0.18)",
+                                                }}
+                                            >
+                                                <Layers
+                                                    size={20}
+                                                    className="text-indigo-400"
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <p className="text-white font-bold text-[15px]">
+                                                    Recruitment Timeline
+                                                </p>
+
+                                                <p className="text-white/35 text-[11px] mt-1">
+                                                    {completedSteps} / {totalSteps} milestones completed
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        {/* Progress */}
+                                        <div className="relative w-14 h-14 shrink-0">
+
+                                            <svg
+                                                viewBox="0 0 44 44"
+                                                className="w-14 h-14 -rotate-90"
+                                            >
+                                                <circle
+                                                    cx="22"
+                                                    cy="22"
+                                                    r="18"
+                                                    fill="none"
+                                                    stroke="rgba(255,255,255,0.06)"
+                                                    strokeWidth="3"
+                                                />
+
+                                                <motion.circle
+                                                    cx="22"
+                                                    cy="22"
+                                                    r="18"
+                                                    fill="none"
+                                                    stroke="url(#grad)"
+                                                    strokeWidth="3"
+                                                    strokeLinecap="round"
+                                                    initial={{ strokeDasharray: "0 113" }}
+                                                    animate={{
+                                                        strokeDasharray: `${progress * 1.13} 113`,
+                                                    }}
+                                                    transition={{
+                                                        duration: 1,
+                                                        ease: "easeOut",
+                                                    }}
+                                                />
+
+                                                <defs>
+                                                    <linearGradient
+                                                        id="grad"
+                                                        x1="0%"
+                                                        y1="0%"
+                                                        x2="100%"
+                                                        y2="0%"
+                                                    >
+                                                        <stop offset="0%" stopColor="#6366f1" />
+                                                        <stop offset="100%" stopColor="#a78bfa" />
+                                                    </linearGradient>
+                                                </defs>
+                                            </svg>
+
+                                            <div
+                                                className="
+                            absolute
+                            inset-0
+                            flex
+                            items-center
+                            justify-center
+                            text-[11px]
+                            font-bold
+                            text-white
+                        "
+                                            >
+                                                {progress}%
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Progress Bar */}
+                                    <div
+                                        className="
+                    relative
+                    mt-4
+                    h-1.5
+                    rounded-full
+                    overflow-hidden
+                "
+                                        style={{
+                                            background:
+                                                "rgba(255,255,255,0.05)",
+                                        }}
+                                    >
+                                        <motion.div
+                                            initial={{ width: 0 }}
+                                            animate={{
+                                                width: `${progress}%`,
+                                            }}
+                                            transition={{
+                                                duration: 1,
+                                                ease: "easeOut",
+                                            }}
+                                            className="h-full rounded-full"
+                                            style={{
+                                                background:
+                                                    "linear-gradient(90deg,#6366f1,#8b5cf6)",
+                                            }}
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* ───────────────── TIMELINE ───────────────── */}
+                                <div className="relative isolate">
+
+                                    {/* Main Timeline Line */}
+                                    <div
+                                        className="absolute left-[11px] top-[50px] bottom-[38px] w-px"
+                                        style={{
+                                            background: `
+                                                linear-gradient(
+                                                    to bottom,
+                                                    rgba(139,92,246,0.45),
+                                                    rgba(255,255,255,0.04)
+                                                )
+                                            `,
+                                        }}
+                                    />
+
+                                    <div className="space-y-6">
+
+                                        {PHASES.map((phase, phaseIndex) => (
+
+                                            <div key={phase.phase} className="space-y-3">
+
+                                                {/* Phase Header */}
+                                                <div className="flex items-center gap-2 pl-7">
+
+                                                    <div
+                                                        className="w-1.5 h-1.5 rounded-full"
+                                                        style={{
+                                                            background: phase.color,
+                                                            boxShadow: `0 0 10px ${phase.color}`,
+                                                        }}
+                                                    />
+
+                                                    <p
+                                                        className="
+                                                            text-[9px]
+                                                            font-bold
+                                                            uppercase
+                                                            tracking-[0.22em]
+                                "
+                                                        style={{
+                                                            color: phase.color,
+                                                        }}
+                                                    >
+                                                        {phase.phase}
+                                                    </p>
+
+                                                    <div
+                                                        className="flex-1 h-px"
+                                                        style={{
+                                                            background: `
+                                                                linear-gradient(
+                                                                    90deg,
+                                                                    ${phase.color}55,
+                                                                    transparent
+                                                                )
+                                                            `,
+                                                        }}
+                                                    />
+                                                </div>
+
+                                                {/* Steps */}
+                                                <div className="space-y-3">
+
+                                                    {phase.steps.map((step, index) => {
+
+                                                        const done = !!step.time;
+                                                        const Icon = step.icon;
+
+                                                        return (
+                                                            <motion.div
+                                                                key={step.key}
+                                                                initial={{
+                                                                    opacity: 0,
+                                                                    y: 8,
+                                                                }}
+                                                                animate={{
+                                                                    opacity: 1,
+                                                                    y: 0,
+                                                                }}
+                                                                transition={{
+                                                                    delay:
+                                                                        phaseIndex * 0.05 +
+                                                                        index * 0.04,
+                                                                }}
+                                                                className="
+                                                                        relative
+                                                                        flex
+                                                                        gap-3
+                                                                    "
+                                                            >
+
+                                                                {/* Timeline Node */}
+                                                                <div className="relative w-6 shrink-0 flex justify-center">
+
+                                                                    <div
+                                                                        className="
+                                                                            relative
+                                                                            z-10
+                                                                            mt-5
+                                                                            w-3.5
+                                                                            h-3.5
+                                                                            rounded-full
+                                                                            border
+                                                                            flex
+                                                                            items-center
+                                                                            justify-center
+                                                                        "
+                                                                        style={{
+                                                                            background: done
+                                                                                ? `${step.color}22`
+                                                                                : "rgba(255,255,255,0.03)",
+
+                                                                            borderColor: done
+                                                                                ? `${step.color}60`
+                                                                                : "rgba(255,255,255,0.08)",
+
+                                                                            boxShadow: done
+                                                                                ? `0 0 16px ${step.color}35`
+                                                                                : "none",
+                                                                        }}
+                                                                    >
+                                                                        <div
+                                                                            className="w-1.5 h-1.5 rounded-full"
+                                                                            style={{
+                                                                                background: done
+                                                                                    ? step.color
+                                                                                    : "rgba(255,255,255,0.18)",
+                                                                            }}
+                                                                        />
+                                                                    </div>
+                                                                </div>
+
+                                                                {/* Card */}
+                                                                <motion.div
+                                                                    whileHover={{
+                                                                        y: -2,
+                                                                    }}
+                                                                    className="
+                                                                        flex-1
+                                                                        rounded-2xl
+                                                                        border
+                                                                        overflow-hidden
+                                                                        transition-all
+                                                                        duration-300
+                                                                    "
+                                                                        style={{
+                                                                        background: done
+                                                                            ? `
+                                                                            linear-gradient(
+                                                                                135deg,
+                                                                                ${step.color}10,
+                                                                                rgba(255,255,255,0.02)
+                                                                            )
+                                                                        `
+                                                                                                : `
+                                                                            linear-gradient(
+                                                                                135deg,
+                                                                                rgba(255,255,255,0.025),
+                                                                                rgba(255,255,255,0.015)
+                                                                            )
+                                                                        `,
+
+                                                                        borderColor: done
+                                                                            ? `${step.color}22`
+                                                                            : "rgba(255,255,255,0.05)",
+
+                                                                        backdropFilter: "blur(18px)",
+                                                                    }}
+                                                                >
+
+                                                                    <div className="px-4 py-3.5">
+
+                                                                        <div className="flex items-start gap-3">
+
+                                                                            {/* Icon */}
+                                                                            <div
+                                                                                className="
+                                                                                    w-10
+                                                                                    h-10
+                                                                                    rounded-xl
+                                                                                    flex
+                                                                                    items-center
+                                                                                    justify-center
+                                                                                    shrink-0
+                                                                                "
+                                                                                style={{
+                                                                                    background: done
+                                                                                        ? `${step.color}15`
+                                                                                        : "rgba(255,255,255,0.03)",
+
+                                                                                    border: `1px solid ${done
+                                                                                            ? `${step.color}25`
+                                                                                            : "rgba(255,255,255,0.06)"
+                                                                                        }`,
+                                                                                }}
+                                                                            >
+                                                                                <Icon
+                                                                                    size={15}
+                                                                                    style={{
+                                                                                        color: done
+                                                                                            ? step.color
+                                                                                            : "rgba(255,255,255,0.22)",
+                                                                                    }}
+                                                                                />
+                                                                            </div>
+
+                                                                            {/* Content */}
+                                                                            <div className="flex-1 min-w-0">
+
+                                                                                <div className="flex items-start justify-between gap-3">
+
+                                                                                    <div className="min-w-0">
+
+                                                                                        <div className="flex items-center gap-2 flex-wrap">
+
+                                                                                            <p
+                                                                                                className="
+                                                                                                    text-[13px]
+                                                                                                    font-semibold
+                                                                                                "
+                                                                                                style={{
+                                                                                                    color: done
+                                                                                                        ? "rgba(255,255,255,0.92)"
+                                                                                                        : "rgba(255,255,255,0.28)",
+                                                                                                }}
+                                                                                            >
+                                                                                                {step.title}
+                                                                                            </p>
+
+                                                                                            <span
+                                                                                                className="
+                                                                                                    px-2
+                                                                                                    py-0.5
+                                                                                                    rounded-md
+                                                                                                    text-[9px]
+                                                                                                    font-bold
+                                                                                                    border
+                                                                                                "
+                                                                                                style={{
+                                                                                                    background: done
+                                                                                                        ? `${step.color}15`
+                                                                                                        : "rgba(255,255,255,0.03)",
+
+                                                                                                    borderColor: done
+                                                                                                        ? `${step.color}25`
+                                                                                                        : "rgba(255,255,255,0.06)",
+
+                                                                                                    color: done
+                                                                                                        ? step.color
+                                                                                                        : "rgba(255,255,255,0.28)",
+                                                                                                }}
+                                                                                            >
+                                                                                                {done ? "Completed" : "Pending"}
+                                                                                            </span>
+                                                                                        </div>
+
+                                                                                        <p
+                                                                                            className="
+                                                                                                text-[11px]
+                                                                                                mt-1
+                                                                                                leading-relaxed
+                                                                                            "
+                                                                                            style={{
+                                                                                                color: done
+                                                                                                    ? "rgba(255,255,255,0.36)"
+                                                                                                    : "rgba(255,255,255,0.18)",
+                                                                                            }}
+                                                                                        >
+                                                                                            {step.desc}
+                                                                                        </p>
+                                                                                    </div>
+
+                                                                                    {/* Time */}
+                                                                                    <div className="text-right shrink-0">
+
+                                                                                        {done ? (
+                                                                                            <>
+                                                                                                <p
+                                                                                                    className="
+                                                                                                        text-[11px]
+                                                                                                        font-bold
+                                                                                                    "
+                                                                                                    style={{
+                                                                                                        color: step.color,
+                                                                                                    }}
+                                                                                                >
+                                                                                                    {new Date(
+                                                                                                        step.time
+                                                                                                    ).toLocaleDateString(
+                                                                                                        "en-US",
+                                                                                                        {
+                                                                                                            month: "short",
+                                                                                                            day: "numeric",
+                                                                                                        }
+                                                                                                    )}
+                                                                                                </p>
+
+                                                                                                <p className="text-[9px] text-white/25 mt-1">
+                                                                                                    {new Date(
+                                                                                                        step.time
+                                                                                                    ).toLocaleTimeString(
+                                                                                                        "en-US",
+                                                                                                        {
+                                                                                                            hour: "numeric",
+                                                                                                            minute: "2-digit",
+                                                                                                            hour12: true,
+                                                                                                        }
+                                                                                                    )}
+                                                                                                </p>
+                                                                                            </>
+                                                                                        ) : (
+                                                                                            <div
+                                                                                                className="
+                                                                                                    px-2.5
+                                                                                                    py-1
+                                                                                                    rounded-lg
+                                                                                                    border
+                                                                                                    text-[9px]
+                                                                                                    font-semibold
+                                                                                                "
+                                                                                                style={{
+                                                                                                    background:
+                                                                                                        "rgba(255,255,255,0.025)",
+
+                                                                                                    borderColor:
+                                                                                                        "rgba(255,255,255,0.06)",
+
+                                                                                                    color:
+                                                                                                        "rgba(255,255,255,0.28)",
+                                                                                                }}
+                                                                                            >
+                                                                                                Pending
+                                                                                            </div>
+                                                                                        )}
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    {/* Bottom Accent */}
+                                                                    {done && (
+                                                                        <div
+                                                                            className="h-[2px]"
+                                                                            style={{
+                                                                                background: `
+                                                                                    linear-gradient(
+                                                                                        90deg,
+                                                                                        ${step.color},
+                                                                                        transparent
+                                                                                    )
+                                                                                `,
+                                                                            }}
+                                                                        />
+                                                                    )}
+                                                                </motion.div>
+                                                            </motion.div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Footer */}
+                                <div
+                                    className="
+                                        flex
+                                        items-center
+                                        gap-3
+                                        rounded-2xl
+                                        border
+                                        border-white/[0.05]
+                                        px-4
+                                        py-3
+                                    "
+                                    style={{
+                                        background:
+                                            "rgba(255,255,255,0.025)",
+                                    }}
+                                >
+                                    <AlertCircle
+                                        size={14}
+                                        className="text-indigo-400/70 shrink-0"
+                                    />
+
+                                    <p className="text-white/30 text-[11px] leading-relaxed">
+                                        Timeline updates automatically as the recruitment drive progresses.
+                                    </p>
+                                </div>
+                            </div>
+                        );
+                    })()}
 
                     {tab === "settings" && (
                         <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
@@ -1862,7 +2521,7 @@ const AdminDrive = () => {
                         ))}
                     </div>
                     <div className="relative">
-                        <select value={sortBy} onChange={e=>setSortBy(e.target.value)}
+                    <select value={sortBy} onChange={e=>setSortBy(e.target.value)}
                             className="appearance-none pl-8 pr-8 py-2.5 rounded-xl text-xs text-white/60 border border-white/6 outline-none cursor-pointer"
                             style={{ background:"rgba(255,255,255,0.04)", colorScheme:"dark" }}>
                             <option value="date">Sort: Date</option>

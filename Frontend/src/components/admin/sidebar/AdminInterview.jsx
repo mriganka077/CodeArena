@@ -314,7 +314,7 @@ const InterviewDrawer = ({ interview: iv, onClose }) => {
 
           {/* tabs */}
           <div className="flex gap-1 mt-4">
-            {["details", "difficulty", "email", "feedback", "candidate"].map((t) => (
+            {["details", "difficulty", "email", "transcript"].map((t) => (
               <button key={t} onClick={() => setTab(t)}
                 className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold capitalize transition border ${tab === t
                   ? "bg-indigo-500/20 text-indigo-300 border-indigo-500/30"
@@ -328,111 +328,681 @@ const InterviewDrawer = ({ interview: iv, onClose }) => {
         <div className="flex-1 px-6 py-5 space-y-5">
 
           {/* ── DETAILS TAB ── */}
-          {tab === "details" && (<>
+          {tab === "details" && (() => {
 
-            {/* if in progress — live banner */}
-            {iv.status === "In Progress" && (
-              <motion.div initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }}
-                className="rounded-xl p-3.5 flex items-center gap-3 border border-amber-500/25"
-                style={{ background: "rgba(251,191,36,0.06)" }}>
-                <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse shrink-0" />
-                <div className="flex-1">
-                  <p className="text-amber-300 text-xs font-semibold">AI Interview in progress</p>
-                  <p className="text-amber-400/50 text-[10px] mt-0.5">Session started at {fmtTime(iv.scheduledAt)}</p>
-                </div>
-                <div className="px-3 py-1.5 rounded-lg text-[11px] font-semibold flex items-center gap-1.5"
-                  style={{ background: "rgba(99,102,241,0.2)", border: "1px solid rgba(99,102,241,0.35)", color: "#a5b4fc" }}>
-                  <Zap size={11} /> Live
-                </div>
-              </motion.div>
-            )}
+            // ─────────────────────────────────────────────
+            // Transcript Analytics
+            // ─────────────────────────────────────────────
 
-            {/* score + recommendation */}
-            {iv.status === "Completed" && (
-              <div className="grid grid-cols-2 gap-2.5">
-                {[
-                  { label: "Interview Score",  val: iv.score ?? "—",    color: iv.score >= 80 ? "#4ade80" : iv.score >= 65 ? "#facc15" : "#f87171", Icon: Star },
-                  { label: "Assessment Score", val: iv.assessmentScore, color: "#818cf8", Icon: BarChart2 },
-                ].map((item, i) => (
-                  <div key={i} className="rounded-xl p-3 border border-white/5 flex items-center gap-2.5"
-                    style={{ background: "rgba(255,255,255,0.025)" }}>
-                    <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-                      style={{ background: `${item.color}18`, border: `1px solid ${item.color}35` }}>
-                      <item.Icon size={14} style={{ color: item.color }} />
+            const transcript = iv.transcript || [];
+
+            const aiMessages = transcript.filter(
+              (t) => t.role === "assistant"
+            );
+
+            const userMessages = transcript.filter(
+              (t) => t.role === "user"
+            );
+
+            const totalQuestions = aiMessages.length;
+            const totalResponses = userMessages.length;
+
+            const aiWords = aiMessages.reduce(
+              (acc, t) =>
+                acc + (t.text?.split(" ").length || 0),
+              0
+            );
+
+            const userWords = userMessages.reduce(
+              (acc, t) =>
+                acc + (t.text?.split(" ").length || 0),
+              0
+            );
+
+            const totalWords = aiWords + userWords;
+
+            const aiRatio = totalWords
+              ? Math.round((aiWords / totalWords) * 100)
+              : 0;
+
+            const userRatio = totalWords
+              ? Math.round((userWords / totalWords) * 100)
+              : 0;
+
+            // ─────────────────────────────────────────────
+            // Keywords Detection
+            // ─────────────────────────────────────────────
+
+            const transcriptText = transcript
+              .map((t) => t.text || "")
+              .join(" ")
+              .toLowerCase();
+
+            const keywordPool = [
+              "python",
+              "react",
+              "mongodb",
+              "node",
+              "api",
+              "dfs",
+              "bfs",
+              "recursion",
+              "algorithm",
+              "dsa",
+              "sql",
+              "laravel",
+              "javascript",
+              "express",
+            ];
+
+            const detectedKeywords = keywordPool.filter(
+              (keyword) =>
+                transcriptText.includes(
+                  keyword.toLowerCase()
+                )
+            );
+
+            // ─────────────────────────────────────────────
+            // Violations Analytics
+            // ─────────────────────────────────────────────
+
+            const violations = iv.violations || {};
+
+            const totalViolations = Object.values(
+              violations
+            ).reduce((a, b) => a + b, 0);
+
+            const riskLevel =
+              totalViolations <= 3
+                ? "Low Risk"
+                : totalViolations <= 7
+                  ? "Medium Risk"
+                  : "High Risk";
+
+            // ─────────────────────────────────────────────
+            // Time Calculations
+            // ─────────────────────────────────────────────
+
+            const transcriptStart =
+              transcript?.length > 0
+                ? new Date(
+                  transcript[0]?.timestamp
+                ).getTime()
+                : null;
+
+            const transcriptEnd =
+              transcript?.length > 0
+                ? new Date(
+                  transcript[
+                    transcript.length - 1
+                  ]?.timestamp
+                ).getTime()
+                : null;
+
+            const transcriptDuration =
+              transcriptStart && transcriptEnd
+                ? Math.floor(
+                  (transcriptEnd -
+                    transcriptStart) /
+                  1000
+                )
+                : 0;
+
+            const actualDurationSeconds =
+              iv.timeTaken ||
+              transcriptDuration ||
+              0;
+
+            const actualMinutes =
+              Math.floor(
+                actualDurationSeconds / 60
+              );
+
+            const actualSeconds =
+              actualDurationSeconds % 60;
+
+            // ─────────────────────────────────────────────
+            // Communication Quality
+            // ─────────────────────────────────────────────
+
+            const communicationQuality =
+              iv.communication >= 85
+                ? "Excellent"
+                : iv.communication >= 70
+                  ? "Good"
+                  : iv.communication >= 50
+                    ? "Average"
+                    : "Poor";
+
+            return (
+              <div className="space-y-4">
+
+                {/* TIMELINE */}
+                <div
+                  className="rounded-2xl border border-indigo-500/15 p-5"
+                  style={{
+                    background:
+                      "linear-gradient(180deg, rgba(99,102,241,0.06), rgba(255,255,255,0.02))",
+                  }}
+                >
+                  <div className="flex items-center gap-2 mb-5">
+                    <div
+                      className="w-9 h-9 rounded-xl flex items-center justify-center"
+                      style={{
+                        background:
+                          "rgba(139,92,246,0.15)",
+                        border:
+                          "1px solid rgba(139,92,246,0.25)",
+                      }}
+                    >
+                      <Clock
+                        size={16}
+                        className="text-violet-300"
+                      />
                     </div>
+
+                    <h3 className="text-white font-bold text-[15px] uppercase">
+                      Interview Timeline
+                    </h3>
+                  </div>
+
+                  <div className="space-y-5">
+
+                    {[
+                      {
+                        label: "Scheduled",
+                        time: fmtDateTime(
+                          iv.scheduledAt
+                        ),
+                        icon: Calendar,
+                        color: "#8b5cf6",
+                      },
+                      {
+                        label: "Started",
+                        time:
+                          transcript?.length > 0
+                            ? fmtDateTime(
+                                transcript[0]?.timestamp
+                              )
+                            : "Not Started",
+                        icon: Play,
+                        color: "#4ade80",
+                      },
+                      {
+                        label: "Ended",
+                        time:
+                          transcript?.length > 0
+                            ? fmtDateTime(
+                                new Date(
+                                  new Date(
+                                    transcript[0]?.timestamp
+                                  ).getTime() +
+                                    (iv.timeTaken || 0) *
+                                      1000
+                                )
+                              )
+                            : "Not Completed",
+                        icon: PhoneOff,
+                        color: "#f87171",
+                      },
+                    ].map((item, i) => (
+                      <div
+                        key={i}
+                        className="flex items-center gap-3"
+                      >
+                        <div className="relative">
+                          <div
+                            className="w-7 h-7 rounded-full flex items-center justify-center"
+                            style={{
+                              background: `${item.color}22`,
+                              border: `1px solid ${item.color}55`,
+                            }}
+                          >
+                            <item.icon
+                              size={12}
+                              style={{
+                                color: item.color,
+                              }}
+                            />
+                          </div>
+
+                          {i !== 2 && (
+                            <div className="absolute left-1/2 top-7 w-[1px] h-7 bg-white/10 -translate-x-1/2" />
+                          )}
+                        </div>
+
+                        <div className="flex-1">
+                          <p className="text-white text-sm font-semibold">
+                            {item.label}
+                          </p>
+
+                          <p className="text-white/35 text-[11px] mt-0.5">
+                            {item.time}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-3 mt-6 pt-5 border-t border-white/5">
+
                     <div>
-                      <p className="text-white font-bold text-base leading-none">{item.val}</p>
-                      <p className="text-white/30 text-[10px] mt-0.5">{item.label}</p>
+                      <p className="text-white/30 text-[10px]">
+                        Duration (Scheduled)
+                      </p>
+
+                      <p className="text-white font-bold text-lg mt-1">
+                        {iv.duration} min
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-white/30 text-[10px]">
+                        Actual Duration
+                      </p>
+
+                      <p className="text-white font-bold text-lg mt-1">
+                        {actualMinutes} min
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-white/30 text-[10px]">
+                        Time Taken
+                      </p>
+
+                      <p className="text-violet-400 font-bold text-lg mt-1">
+                        {actualMinutes}m{" "}
+                        {actualSeconds}s
+                      </p>
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
+                </div>
 
-            {/* recommendation badge */}
-            {iv.recommendation && (
-              <div className="rounded-xl p-4 border flex items-center gap-3"
-                style={{ background: REC_META[iv.recommendation]?.bg ?? "rgba(255,255,255,0.02)", borderColor: REC_META[iv.recommendation]?.border ?? "rgba(255,255,255,0.05)" }}>
-                {iv.recommendation === "Strong Hire" && <ThumbsUp size={16} style={{ color: REC_META[iv.recommendation]?.color }} />}
-                {iv.recommendation === "Hire"        && <CheckCircle2 size={16} style={{ color: REC_META[iv.recommendation]?.color }} />}
-                {iv.recommendation === "No Hire"     && <ThumbsDown size={16} style={{ color: REC_META[iv.recommendation]?.color }} />}
-                <div>
-                  <p className="text-xs font-bold" style={{ color: REC_META[iv.recommendation]?.color }}>{iv.recommendation}</p>
-                  <p className="text-white/30 text-[10px] mt-0.5">Recommendation by AI assessment</p>
+                {/* AI METRICS */}
+                <div
+                  className="rounded-2xl border border-indigo-500/15 p-5"
+                  style={{
+                    background:
+                      "linear-gradient(180deg, rgba(99,102,241,0.05), rgba(255,255,255,0.02))",
+                  }}
+                >
+                  <div className="flex items-center gap-2 mb-5">
+                    <Zap
+                      size={16}
+                      className="text-indigo-300"
+                    />
+
+                    <h3 className="text-white font-bold text-[15px] uppercase">
+                      AI Evaluation Metrics
+                    </h3>
+                  </div>
+
+                  <div className="space-y-4">
+
+                    {[
+                      {
+                        label:
+                          "Technical Knowledge",
+                        score:
+                          iv.technicalKnowledge ||
+                          0,
+                        color: "#4ade80",
+                      },
+                      {
+                        label: "Communication",
+                        score:
+                          iv.communication || 0,
+                        color: "#38bdf8",
+                      },
+                      {
+                        label:
+                          "Problem Solving",
+                        score:
+                          iv.problemSolving || 0,
+                        color: "#a855f7",
+                      },
+                      {
+                        label: "Confidence",
+                        score:
+                          iv.confidence || 0,
+                        color: "#facc15",
+                      },
+                    ].map((metric, i) => (
+                      <div key={i}>
+                        <div className="flex justify-between mb-1">
+                          <p className="text-white/70 text-xs">
+                            {metric.label}
+                          </p>
+
+                          <p
+                            className="font-bold text-sm"
+                            style={{
+                              color: metric.color,
+                            }}
+                          >
+                            {metric.score}%
+                          </p>
+                        </div>
+
+                        <div className="h-2 rounded-full bg-white/5 overflow-hidden">
+                          <motion.div
+                            initial={{
+                              width: 0,
+                            }}
+                            animate={{
+                              width: `${metric.score}%`,
+                            }}
+                            transition={{
+                              duration: 1,
+                            }}
+                            className="h-full rounded-full"
+                            style={{
+                              background:
+                                metric.color,
+                            }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* RECOMMENDATION */}
+                <div
+                  className="rounded-2xl border p-5"
+                  style={{
+                    background:
+                      "rgba(74,222,128,0.06)",
+                    borderColor:
+                      "rgba(74,222,128,0.18)",
+                  }}
+                >
+                  <div className="flex items-center gap-2 mb-5">
+                    <Award
+                      size={16}
+                      className="text-emerald-400"
+                    />
+
+                    <h3 className="text-white font-bold text-[15px] uppercase">
+                      AI Recommendation
+                    </h3>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+
+                    <div>
+                      <p className="text-emerald-400 font-black text-3xl leading-none">
+                        {iv.recommendation ||
+                          "No Hire"}
+                      </p>
+
+                      <p className="text-white/30 text-xs mt-2">
+                        Overall Score
+                      </p>
+
+                      <p className="text-white font-bold text-3xl mt-1">
+                        {iv.score || 0}
+                        <span className="text-white/30 text-lg">
+                          /100
+                        </span>
+                      </p>
+                    </div>
+
+                    <div className="border-l border-white/5 pl-4">
+                      <p className="text-white/65 text-sm leading-relaxed">
+                        {iv.feedback?.trim()
+                          ? iv.feedback
+                          : "No feedback generated yet."}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* VIOLATIONS */}
+                <div
+                  className="rounded-2xl border border-rose-500/15 p-5"
+                  style={{
+                    background:
+                      "linear-gradient(180deg, rgba(248,113,113,0.04), rgba(255,255,255,0.02))",
+                  }}
+                >
+                  <div className="flex items-center gap-2 mb-5">
+                    <AlertCircle
+                      size={16}
+                      className="text-rose-400"
+                    />
+
+                    <h3 className="text-white font-bold text-[15px] uppercase">
+                      Proctoring Violations
+                    </h3>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-y-4">
+
+                    {[
+                      [
+                        "Tab Switch",
+                        violations.tab || 0,
+                      ],
+                      [
+                        "No Face",
+                        violations.noFace || 0,
+                      ],
+                      [
+                        "Multiple Person",
+                        violations.multiPerson ||
+                        0,
+                      ],
+                      [
+                        "Phone Detected",
+                        violations.phone || 0,
+                      ],
+                      [
+                        "Keyboard",
+                        violations.keyboard ||
+                        0,
+                      ],
+                      [
+                        "Brightness",
+                        violations.brightness ||
+                        0,
+                      ],
+                    ].map(([label, value], i) => (
+                      <div
+                        key={i}
+                        className="flex justify-between pr-6"
+                      >
+                        <p className="text-white/60 text-sm">
+                          {label}
+                        </p>
+
+                        <p
+                          className={`font-bold ${value > 0
+                            ? "text-rose-400"
+                            : "text-white/40"
+                            }`}
+                        >
+                          {value}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div
+                    className="mt-5 rounded-xl px-4 py-3 border flex items-center justify-between"
+                    style={{
+                      background:
+                        "rgba(251,191,36,0.08)",
+                      borderColor:
+                        "rgba(251,191,36,0.15)",
+                    }}
+                  >
+                    <p className="text-amber-300 text-sm font-semibold">
+                      Total Violations
+                    </p>
+
+                    <p className="text-amber-400 font-bold">
+                      {totalViolations} (
+                      {riskLevel})
+                    </p>
+                  </div>
+                </div>
+
+                {/* TRANSCRIPT */}
+                <div
+                  className="rounded-2xl border border-indigo-500/15 p-5"
+                  style={{
+                    background:
+                      "linear-gradient(180deg, rgba(99,102,241,0.04), rgba(255,255,255,0.02))",
+                  }}
+                >
+                  <div className="flex items-center gap-2 mb-5">
+                    <FileText
+                      size={16}
+                      className="text-violet-400"
+                    />
+
+                    <h3 className="text-white font-bold text-[15px] uppercase">
+                      Transcript Insights
+                    </h3>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-y-4">
+
+                    <div>
+                      <p className="text-white/30 text-[11px]">
+                        Questions Asked
+                      </p>
+
+                      <p className="text-white font-bold text-xl">
+                        {totalQuestions}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-white/30 text-[11px]">
+                        Candidate Responses
+                      </p>
+
+                      <p className="text-white font-bold text-xl">
+                        {totalResponses}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-white/30 text-[11px]">
+                        AI Speaking Ratio
+                      </p>
+
+                      <p className="text-white font-bold text-xl">
+                        {aiRatio}%
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-white/30 text-[11px]">
+                        Candidate Speaking
+                      </p>
+
+                      <p className="text-white font-bold text-xl">
+                        {userRatio}%
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-5 pt-5 border-t border-white/5">
+
+                    <p className="text-white/35 text-[10px] uppercase tracking-widest font-semibold mb-3">
+                      Top Keywords Detected
+                    </p>
+
+                    <div className="flex flex-wrap gap-2">
+
+                      {detectedKeywords.length >
+                        0 ? (
+                        detectedKeywords.map(
+                          (tag) => (
+                            <span
+                              key={tag}
+                              className="px-3 py-1 rounded-lg text-[11px] font-medium border"
+                              style={{
+                                background:
+                                  "rgba(99,102,241,0.1)",
+                                borderColor:
+                                  "rgba(99,102,241,0.25)",
+                                color:
+                                  "#a5b4fc",
+                              }}
+                            >
+                              {tag}
+                            </span>
+                          )
+                        )
+                      ) : (
+                        <p className="text-white/25 text-xs">
+                          No keywords detected
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="mt-4 flex items-center justify-between">
+                      <p className="text-white/40 text-xs">
+                        Communication Quality
+                      </p>
+
+                      <p className="text-emerald-400 font-bold text-sm">
+                        {
+                          communicationQuality
+                        }
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* SKILLS */}
+                <div
+                  className="rounded-2xl border border-indigo-500/15 p-5"
+                  style={{
+                    background:
+                      "linear-gradient(180deg, rgba(99,102,241,0.03), rgba(255,255,255,0.02))",
+                  }}
+                >
+                  <div className="flex items-center gap-2 mb-4">
+                    <Target
+                      size={15}
+                      className="text-violet-400"
+                    />
+
+                    <h3 className="text-white font-bold text-[15px] uppercase">
+                      Skills Focus
+                    </h3>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+
+                    {(iv.tags ||
+                      iv.focusAreas ||
+                      []).map((skill) => (
+                        <span
+                          key={skill}
+                          className="px-3 py-1.5 rounded-lg text-[11px] font-semibold border"
+                          style={{
+                            background:
+                              "rgba(99,102,241,0.1)",
+                            borderColor:
+                              "rgba(99,102,241,0.25)",
+                            color: "#a5b4fc",
+                          }}
+                        >
+                          {skill}
+                        </span>
+                      ))}
+                  </div>
                 </div>
               </div>
-            )}
-
-            {/* schedule info */}
-            <section>
-              <p className="text-white/35 text-[10px] uppercase tracking-widest font-semibold mb-3">Schedule</p>
-              <div className="space-y-2.5">
-                {[
-                  { Icon: Calendar, label: "Start",       val: fmtDateTime(iv.scheduledAt) },
-                  { Icon: Calendar, label: "End",         val: iv.endDate ? fmtDateTime(iv.endDate) : "—" },
-                  { Icon: Timer,    label: "Duration",    val: `${iv.duration} minutes` },
-                  { Icon: Video,    label: "Type",        val: iv.type, color: tm.color },
-                ].map(({ Icon, label, val, color }) => (
-                  <div key={label} className="flex items-center gap-3">
-                    <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
-                      style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
-                      <Icon size={12} className="text-indigo-400" />
-                    </div>
-                    <div className="flex-1 flex items-center justify-between">
-                      <p className="text-white/35 text-[11px]">{label}</p>
-                      <p className="text-xs font-medium" style={{ color: color || "rgba(255,255,255,0.65)" }}>{val}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            {/* AI conducted banner */}
-            <div className="rounded-xl p-3.5 border border-indigo-500/20 flex items-center gap-3"
-              style={{ background: "rgba(99,102,241,0.06)" }}>
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-                style={{ background: "rgba(99,102,241,0.2)", border: "1px solid rgba(99,102,241,0.35)" }}>
-                <Zap size={16} className="text-indigo-400" />
-              </div>
-              <div>
-                <p className="text-indigo-200 text-xs font-semibold">Conducted by AI</p>
-                <p className="text-indigo-300/40 text-[10px] mt-0.5">Fully automated interview — no human interviewer</p>
-              </div>
-            </div>
-
-            {/* tags */}
-            <section>
-              <p className="text-white/35 text-[10px] uppercase tracking-widest font-semibold mb-2">Skills Focus</p>
-              <div className="flex flex-wrap gap-1.5">
-                {iv.tags.map((t) => (
-                  <span key={t} className="px-2.5 py-1 rounded-lg text-[11px] font-medium border"
-                    style={{ background: "rgba(99,102,241,0.1)", borderColor: "rgba(99,102,241,0.25)", color: "#a5b4fc" }}>
-                    {t}
-                  </span>
-                ))}
-              </div>
-            </section>
-          </>)}
+            );
+          })()}
 
           {/* ── DIFFICULTY TAB ── */}
           {tab === "difficulty" && (
@@ -552,111 +1122,210 @@ const InterviewDrawer = ({ interview: iv, onClose }) => {
             </div>
           )}
 
-          {/* ── FEEDBACK TAB ── */}
-          {tab === "feedback" && (
+          {/* ── TRANSCRIPT TAB ── */}
+          {tab === "transcript" && (
             <div className="space-y-4">
-              {iv.status === "Completed" && iv.notes ? (
-                <>
-                  <div className="rounded-xl p-4 border border-indigo-500/15"
-                    style={{ background: "rgba(99,102,241,0.05)" }}>
-                    <div className="flex items-center gap-2 mb-3 pb-2 border-b border-indigo-500/10">
-                      <MessageSquare size={13} className="text-indigo-400" />
-                      <p className="text-indigo-300 text-[11px] font-bold uppercase tracking-widest">Interviewer Notes</p>
-                    </div>
-                    <p className="text-white/60 text-xs leading-relaxed">{iv.notes}</p>
-                  </div>
-                  <div className="space-y-3">
-                    <p className="text-white/35 text-[10px] uppercase tracking-widest font-semibold">Skill Ratings</p>
-                    {[
-                      { skill: "Technical Knowledge", score: 88 },
-                      { skill: "Problem Solving",     score: 82 },
-                      { skill: "Communication",       score: 90 },
-                      { skill: "Culture Fit",         score: 85 },
-                    ].map((s) => (
-                      <div key={s.skill} className="space-y-1">
-                        <div className="flex justify-between">
-                          <span className="text-white/50 text-[11px]">{s.skill}</span>
-                          <span className="text-white/70 text-[11px] font-bold">{s.score}</span>
-                        </div>
-                        <MiniBar pct={s.score} color={s.score >= 85 ? "#4ade80" : s.score >= 70 ? "#facc15" : "#f87171"} />
-                      </div>
-                    ))}
-                  </div>
-                </>
-              ) : iv.status === "Completed" ? (
-                <div className="space-y-3">
-                  <p className="text-white/35 text-[10px] uppercase tracking-widest font-semibold">Add Feedback</p>
-                  <textarea value={note} onChange={(e) => setNote(e.target.value)}
-                    placeholder="Write your interview feedback here…" rows={5}
-                    className="w-full px-4 py-3 rounded-xl text-xs text-white/70 placeholder-white/20 border border-white/6 outline-none focus:border-indigo-500/40 resize-none transition"
-                    style={{ background: "rgba(255,255,255,0.04)" }} />
-                  <button className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-semibold text-white transition"
-                    style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6)" }}>
-                    <Send size={12} /> Submit Feedback
-                  </button>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
-                  <div className="w-12 h-12 rounded-2xl flex items-center justify-center"
-                    style={{ background: "rgba(99,102,241,0.1)", border: "1px solid rgba(99,102,241,0.2)" }}>
-                    <MessageSquare size={20} className="text-indigo-400" />
-                  </div>
-                  <p className="text-white font-semibold text-sm">No feedback yet</p>
-                  <p className="text-white/30 text-xs max-w-[200px]">Feedback will be available once the interview is completed.</p>
-                </div>
-              )}
-            </div>
-          )}
 
-          {/* ── CANDIDATE TAB ── */}
-          {tab === "candidate" && (
-            <div className="space-y-4">
-              <div className="rounded-xl p-4 border border-white/5 flex items-center gap-4"
-                style={{ background: "rgba(255,255,255,0.025)" }}>
-                <Avatar initials={iv.avatar} size={52} />
-                <div>
-                  <p className="text-white font-bold text-base">{iv.candidate}</p>
-                  <p className="text-white/40 text-xs mt-0.5">{iv.role}</p>
-                  <div className="flex items-center gap-2 mt-1.5">
-                    <span className="text-white/30 text-[10px]">Drive:</span>
-                    <span className="text-indigo-300 text-[10px]">{iv.drive}</span>
-                  </div>
-                </div>
-              </div>
+              <div
+                className="rounded-2xl border border-white/[0.06] overflow-hidden"
+                style={{
+                  background: "rgba(255,255,255,0.025)",
+                }}
+              >
 
-              <section>
-                <p className="text-white/35 text-[10px] uppercase tracking-widest font-semibold mb-3">Performance</p>
-                <div className="grid grid-cols-2 gap-2.5">
-                  {[
-                    { label: "Interview Score", val: iv.assessmentScore, color: "#818cf8", Icon: ClipboardList },
-                    { label: "Drive Rank",       val: `#${iv.rank}`,      color: "#fbbf24", Icon: Award },
-                  ].map((item, i) => (
-                    <div key={i} className="rounded-xl p-3 border border-white/5 flex items-center gap-2.5"
-                      style={{ background: "rgba(255,255,255,0.025)" }}>
-                      <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-                        style={{ background: `${item.color}18`, border: `1px solid ${item.color}35` }}>
-                        <item.Icon size={14} style={{ color: item.color }} />
+                {/* header */}
+                <div className="px-5 py-4 border-b border-white/[0.05]">
+
+                  <div className="flex items-center justify-between gap-3">
+
+                    <div className="flex items-center gap-3">
+
+                      <div
+                        className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                        style={{
+                          background:
+                            "rgba(99,102,241,0.12)",
+                          border:
+                            "1px solid rgba(99,102,241,0.2)",
+                        }}
+                      >
+                        <MessageSquare
+                          size={16}
+                          className="text-indigo-300"
+                        />
                       </div>
+
                       <div>
-                        <p className="text-white font-bold text-base leading-none">{item.val}</p>
-                        <p className="text-white/30 text-[10px] mt-0.5">{item.label}</p>
+                        <h3 className="text-white font-bold text-lg leading-none">
+                          Interview Conversation
+                        </h3>
+
+                        <p className="text-white/35 text-[11px] mt-1">
+                          AI Rectuiter & candidate transcript
+                        </p>
                       </div>
                     </div>
-                  ))}
-                </div>
-              </section>
 
-              <div className="rounded-xl p-4 border border-white/5" style={{ background: "rgba(255,255,255,0.02)" }}>
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-white/40 text-[11px] font-semibold uppercase tracking-widest">Interview Score</p>
-                  <span className="text-white font-bold text-sm">{iv.assessmentScore}/100</span>
+                    <div
+                      className="px-2.5 py-1 rounded-lg text-[10px] font-semibold border shrink-0"
+                      style={{
+                        background:
+                          "rgba(255,255,255,0.03)",
+                        border:
+                          "1px solid rgba(255,255,255,0.06)",
+                        color:
+                          "rgba(255,255,255,0.6)",
+                      }}
+                    >
+                      {(iv.transcript || []).length} msgs
+                    </div>
+                  </div>
                 </div>
-                <MiniBar pct={iv.assessmentScore} color="#818cf8" />
+
+                {/* empty */}
+                {(!iv.transcript ||
+                  iv.transcript.length === 0) ? (
+
+                  <div className="py-16 flex flex-col items-center justify-center text-center">
+
+                    <MessageSquare
+                      size={28}
+                      className="text-indigo-400/40 mb-3"
+                    />
+
+                    <p className="text-white/70 text-sm font-medium">
+                      No transcript available
+                    </p>
+
+                    <p className="text-white/25 text-xs mt-1">
+                      Interview conversation will appear here.
+                    </p>
+                  </div>
+
+                ) : (
+
+                  <div className="p-4 space-y-3">
+
+                    {iv.transcript.map((msg, index) => {
+
+                      const isAI =
+                        msg.role === "assistant";
+
+                      return (
+
+                        <div
+                          key={index}
+                          className="rounded-2xl border border-white/[0.05] p-4"
+                          style={{
+                            background:
+                              "rgba(255,255,255,0.02)",
+                          }}
+                        >
+
+                          {/* top */}
+                          <div className="flex items-start gap-3">
+
+                            {/* avatar */}
+                            <div
+                              className="w-11 h-11 rounded-xl flex items-center justify-center font-bold text-sm shrink-0"
+                              style={{
+                                background: isAI
+                                  ? "rgba(139,92,246,0.14)"
+                                  : "rgba(74,222,128,0.12)",
+
+                                border: isAI
+                                  ? "1px solid rgba(139,92,246,0.22)"
+                                  : "1px solid rgba(74,222,128,0.22)",
+
+                                color: isAI
+                                  ? "#c4b5fd"
+                                  : "#86efac",
+                              }}
+                            >
+                              {isAI ? "AI" : iv.avatar}
+                            </div>
+
+                            {/* content */}
+                            <div className="flex-1 min-w-0">
+
+                              {/* name row */}
+                              <div className="flex items-center justify-between gap-2 mb-2">
+
+                                <div>
+                                  <p className="text-white font-semibold text-sm leading-none">
+                                    {isAI
+                                      ? "AI Rectuiter"
+                                      : iv.candidate}
+                                  </p>
+
+                                  <p className="text-white/25 text-[10px] mt-1">
+                                    {isAI
+                                      ? "Question"
+                                      : "Response"}
+                                  </p>
+                                </div>
+
+                                <p className="text-white/25 text-[10px] shrink-0">
+                                  {msg.timestamp
+                                    ? fmtDateTime(
+                                      msg.timestamp
+                                    )
+                                    : "No Time"}
+                                </p>
+                              </div>
+
+                              {/* message */}
+                              <div
+                                className="rounded-xl px-4 py-3 border"
+                                style={{
+                                  background: isAI
+                                    ? "rgba(139,92,246,0.06)"
+                                    : "rgba(74,222,128,0.04)",
+
+                                  borderColor: isAI
+                                    ? "rgba(139,92,246,0.14)"
+                                    : "rgba(74,222,128,0.12)",
+                                }}
+                              >
+
+                                <p
+                                  className={`text-[13px] leading-6 ${isAI
+                                      ? "text-white/90"
+                                      : "text-white/75"
+                                    }`}
+                                >
+                                  {msg.text?.trim()
+                                    ? msg.text
+                                    : isAI
+                                      ? "No AI message available."
+                                      : "No response from candidate."}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+
+                    {/* footer */}
+                    <div className="flex items-center gap-2 px-2 pt-1">
+
+                      <AlertCircle
+                        size={12}
+                        className="text-indigo-300/50"
+                      />
+
+                      <p className="text-white/25 text-[10px]">
+                        Full transcript securely stored.
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
-
-            
             </div>
           )}
+
+          
         </div>
 
         {/* sticky footer */}
@@ -675,7 +1344,7 @@ const InterviewDrawer = ({ interview: iv, onClose }) => {
           ) : (
             <>
               <button className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-semibold border border-white/8 text-white/50 hover:bg-white/5 hover:text-white transition">
-                <Copy size={13} /> Duplicate
+                <ClipboardList size={13} /> Shortlist
               </button>
               <button className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-semibold text-white transition"
                 style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6)" }}>

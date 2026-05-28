@@ -19,7 +19,7 @@ const driveSchema = new mongoose.Schema({
   // Drive timing
   driveEndDate: {
     type: Date,
-    required: true,
+    default: null,
   },
 
   driveType: {

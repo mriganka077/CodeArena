@@ -10,33 +10,104 @@ import {
 } from "lucide-react";
 
 import { CalendarDays } from "lucide-react";
-
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 
 const DARK_INPUT_STYLE = `
-  .dark-input, .dark-select {
-    color-scheme: dark;
-  }
+.react-datepicker-popper {
+  z-index: 999999 !important;
+}
 
-  .dark-select option {
-    background: #0f0d1f;
-    color: rgba(255,255,255,0.8);
-  }
+.react-datepicker-popper-custom {
+  z-index: 999999 !important;
+}
 
-  .dark-input {
-    background: rgba(8, 6, 18, 0.85);
-    color: rgba(255,255,255,0.85);
-    color-scheme: dark;
-  }
+.react-datepicker__portal {
+  background: transparent !important;
+}
 
-  .dark-input[type="datetime-local"]::-webkit-calendar-picker-indicator {
-    opacity: 0;
-    position: absolute;
-    right: 0;
-    width: 100%;
-    height: 100%;
-    cursor: pointer;
-  }
+.react-datepicker-wrapper {
+  width: 100%;
+}
+
+.react-datepicker__input-container {
+  width: 100%;
+}
+.react-datepicker {
+  background: #0b0818 !important;
+  border: 1px solid rgba(99,102,241,0.2) !important;
+  border-radius: 16px !important;
+  overflow: hidden;
+}
+
+.react-datepicker__header {
+  background: #151028 !important;
+  border-bottom: 1px solid rgba(255,255,255,0.06) !important;
+}
+
+.react-datepicker__current-month,
+.react-datepicker-time__header,
+.react-datepicker-year-header {
+  color: white !important;
+}
+
+.react-datepicker__day,
+.react-datepicker__time-name {
+  color: rgba(255,255,255,0.8) !important;
+}
+
+.react-datepicker__day--disabled,
+.react-datepicker__time-list-item--disabled {
+  opacity: 0.2 !important;
+  cursor: not-allowed !important;
+}
+
+.react-datepicker__time-container {
+  border-left: 1px solid rgba(255,255,255,0.06) !important;
+}
+
+.react-datepicker__time-box {
+  background: #0b0818 !important;
+}
+
+.react-datepicker__time-list-item {
+  color: rgba(255,255,255,0.8) !important;
+}
+.react-datepicker__time-list-item {
+  color: rgba(255,255,255,0.82) !important;
+  background: transparent !important;
+  transition: all 0.2s ease;
+}
+
+.react-datepicker__time-list-item:hover {
+  background: rgba(139,92,246,0.18) !important;
+  color: white !important;
+}
+
+.react-datepicker__time-list-item--selected {
+  background: #8b5cf6 !important;
+  color: white !important;
+  font-weight: 600 !important;
+}
+
+.react-datepicker__day--selected {
+  background: #8b5cf6 !important;
+  color: white !important;
+}
+
+.react-datepicker__triangle {
+  display: none !important;
+}
+
+.react-datepicker__day:hover {
+  background: rgba(139,92,246,0.18) !important;
+}
+
+.react-datepicker__day--keyboard-selected {
+  background: rgba(139,92,246,0.35) !important;
+  color: white !important;
+}
 `;
 
 
@@ -202,56 +273,164 @@ const FieldLabel = ({ children }) => (
 );
 
 // ── Styled Select ─────────────────────────────────────────────────────────────
-const StyledSelect = ({ value, onChange, children, placeholder }) => (
-    <div className="relative">
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full pl-3 pr-8 py-2.5 rounded-xl text-xs outline-none appearance-none cursor-pointer transition-all"
-        style={{
-          background: "#000000",
-          border: "1px solid rgba(255,255,255,0.07)",
-          color: value
-            ? "rgba(255,255,255,0.75)"
-            : "rgba(255,255,255,0.25)",
-        }}
-        onFocus={(e) => (
-          e.target.style.borderColor =
-            "rgba(99,102,241,0.4)"
-        )}
-        onBlur={(e) => (
-          e.target.style.borderColor =
-            "rgba(255,255,255,0.07)"
-        )}
+const SInput = ({
+  value,
+  onChange,
+  options = [],
+  error
+}) => {
+
+  const [open, setOpen] =
+      React.useState(false);
+
+  const dropdownRef =
+      React.useRef(null);
+
+  React.useEffect(() => {
+
+      const handleClickOutside = (
+          event
+      ) => {
+
+          if (
+              dropdownRef.current &&
+              !dropdownRef.current.contains(
+                  event.target
+              )
+          ) {
+              setOpen(false);
+          }
+      };
+
+      document.addEventListener(
+          "mousedown",
+          handleClickOutside
+      );
+
+      return () => {
+
+          document.removeEventListener(
+              "mousedown",
+              handleClickOutside
+          );
+      };
+
+  }, []);
+
+  return (
+
+      <div
+          ref={dropdownRef}
+          className="relative z-[100]"
       >
-        {placeholder && (
-          <option
-            value=""
-            style={{
-              background: "#000",
-              color: "rgba(255,255,255,0.5)",
-            }}
+
+          <button
+              type="button"
+              onClick={() =>
+                  setOpen(!open)
+              }
+              className={`w-full px-3 py-2.5 rounded-xl text-xs text-left outline-none transition flex items-center justify-between
+              ${
+                  error
+                      ? "border border-rose-500/50"
+                      : "border border-white/8 hover:border-indigo-500/40"
+              }`}
+              style={{
+                  background:
+                      "rgba(8,6,18,0.85)",
+                  color:
+                      "rgba(255,255,255,0.78)"
+              }}
           >
-            {placeholder}
-          </option>
-        )}
-  
-        {React.Children.map(children, (child) =>
-          React.cloneElement(child, {
-            style: {
-              background: "#000000",
-              color: "#ffffff",
-            },
-          })
-        )}
-      </select>
-  
-      <ChevronDown
-        size={11}
-        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-white/30 pointer-events-none"
-      />
-    </div>
+
+              <span>{value}</span>
+
+              <ChevronDown
+                  size={13}
+                  className={`text-white/30 transition duration-200 ${
+                      open
+                          ? "rotate-180"
+                          : ""
+                  }`}
+              />
+
+          </button>
+
+          <AnimatePresence>
+
+              {open && (
+
+                  <motion.div
+                  
+                      initial={{
+                          opacity: 0,
+                          y: -8,
+                          scale: 0.98
+                      }}
+                      animate={{
+                          opacity: 1,
+                          y: 0,
+                          scale: 1
+                      }}
+                      exit={{
+                          opacity: 0,
+                          y: -8,
+                          scale: 0.98
+                      }}
+                      transition={{
+                          duration: 0.18
+                      }}
+                      className="absolute left-0 top-[calc(100%+8px)] z-[9999] w-full rounded-2xl border border-indigo-500/20"
+                      style={{
+                          background:
+                              "rgba(11,8,24,0.98)",
+                          backdropFilter:
+                              "blur(18px)",
+                          boxShadow:
+                              "0 20px 50px rgba(0,0,0,0.45)",
+                          position: "absolute",
+                          background: "rgba(11,8,24,0.98)",
+                          backdropFilter: "blur(18px)",
+                          boxShadow: "0 20px 50px rgba(0,0,0,0.45)"
+                            
+                      }}
+                  >
+
+                      {options.map((item) => (
+
+                          <button
+                              key={item}
+                              type="button"
+                              onClick={() => {
+
+                                  onChange({
+                                      target: {
+                                          value: item
+                                      }
+                                  });
+
+                                  setOpen(false);
+                              }}
+                              className={`w-full px-3 py-3 text-left text-xs transition
+                              ${
+                                  value === item
+                                      ? "bg-violet-500/20 text-violet-300"
+                                      : "text-white/75 hover:bg-white/5"
+                              }`}
+                          >
+                              {item}
+                          </button>
+
+                      ))}
+
+                  </motion.div>
+              )}
+
+          </AnimatePresence>
+
+      </div>
   );
+};
 
 // ── Styled Input ──────────────────────────────────────────────────────────────
 const StyledInput = ({ type = "text", value, onChange, placeholder }) => (
@@ -301,15 +480,32 @@ const DrivePanel = ({
 
       <div>
         <FieldLabel>Hiring Drive</FieldLabel>
-        <StyledSelect
-          value={form.drive}
-          onChange={(v) => setForm((f) => ({ ...f, drive: v, selectedCandidates: [] }))}
-          placeholder="— Choose a drive —"
-        >
-          {drives.map((d) => (
-            <option key={d._id} value={d._id}>{d.hiringPositionName}</option>
-          ))}
-        </StyledSelect>
+        <SInput
+          value={
+            drives.find(
+              (d) => d._id === form.drive
+            )?.hiringPositionName ||
+            "Select Drive"
+          }
+          onChange={(e) => {
+
+            const selectedDrive =
+              drives.find(
+                (d) =>
+                  d.hiringPositionName ===
+                  e.target.value
+              );
+
+            setForm((f) => ({
+              ...f,
+              drive: selectedDrive?._id || "",
+              selectedCandidates: [],
+            }));
+          }}
+          options={drives.map(
+            (d) => d.hiringPositionName
+          )}
+        />
       </div>
 
       <div>
@@ -462,32 +658,212 @@ const DrivePanel = ({
 };
 
 // ── Panel 2: Schedule ─────────────────────────────────────────────────────────
-const SchedulePanel = ({ form, setForm }) => (
-  <div className="space-y-4">
-    <SectionHeader Icon={Calendar} title="Interview Schedule" subtitle="Set the date, time window, round, and platform." />
+const SchedulePanel = ({
+  form,
+  setForm,
+  drives,
+}) => {
 
-    <div className="grid grid-cols-2 gap-3">
-        <FieldLabel label="Start Date & Time" icon={Calendar} >
-          <TInput
-            type="datetime-local"
-            value={form.startDate}
-            onChange={(e) => setForm((f) => ({ ...f, startDate: e.target.value }))}
+  const selectedDrive =
+      drives.find(
+          (d) => d._id === form.drive
+      );
+
+  const assessmentEndDate =
+      selectedDrive?.assessmentEndDate
+          ? new Date(
+                selectedDrive.assessmentEndDate
+            )
+                .toISOString()
+                .slice(0, 16)
+          : "";
+
+  const now = new Date();
+
+  const startOfDay = new Date();
+  startOfDay.setHours(0, 0, 0, 0);
+
+  const endOfDay = new Date();
+  endOfDay.setHours(23, 59, 59, 999);
+
+  return (
+
+      <div className="space-y-4">
+
+          <SectionHeader
+              Icon={Calendar}
+              title="Interview Schedule"
+              subtitle="Set the date, time window, round, and platform."
           />
-        </FieldLabel>
 
-        <FieldLabel label="End Date & Time" icon={Calendar} >
-          <TInput
-            type="datetime-local"
-            value={form.endDate}
-            onChange={(e) => setForm((f) => ({ ...f, endDate: e.target.value }))}
-          />
-        </FieldLabel>
-    </div>
+          <div className="grid grid-cols-2 gap-3">
 
+              <div>
 
+                  <FieldLabel>
+                      Start Date & Time
+                  </FieldLabel>
 
-  </div>
-);
+                <DatePicker
+                  selected={
+                    form.startDate
+                      ? new Date(form.startDate)
+                      : null
+                  }
+
+                  onChange={(date) => {
+
+                    if (!date) return;
+
+                    setForm((f) => ({
+                      ...f,
+                      startDate: date.toISOString(),
+
+                      endDate:
+                        f.endDate &&
+                          new Date(f.endDate) < date
+                          ? ""
+                          : f.endDate,
+                    }));
+                  }}
+
+                  minDate={
+                    assessmentEndDate
+                      ? new Date(assessmentEndDate)
+                      : now
+                  }
+
+                  minTime={
+                    form.startDate &&
+                      new Date(form.startDate).toDateString() ===
+                      now.toDateString()
+                      ? now
+                      : startOfDay
+                  }
+
+                  maxTime={endOfDay}
+
+                  showTimeSelect
+                  timeIntervals={5}
+                  dateFormat="dd-MM-yyyy hh:mm aa"
+
+                  popperPlacement="bottom-start"
+                  portalId="root"
+                  popperClassName="react-datepicker-popper-custom"
+
+                  className="
+          dark-input
+          w-full
+          pl-3
+          pr-10
+          py-2.5
+          rounded-xl
+          text-xs
+          text-white/80
+          border
+          border-white/8
+          outline-none
+        "
+
+                  placeholderText="Select start date"
+                />
+
+              </div>
+
+              <div>
+
+                  <FieldLabel>
+                      End Date & Time
+                  </FieldLabel>
+
+                <DatePicker
+                  selected={
+                    form.endDate
+                      ? new Date(form.endDate)
+                      : null
+                  }
+
+                  onChange={(date) => {
+
+                    if (!date) return;
+
+                    setForm((f) => ({
+                      ...f,
+                      endDate: date.toISOString(),
+                    }));
+                  }}
+
+                  minDate={
+                    form.startDate
+                      ? new Date(form.startDate)
+                      : assessmentEndDate
+                        ? new Date(assessmentEndDate)
+                        : now
+                  }
+
+                  minTime={
+                    form.startDate &&
+                      form.endDate &&
+                      new Date(form.startDate).toDateString() ===
+                      new Date(form.endDate).toDateString()
+                      ? new Date(form.startDate)
+                      : startOfDay
+                  }
+
+                  maxTime={endOfDay}
+
+                  showTimeSelect
+                  timeIntervals={5}
+                  dateFormat="dd-MM-yyyy hh:mm aa"
+
+                  popperPlacement="bottom-start"
+                  portalId="root"
+                  popperClassName="react-datepicker-popper-custom"
+
+                  className="
+          dark-input
+          w-full
+          pl-3
+          pr-10
+          py-2.5
+          rounded-xl
+          text-xs
+          text-white/80
+          border
+          border-white/8
+          outline-none
+        "
+
+                  placeholderText="Select end date"
+                />
+
+              </div>
+
+          </div>
+
+          {assessmentEndDate && (
+
+              <div
+                  className="rounded-xl px-3 py-2 text-[11px]"
+                  style={{
+                      background:
+                          "rgba(99,102,241,0.08)",
+
+                      border:
+                          "1px solid rgba(99,102,241,0.15)",
+
+                      color:
+                          "rgba(255,255,255,0.65)",
+                  }}
+              >
+                  Interview can only start after assessment ends.
+              </div>
+
+          )}
+
+      </div>
+  );
+};
 
 // ── Panel 3: Difficulty ───────────────────────────────────────────────────────
 const DifficultyPanel = ({ form, setForm }) => {
@@ -667,7 +1043,12 @@ const ScheduleInterviewModal = ({ onClose }) => {
           setForm={setForm}
           drives={drives}
       />,
-    <SchedulePanel key="schedule"   form={form} setForm={setForm} />,
+    <SchedulePanel
+      key="schedule"
+      form={form}
+      setForm={setForm}
+      drives={drives}
+    />,
     <DifficultyPanel key="diff"     form={form} setForm={setForm} />,
     <EmailPanel    key="email"      form={form} setForm={setForm} />,
   ];
