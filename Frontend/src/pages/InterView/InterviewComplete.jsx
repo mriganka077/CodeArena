@@ -13,7 +13,7 @@ import {
 
 import SoftBackdrop from "../../components/SoftBackdrop";
 import LenisScroll from "../../components/lenis";
-import Header from "../../components/Header";
+import Header from "../../components/HeaderComplete";
 
 import {
   useLocation,
