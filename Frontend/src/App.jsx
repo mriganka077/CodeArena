@@ -21,9 +21,8 @@ import Dashboard from "./pages/Dashboard/Dashboard.jsx";
 import AuthCallback from "./pages/AuthCallback.jsx";
 import VerifyEmail from "./pages/VerifyEmail.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
-import AdminDashboard from "./pages/Admin/AdminDashboard.jsx";
 import Interview from "./pages/InterView/Interview.jsx";
-import AdminDashboard2 from "./pages/Admin/AdminDashboard2.jsx";
+import AdminDashboard from "./pages/Admin/AdminDashboard.jsx";
 // import CandidatesPage from "./components/admin/sidebar/Candidatespage.jsx";
 import AdminLoginPage from "./pages/Admin/AdminLoginPage.jsx";
 // import AdminDrive from "./components/admin/sidebar/AdminDrive.jsx";
@@ -59,21 +58,20 @@ function App() {
       <Route path="/forgot" element={<ForgotPassword />} />
       <Route path="/interviewfeedback" element={<MockInterviewFeedback />} />
 
-      <Route path="/admin" element={<AdminDashboard />} />
       <Route
         path="/adminlogin"
         element={
           localStorage.getItem("adminToken")
-            ? <Navigate to="/admindash" replace />
+            ? <Navigate to="/admin" replace />
             : <AdminLoginPage />
         }
       />
 
       <Route
-        path="/admindash"
+        path="/admin"
         element={
           localStorage.getItem("adminToken")
-            ? <AdminDashboard2 />
+            ? <AdminDashboard />
             : <Navigate to="/adminlogin" replace />
         }
       />

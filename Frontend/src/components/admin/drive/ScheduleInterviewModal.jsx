@@ -381,19 +381,12 @@ const SInput = ({
                           duration: 0.18
                       }}
                       className="absolute left-0 top-[calc(100%+8px)] z-[9999] w-full rounded-2xl border border-indigo-500/20"
-                      style={{
-                          background:
-                              "rgba(11,8,24,0.98)",
-                          backdropFilter:
-                              "blur(18px)",
-                          boxShadow:
-                              "0 20px 50px rgba(0,0,0,0.45)",
+                        style={{
                           position: "absolute",
                           background: "rgba(11,8,24,0.98)",
                           backdropFilter: "blur(18px)",
-                          boxShadow: "0 20px 50px rgba(0,0,0,0.45)"
-                            
-                      }}
+                          boxShadow: "0 20px 50px rgba(0,0,0,0.45)",
+                        }}
                   >
 
                       {options.map((item) => (

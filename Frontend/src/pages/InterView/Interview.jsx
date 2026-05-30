@@ -295,6 +295,8 @@ const driveId =
   });
 
   const submitInterviewResult = async (
+
+    
    
     finalStatus = "completed",
     reason = "",
@@ -305,6 +307,15 @@ const driveId =
         location.state?.type === "domain"
           ? "http://localhost:4000/api/mockinterview/submit-result"
           : "http://localhost:4000/api/interview/submit-result";
+
+      console.log("Submitting Interview");
+      console.log("Transcript Count:", transcriptRef.current.length);
+      console.log("Transcript:", transcriptRef.current);
+      console.log("Drive ID:", driveId);
+      console.log(
+        "Interview ID:",
+        location.state?.drive?.interviewId
+      );
 
       const response = await fetch(
         apiUrl,
@@ -353,23 +364,43 @@ const driveId =
 
   const terminateInterview = async (reason) => {
     isEndingInterview.current = true;
+  
     setStatus("ended");
-    if (streamRef.current)
-      streamRef.current.getTracks().forEach((track) => track.stop());
-    if (document.fullscreenElement)
+  
+    if (streamRef.current) {
+      streamRef.current
+        .getTracks()
+        .forEach((track) => track.stop());
+    }
+  
+    if (document.fullscreenElement) {
       await document.exitFullscreen().catch(() => {});
+    }
+  
     window.speechSynthesis.cancel();
+  
     try {
+  
       await vapi.stop();
-    } catch (e) {}
-
+  
+      await new Promise((resolve) =>
+        setTimeout(resolve, 3000)
+      );
+  
+    } catch (e) {
+      console.error(e);
+    }
+  
     await submitInterviewResult(
       "abandoned",
       reason
     );
-
-    triggerAlert("Interview Terminated", reason, "danger", () =>
-      navigate("/drive"),
+  
+    triggerAlert(
+      "Interview Terminated",
+      reason,
+      "danger",
+      () => navigate("/drive")
     );
   };
 
@@ -476,6 +507,11 @@ useEffect(() => {
 
     vapi.on("message", (message) => {
 
+      console.log(
+        "Current Transcript Length:",
+        transcriptRef.current.length
+      );
+
       console.log("VAPI MESSAGE:", message);
     
       if (message.type !== "transcript") return;
@@ -504,24 +540,26 @@ useEffect(() => {
           if (
             lastMessage &&
             lastMessage.role === role &&
-            Date.now() -
-              new Date(
-                lastMessage.timestamp
-              ).getTime() <
-              4000
-          ){
-        
-            // Replace assistant/user streaming chunk
-            updated[updated.length - 1] = {
-        
+            transcriptText.startsWith(
+              lastMessage.text
+            )
+          ) {
+          
+            updated[
+              updated.length - 1
+            ] = {
+          
               ...lastMessage,
-        
+          
               text: transcriptText,
-        
+          
               timestamp:
                 new Date().toISOString(),
             };
-            transcriptRef.current = updated;
+          
+            transcriptRef.current =
+              updated;
+          
             return updated;
           }
         
@@ -577,7 +615,9 @@ useEffect(() => {
     });
 
     return () => {
-      vapi.stop();
+      if (!isEndingInterview.current) {
+        vapi.stop();
+      }
     };
   }, []);
 
@@ -697,52 +737,15 @@ useEffect(() => {
   
     setStatus("ended");
   
-    const tempResult = {
-      userId: {
-        firstName: user?.firstName,
-        lastName: user?.lastName,
-      },
-  
-      driveId: {
-        hiringPositionName:
-          location.state?.drive
-            ?.hiringPositionName ||
-          "Drive Interview",
-      },
-  
-      timeTaken: elapsed,
-  
-      score: 0,
-  
-      recommendation: "Processing",
-  
-      feedback:
-        "AI is analyzing your interview responses...",
-  
-      transcript: conversationTranscript,
-    };
-  
     const isDomainInterview =
       location.state?.type === "domain";
-
-    navigate(
-      isDomainInterview
-        ? "/interviewfeedback"
-        : "/interviewdone",
-      {
-        state: {
-          result: tempResult,
-        },
-      }
-    );
   
     try {
   
       if (streamRef.current) {
-  
         streamRef.current
           .getTracks()
-          .forEach((track) =>
+          .forEach(track =>
             track.stop()
           );
       }
@@ -750,7 +753,6 @@ useEffect(() => {
       if (
         document.fullscreenElement
       ) {
-  
         await document
           .exitFullscreen()
           .catch(() => {});
@@ -762,7 +764,16 @@ useEffect(() => {
   
         await vapi.stop();
   
+        await new Promise(resolve =>
+          setTimeout(resolve, 3000)
+        );
+  
       } catch (e) {}
+  
+      console.log(
+        "FINAL TRANSCRIPT",
+        transcriptRef.current
+      );
   
       const data =
         await submitInterviewResult(
@@ -770,25 +781,25 @@ useEffect(() => {
           "User ended call"
         );
   
-        if (data?.result) {
-
-          localStorage.setItem(
-            "latestInterviewResult",
-            JSON.stringify(data.result)
-          );
-        
-          navigate(
-            isDomainInterview
-              ? "/interviewfeedback"
-              : "/interviewdone",
-            {
-              replace: true,
-              state: {
-                result: data.result,
-              },
-            }
-          );
-        }
+      if (data?.result) {
+  
+        localStorage.setItem(
+          "latestInterviewResult",
+          JSON.stringify(data.result)
+        );
+  
+        navigate(
+          isDomainInterview
+            ? "/interviewfeedback"
+            : "/interviewdone",
+          {
+            replace: true,
+            state: {
+              result: data.result,
+            },
+          }
+        );
+      }
   
     } catch (err) {
   

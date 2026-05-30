@@ -523,7 +523,7 @@ const endDrive = async () => {
                                     { Icon:Timer,   label:"Duration",  val:`${drive.duration} min` },
                                     {
                                         Icon: Code2,
-                                        label: "Questions",
+                                        label: "Assessment Questions",
                                         val: `${drive.questionCount} total`,
                                         extra: [
                                             `${drive.mcqCount} MCQ × ${drive.marksPerMcq} marks`,

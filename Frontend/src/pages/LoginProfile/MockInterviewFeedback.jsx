@@ -1,6 +1,8 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
+import { useAuth } from "../../context/AuthContext";
 import {
   CalendarDays,
   Clock3,
@@ -24,64 +26,180 @@ import Header from "../../components/Header";
 import LenisScroll from "../../components/lenis";
 import SoftBackdrop from "../../components/SoftBackdrop";
 
-const skills = [
-  {
-    title: "Technical Skills",
-    score: "5/10",
-    percent: "50%",
-    description:
-      "Shows understanding of basic concepts but needs deeper technical knowledge.",
-    icon: <Code2 size={20} />,
-    color: "from-violet-500 to-indigo-500",
-  },
-  {
-    title: "Problem Solving",
-    score: "7/10",
-    percent: "70%",
-    description:
-      "Good approach to problem-solving with logical thinking and methodical breakdown.",
-    icon: <Brain size={20} />,
-    color: "from-green-400 to-emerald-500",
-  },
-  {
-    title: "Communication",
-    score: "6/10",
-    percent: "60%",
-    description:
-      "Clear communication with room for improvement in technical depth and clarity.",
-    icon: <MessageSquareText size={20} />,
-    color: "from-violet-400 to-purple-500",
-  },
-  {
-    title: "Experience",
-    score: "N/A",
-    percent: "0%",
-    description:
-      "Limited discussion about past experience and real-world applications.",
-    icon: <BriefcaseBusiness size={20} />,
-    color: "from-slate-500 to-slate-600",
-  },
-];
-
-const recommendations = [
-  {
-    title: "Strengthen Backend Fundamentals",
-    desc: "Focus on system design, database modeling, and API architecture.",
-    icon: <BookOpen size={20} />,
-  },
-  {
-    title: "Improve Communication",
-    desc: "Practice explaining complex concepts clearly and actively listening.",
-    icon: <Headphones size={20} />,
-  },
-  {
-    title: "Build Real-world Projects",
-    desc: "Create and showcase projects with backend contributions.",
-    icon: <FolderKanban size={20} />,
-  },
-];
 
 const MockInterviewFeedback = () => {
+  const { user } = useAuth();
+  const location = useLocation();
+  
+  let storedResult = {};
+
+  try {
+    storedResult = JSON.parse(
+      localStorage.getItem("latestInterviewResult")
+    ) || {};
+  } catch {
+    storedResult = {};
+  }
+  
+  const result =
+    location.state?.result ||
+    storedResult;
+  
+  const skills = [
+    {
+      title: "Technical Skills",
+      score: `${Math.round(
+        (result?.technicalKnowledge || 0) / 10
+      )}/10`,
+      percent: `${result?.technicalKnowledge || 0}%`,
+      description:
+        "Knowledge of technical concepts and subject expertise.",
+      icon: <Code2 size={20} />,
+      color: "from-violet-500 to-indigo-500",
+    },
+  
+    {
+      title: "Problem Solving",
+      score: `${Math.round(
+        (result?.problemSolving || 0) / 10
+      )}/10`,
+      percent: `${result?.problemSolving || 0}%`,
+      description:
+        "Logical thinking and problem-solving ability.",
+      icon: <Brain size={20} />,
+      color: "from-green-400 to-emerald-500",
+    },
+  
+    {
+      title: "Communication",
+      score: `${Math.round(
+        (result?.communication || 0) / 10
+      )}/10`,
+      percent: `${result?.communication || 0}%`,
+      description:
+        "Communication and articulation skills.",
+      icon: <MessageSquareText size={20} />,
+      color: "from-violet-400 to-purple-500",
+    },
+  
+    {
+      title: "Confidence",
+      score: `${Math.round(
+        (result?.confidence || 0) / 10
+      )}/10`,
+      percent: `${result?.confidence || 0}%`,
+      description:
+        "Confidence while answering interview questions.",
+      icon: <BriefcaseBusiness size={20} />,
+      color: "from-orange-400 to-red-500",
+    },
+  ];
+  
+  const strengths = [];
+  
+  if (
+    result?.technicalKnowledge >= 70
+  )
+    strengths.push(
+      "Strong technical knowledge"
+    );
+  
+  if (
+    result?.problemSolving >= 70
+  )
+    strengths.push(
+      "Excellent problem solving"
+    );
+  
+  if (
+    result?.communication >= 70
+  )
+    strengths.push(
+      "Good communication skills"
+    );
+  
+  if (
+    result?.confidence >= 70
+  )
+    strengths.push(
+      "High confidence level"
+    );
+  
+  
+  const improvements = [];
+  
+  if (
+    result?.technicalKnowledge < 70
+  )
+    improvements.push(
+      "Improve technical depth"
+    );
+  
+  if (
+    result?.problemSolving < 70
+  )
+    improvements.push(
+      "Practice problem solving"
+    );
+  
+  if (
+    result?.communication < 70
+  )
+    improvements.push(
+      "Enhance communication"
+    );
+  
+  if (
+    result?.confidence < 70
+  )
+    improvements.push(
+      "Build confidence"
+    );
+  
+  const recommendations = [];
+  
+  if (
+    result?.technicalKnowledge < 70
+  ) {
+    recommendations.push({
+      title:
+        "Strengthen Technical Knowledge",
+      desc:
+        "Focus on core concepts and practical implementation.",
+      icon: <BookOpen size={20} />,
+    });
+  }
+  
+  if (
+    result?.communication < 70
+  ) {
+    recommendations.push({
+      title:
+        "Improve Communication",
+      desc:
+        "Practice explaining concepts clearly.",
+      icon: <Headphones size={20} />,
+    });
+  }
+  
+  if (
+    result?.problemSolving < 70
+  ) {
+    recommendations.push({
+      title:
+        "Practice Problem Solving",
+      desc:
+        "Solve more real-world interview questions.",
+      icon: <FolderKanban size={20} />,
+    });
+  }
+  if (recommendations.length === 0) {
+    recommendations.push({
+      title: "Excellent Performance",
+      desc: "Continue maintaining your current level.",
+      icon: <CheckCircle2 size={20} />,
+    });
+  }
   const navigate = useNavigate();
 
   return (
@@ -167,16 +285,22 @@ const MockInterviewFeedback = () => {
               <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
                 <div className="flex items-center gap-4">
                   <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-600 text-2xl font-bold shadow-[0_0_30px_rgba(139,92,246,0.4)]">
-                    AH
+                    {
+                      result?.userId
+                        ? `${result.userId.firstName?.[0] || ""}${result.userId.lastName?.[0] || ""}`
+                        : `${user?.firstName?.[0] || ""}${user?.lastName?.[0] || ""}`
+                    }
                   </div>
 
                   <div>
                     <h2 className="text-xl font-semibold">
-                      Adhip Halder
+                      {result?.userId
+                        ? `${result.userId.firstName} ${result.userId.lastName}`
+                        : `${user?.firstName || ""} ${user?.lastName || ""}`}
                     </h2>
 
                     <p className="text-sm text-gray-400">
-                      adhiphalder8585@gmail.com
+                      {result?.userId?.email || user?.email || "N/A"}
                     </p>
                   </div>
                 </div>
@@ -202,7 +326,7 @@ const MockInterviewFeedback = () => {
                       </p>
 
                       <p className="mt-1 font-semibold text-white">
-                        MRA-2024-042
+                        {`INT-${result?._id?.slice(-6) || "000000"}`}
                       </p>
                     </div>
                   </div>
@@ -220,7 +344,7 @@ const MockInterviewFeedback = () => {
                       </p>
 
                       <p className="mt-1 font-semibold text-white">
-                        Java
+                      {result?.domain}
                       </p>
                     </div>
                   </div>
@@ -238,7 +362,9 @@ const MockInterviewFeedback = () => {
                       </p>
 
                       <p className="mt-1 font-semibold text-white">
-                        May 21, 2024
+                        {new Date(
+                          result?.createdAt
+                        ).toLocaleDateString()}
                       </p>
                     </div>
                   </div>
@@ -256,7 +382,10 @@ const MockInterviewFeedback = () => {
                       </p>
 
                       <p className="mt-1 font-semibold text-white">
-                        45 mins
+                        {result?.timeTaken
+                          ? `${Math.floor(result.timeTaken / 60)}m ${result.timeTaken % 60
+                          }s`
+                          : "0s"}
                       </p>
                     </div>
                   </div>
@@ -290,12 +419,14 @@ const MockInterviewFeedback = () => {
                   <p className="text-sm text-gray-400">Overall Score</p>
 
                   <h2 className="mt-2 text-5xl font-bold text-violet-300">
-                    6.0
+                    {(
+                      (result?.score || 0) / 10
+                    ).toFixed(1)}
                     <span className="text-xl text-gray-500">/10</span>
                   </h2>
 
                   <p className="mt-2 font-medium text-green-400">
-                    Good Start
+                   {result?.recommendation}
                   </p>
                 </div>
 
@@ -311,7 +442,10 @@ const MockInterviewFeedback = () => {
                         strokeDashoffset: 389.5,
                       }}
                       animate={{
-                        strokeDashoffset: 155.8,
+                        strokeDashoffset:
+                          389.5 -
+                          ((result?.score || 0) / 100) *
+                            389.5,
                       }}
                       transition={{
                         duration: 1.8,
@@ -345,7 +479,11 @@ const MockInterviewFeedback = () => {
                       fill="none"
                       strokeLinecap="round"
                       strokeDasharray="389.5"
-                      strokeDashoffset="155.8"
+                      strokeDashoffset={
+                        389.5 -
+                        ((result?.score || 0) / 100) *
+                          389.5
+                      }
                       className="drop-shadow-[0_0_12px_rgba(139,92,246,0.8)]"
                     />
 
@@ -365,7 +503,7 @@ const MockInterviewFeedback = () => {
 
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
                     <span className="text-3xl font-bold text-white">
-                      60%
+                      {result?.score || 0}%
                     </span>
 
                     <span className="mt-1 text-xs tracking-wide text-gray-400">
@@ -377,8 +515,7 @@ const MockInterviewFeedback = () => {
 
               <div className="mt-6 rounded-2xl border border-white/5 bg-white/[0.03] p-4">
                 <p className="text-sm leading-6 text-gray-300">
-                  You have a solid foundation. Focus on deeper technical depth
-                  and communication improvement.
+                 {result?.feedback}
                 </p>
               </div>
             </motion.div>
@@ -489,11 +626,7 @@ const MockInterviewFeedback = () => {
               </div>
 
               <p className="text-sm leading-8 text-gray-400">
-                The candidate demonstrated solid problem-solving ability and
-                team leadership experience, but lacked depth in backend
-                technical specifics. Communication showed room for improvement.
-                Concrete API or backend contributions are needed to fully gauge
-                technical proficiency.
+                {result?.feedback}
               </p>
             </div>
 
@@ -517,10 +650,13 @@ const MockInterviewFeedback = () => {
               </div>
 
               <ul className="space-y-4 text-sm text-gray-300">
-                <li>• Good problem-solving approach</li>
-                <li>• Clear logical thinking</li>
-                <li>• Team leadership experience</li>
-                <li>• Basic technical concepts</li>
+                {strengths.length ? (
+                  strengths.map((item, i) => (
+                    <li key={i}>• {item}</li>
+                  ))
+                ) : (
+                  <li>No major strengths identified yet.</li>
+                )}
               </ul>
             </div>
 
@@ -546,10 +682,13 @@ const MockInterviewFeedback = () => {
               </div>
 
               <ul className="space-y-4 text-sm text-gray-300">
-                <li>• Backend technical depth</li>
-                <li>• Active listening skills</li>
-                <li>• API & system design knowledge</li>
-                <li>• Concrete project contributions</li>
+                {improvements.length ? (
+                  improvements.map((item, i) => (
+                    <li key={i}>• {item}</li>
+                  ))
+                ) : (
+                  <li>No significant improvement areas identified.</li>
+                )}
               </ul>
             </div>
           </div>
