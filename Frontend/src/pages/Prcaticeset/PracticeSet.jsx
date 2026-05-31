@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import QuestionsPanelPrac from '../../components/QuestionsPanelPrac';
 import CodeEditorPrac from '../../components/CodeEditorPrac';
-import Header from '../../components/Header';
+import Header from '../../components/HeaderComplete';
 import SoftBackdropNew from "../../components/SoftBackdropNew";
 
 
