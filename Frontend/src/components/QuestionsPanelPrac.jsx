@@ -4,6 +4,8 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import QuestionCard from './QuestionCardPrac';
 import SoftBackdrop from './SoftBackdrop';
+import { ArrowLeft } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
@@ -61,7 +63,7 @@ const diffPalette = {
   hard: { color: '#f87171', bg: 'rgba(248,113,113,0.1)', border: 'rgba(248,113,113,0.22)' },
 };
 
-/* ─── ScoreRing (matches CandidatesPage) ─── */
+/* ─── ScoreRing ─── */
 const ScoreRing = ({ pct, color, size = 52, stroke = 5 }) => {
   const r = (size - stroke) / 2;
   const circ = 2 * Math.PI * r;
@@ -94,6 +96,8 @@ const QuestionsPanelPrac = ({
   answers, codes, outputs,
   onQuestionsLoaded, onNavigate, onSelectAnswer, onSubmitComplete,
 }) => {
+  const navigate = useNavigate(); // ✅ moved inside component
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [analyzing, setAnalyzing] = useState(false);
@@ -187,7 +191,6 @@ const QuestionsPanelPrac = ({
     <Shell>
       <div className="flex-1 flex items-center justify-center">
         <div className="text-center px-8">
-          {/* animated triple ring */}
           <div className="relative mx-auto mb-7 w-16 h-16">
             <div className="absolute inset-0 rounded-full border border-[#6366f1]/15" />
             <div className="absolute inset-0 rounded-full border border-t-[#6366f1] border-r-[#8b5cf6]/50"
@@ -251,155 +254,130 @@ const QuestionsPanelPrac = ({
     const codingPct = codingQuestions.length ? Math.round((submitResult.stats?.correctCoding / codingQuestions.length) * 100) : 0;
 
     return (
-      <>
-        <Shell>
-          {/* results header */}
-          <div className="px-5 py-5 shrink-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-7 h-7 rounded-lg flex items-center justify-center"
-                style={{ background: 'rgba(99,102,241,0.15)', border: '1px solid rgba(99,102,241,0.25)' }}>
-                <IconTrophy />
-              </div>
-              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-indigo-400">Session Complete</span>
+      <Shell>
+        {/* results header */}
+        <div className="px-5 py-5 shrink-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center"
+              style={{ background: 'rgba(99,102,241,0.15)', border: '1px solid rgba(99,102,241,0.25)' }}>
+              <IconTrophy />
             </div>
-            <h1 className="text-lg font-bold text-white leading-tight">{domain}</h1>
-            <div className="flex items-center gap-2 mt-2">
-              <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full"
-                style={{ color: diff.color, background: diff.bg, border: `1px solid ${diff.border}` }}>
-                {difficulty}
-              </span>
-              <span className="text-[10px] text-white/30">·</span>
-              <span className="text-[10px] text-white/35">{questions.length} questions</span>
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-indigo-400">Session Complete</span>
+          </div>
+          <h1 className="text-lg font-bold text-white leading-tight">{domain}</h1>
+          <div className="flex items-center gap-2 mt-2">
+            <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full"
+              style={{ color: diff.color, background: diff.bg, border: `1px solid ${diff.border}` }}>
+              {difficulty}
+            </span>
+            <span className="text-[10px] text-white/30">·</span>
+            <span className="text-[10px] text-white/35">{questions.length} questions</span>
+          </div>
+        </div>
+
+        {/* score cards */}
+        {submitResult.stats && (
+          <div className="px-5 py-4 shrink-0 grid grid-cols-2 gap-3"
+            style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+            {/* MCQ */}
+            <div className="rounded-2xl p-4 flex flex-col items-center gap-3"
+              style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.07)' }}>
+              <ScoreRing pct={mcqPct} color="#fb923c" size={52} />
+              <div className="text-center">
+                <p className="text-white font-bold text-base leading-none">
+                  {submitResult.stats.correctMCQ}
+                  <span className="text-white/30 font-normal text-xs"> / {mcqQuestions.length}</span>
+                </p>
+                <p className="text-[10px] text-white/35 uppercase tracking-widest mt-1">MCQ SCORE</p>
+              </div>
+              <MiniBar pct={mcqPct} color="#fb923c" />
+            </div>
+            {/* Coding */}
+            <div className="rounded-2xl p-4 flex flex-col items-center gap-3"
+              style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.07)' }}>
+              <ScoreRing pct={codingPct} color="#818cf8" size={52} />
+              <div className="text-center">
+                <p className="text-white font-bold text-base leading-none">
+                  {submitResult.stats.correctCoding}
+                  <span className="text-white/30 font-normal text-xs"> / {codingQuestions.length}</span>
+                </p>
+                <p className="text-[10px] text-white/35 uppercase tracking-widest mt-1">Coding SCORE</p>
+              </div>
+              <MiniBar pct={codingPct} color="#818cf8" />
             </div>
           </div>
+        )}
 
-          {/* score cards */}
-          {submitResult.stats && (
-            <div className="px-5 py-4 shrink-0 grid grid-cols-2 gap-3"
-              style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-              {/* MCQ */}
-              <div className="rounded-2xl p-4 flex flex-col items-center gap-3"
-                style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                <ScoreRing pct={mcqPct} color="#fb923c" size={52} />
-                <div className="text-center">
-                  <p className="text-white font-bold text-base leading-none">
-                    {submitResult.stats.correctMCQ}
-                    <span className="text-white/30 font-normal text-xs"> / {mcqQuestions.length}</span>
-                  </p>
-                  <p className="text-[10px] text-white/35 uppercase tracking-widest mt-1">MCQ SCORE</p>
-                </div>
-                <MiniBar pct={mcqPct} color="#fb923c" />
-              </div>
-              {/* Coding */}
-              <div className="rounded-2xl p-4 flex flex-col items-center gap-3"
-                style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                <ScoreRing pct={codingPct} color="#818cf8" size={52} />
-                <div className="text-center">
-                  <p className="text-white font-bold text-base leading-none">
-                    {submitResult.stats.correctCoding}
-                    <span className="text-white/30 font-normal text-xs"> / {codingQuestions.length}</span>
-                  </p>
-                  <p className="text-[10px] text-white/35 uppercase tracking-widest mt-1">Coding SCORE</p>
-                </div>
-                <MiniBar pct={codingPct} color="#818cf8" />
-              </div>
+        {/* ✅ Back to Dashboard button — outside the grid */}
+        <div className="px-5 py-4 shrink-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+          <button
+            onClick={() => navigate("/dashboard")}
+            className="w-full flex items-center justify-center gap-2 px-5 py-2.5 rounded-2xl text-sm font-semibold text-white transition-all hover:scale-[1.01] active:scale-[0.98]"
+            style={{
+              background: "linear-gradient(135deg, rgba(99,102,241,0.18), rgba(139,92,246,0.12))",
+              border: "1px solid rgba(99,102,241,0.2)",
+            }}
+          >
+            <ArrowLeft size={16} />
+            Back to Dashboard
+          </button>
+        </div>
+
+        {/* AI review */}
+        <div className="flex-1 overflow-y-auto px-5 py-5" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(99,102,241,0.2) transparent' }}>
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-6 h-6 rounded-lg flex items-center justify-center"
+              style={{ background: 'rgba(99,102,241,0.15)', border: '1px solid rgba(99,102,241,0.25)' }}>
+              <IconBot />
             </div>
-          )}
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-indigo-400">AI Overall Review</span>
+          </div>
+          <div
+            className="rounded-3xl overflow-hidden"
+            style={{
+              background: 'rgba(255,255,255,0.03)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              backdropFilter: 'blur(18px)',
+              WebkitBackdropFilter: 'blur(18px)',
+              boxShadow: '0 10px 40px rgba(0,0,0,0.18)',
+            }}
+          >
+            {/* top accent */}
+            <div className="h-[2px] w-full"
+              style={{ background: 'linear-gradient(90deg,#6366f1,#8b5cf6,#a855f7)' }} />
 
-          {/* AI review */}
-          <div className="flex-1 overflow-y-auto px-5 py-5" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(99,102,241,0.2) transparent' }}>
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-6 h-6 rounded-lg flex items-center justify-center"
-                style={{ background: 'rgba(99,102,241,0.15)', border: '1px solid rgba(99,102,241,0.25)' }}>
-                <IconBot />
+            <div className="p-6">
+              {/* heading */}
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-2xl flex items-center justify-center"
+                  style={{ background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.22)' }}>
+                  <IconBot />
+                </div>
+                <div>
+                  <p className="text-white font-semibold text-[15px]">Performance Analysis</p>
+                  <p className="text-white/35 text-[11px] tracking-wide uppercase">AI Generated Technical Review</p>
+                </div>
               </div>
-              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-indigo-400">AI Overall Review</span>
-            </div>
-            <div
-              className="rounded-3xl overflow-hidden"
-              style={{
-                background: 'rgba(255,255,255,0.03)',
-                border: '1px solid rgba(255,255,255,0.08)',
-                backdropFilter: 'blur(18px)',
-                WebkitBackdropFilter: 'blur(18px)',
-                boxShadow: '0 10px 40px rgba(0,0,0,0.18)',
-              }}
-            >
 
-              {/* top accent */}
-              <div
-                className="h-[2px] w-full"
-                style={{
-                  background:
-                    'linear-gradient(90deg,#6366f1,#8b5cf6,#a855f7)',
-                }}
-              />
-
-              <div className="p-6">
-
-                {/* heading */}
-                <div className="flex items-center gap-3 mb-6">
-                  <div
-                    className="w-10 h-10 rounded-2xl flex items-center justify-center"
-                    style={{
-                      background: 'rgba(99,102,241,0.12)',
-                      border: '1px solid rgba(99,102,241,0.22)',
-                    }}
-                  >
-                    <IconBot />
-                  </div>
-
-                  <div>
-                    <p className="text-white font-semibold text-[15px]">
-                      Performance Analysis
-                    </p>
-
-                    <p className="text-white/35 text-[11px] tracking-wide uppercase">
-                      AI Generated Technical Review
-                    </p>
-                  </div>
-                </div>
-
-                {/* content */}
-                <div
-                  className="
-        prose prose-invert max-w-none
-        prose-headings:text-white
-        prose-headings:font-semibold
-        prose-headings:text-[15px]
-
-        prose-p:text-white/65
-        prose-p:text-[13px]
-        prose-p:leading-7
-
-        prose-strong:text-white
-        prose-strong:font-semibold
-
-        prose-li:text-white/60
-        prose-li:text-[13px]
-        prose-li:leading-7
-
-        prose-ul:space-y-1
-
-        prose-code:text-indigo-300
-        prose-code:bg-white/[0.04]
-        prose-code:px-1.5
-        prose-code:py-0.5
-        prose-code:rounded-md
-
-        prose-hr:border-white/10
-      "
-                >
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                    {submitResult.aiReview}
-                  </ReactMarkdown>
-                </div>
-
+              {/* content */}
+              <div className="
+                prose prose-invert max-w-none
+                prose-headings:text-white prose-headings:font-semibold prose-headings:text-[15px]
+                prose-p:text-white/65 prose-p:text-[13px] prose-p:leading-7
+                prose-strong:text-white prose-strong:font-semibold
+                prose-li:text-white/60 prose-li:text-[13px] prose-li:leading-7
+                prose-ul:space-y-1
+                prose-code:text-indigo-300 prose-code:bg-white/[0.04] prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-md
+                prose-hr:border-white/10
+              ">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {submitResult.aiReview}
+                </ReactMarkdown>
               </div>
             </div>
           </div>
-        </Shell>
-      </>
+        </div>
+      </Shell>
     );
   }
 
@@ -562,7 +540,7 @@ const QuestionsPanelPrac = ({
           <button onClick={handleAnalyze} disabled={analyzing}
             className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-[12px] font-semibold transition-all disabled:opacity-40 hover:scale-[1.01] active:scale-[0.99]"
             style={{
-              background: analyzing ? 'rgba(99,102,241,0.1)' : 'rgba(99,102,241,0.1)',
+              background: 'rgba(99,102,241,0.1)',
               border: '1px solid rgba(99,102,241,0.22)',
               color: '#a5b4fc',
             }}>
