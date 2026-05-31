@@ -66,7 +66,7 @@ const InstructionsModal = ({ isOpen, onClose, onConfirm, drive }) => {
             className="relative w-full max-w-2xl bg-[#0f1117]/95 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] p-8 md:p-10 shadow-2xl overflow-hidden"
           >
             <div className="absolute top-0 left-0 w-full h-1.5 bg-indigo-500" />
-            
+
             <div className="space-y-6">
               <div>
                 <h3 className="text-2xl font-bold tracking-tight text-white mb-1">
@@ -82,37 +82,55 @@ const InstructionsModal = ({ isOpen, onClose, onConfirm, drive }) => {
                   <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
                   Strict AI Proctoring is Enabled
                 </p>
-                <p>This assessment is monitored in real-time. Violating the following rules will result in automatic termination of your session.</p>
+                <p>
+                  This assessment is monitored in real-time. Violating the
+                  following rules will result in automatic termination of your
+                  session.
+                </p>
               </div>
 
               <ul className="space-y-4 text-sm text-gray-300">
                 <li className="flex items-start gap-3 bg-white/5 p-3 rounded-xl border border-white/5">
                   <div>
-                    <strong className="text-white block mb-0.5">Camera & Lighting</strong> 
-                    Your face must be clearly visible at all times. Ensure your room is well-lit. Face coverings or masks are strictly prohibited.
+                    <strong className="text-white block mb-0.5">
+                      Camera & Lighting
+                    </strong>
+                    Your face must be clearly visible at all times. Ensure your
+                    room is well-lit. Face coverings or masks are strictly
+                    prohibited.
                   </div>
                 </li>
                 <li className="flex items-start gap-3 bg-white/5 p-3 rounded-xl border border-white/5">
                   <div>
-                    <strong className="text-white block mb-0.5">Environment Security</strong> 
-                    You must be completely alone. Detection of multiple people in the camera frame will trigger an immediate violation.
+                    <strong className="text-white block mb-0.5">
+                      Environment Security
+                    </strong>
+                    You must be completely alone. Detection of multiple people
+                    in the camera frame will trigger an immediate violation.
                   </div>
                 </li>
                 <li className="flex items-start gap-3 bg-white/5 p-3 rounded-xl border border-white/5">
                   <div>
-                    <strong className="text-white block mb-0.5">Screen Focus</strong> 
-                    You will be forced into Full-Screen mode. Do not exit full-screen, switch tabs, minimize the browser, or click outside the window.
+                    <strong className="text-white block mb-0.5">
+                      Screen Focus
+                    </strong>
+                    You will be forced into Full-Screen mode. Do not exit
+                    full-screen, switch tabs, minimize the browser, or click
+                    outside the window.
                   </div>
                 </li>
                 <li className="flex items-start gap-3 bg-white/5 p-3 rounded-xl border border-white/5">
                   <div>
-                    <strong className="text-white block mb-0.5">Keyboard Restrictions</strong> 
-                    Copy-pasting, Alt-Tabbing, and accessing Developer Tools are disabled and monitored.
+                    <strong className="text-white block mb-0.5">
+                      Keyboard Restrictions
+                    </strong>
+                    Copy-pasting, Alt-Tabbing, and accessing Developer Tools are
+                    disabled and monitored.
                   </div>
                 </li>
               </ul>
             </div>
-            
+
             <div className="mt-8 flex flex-col sm:flex-row gap-4">
               <button
                 onClick={() => onConfirm(drive)}
@@ -135,7 +153,6 @@ const InstructionsModal = ({ isOpen, onClose, onConfirm, drive }) => {
     </AnimatePresence>
   );
 };
-
 
 const DrivePreview = () => {
   const { user } = useAuth();
@@ -167,28 +184,17 @@ const DrivePreview = () => {
   useEffect(() => {
     if (!user) return;
 
-    const fetchUserDrives = async (
-      isInitialLoad = false
-    ) => {
-    
-      if (isInitialLoad)
-        setLoading(true);
-    
+    const fetchUserDrives = async (isInitialLoad = false) => {
+      if (isInitialLoad) setLoading(true);
+
       try {
-    
-        const token =
-          localStorage.getItem("token");
-    
-        // Assessment drives
-        const drivesRes = await fetch(
-          "http://localhost:4000/api/my-drives",
-          {
-            headers: {
-              Authorization:
-                `Bearer ${token}`,
-            },
-          }
-        );
+        const token = localStorage.getItem("token");
+
+        const drivesRes = await fetch("http://localhost:4000/api/my-drives", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
         const resultRes = await fetch(
           "http://localhost:4000/api/interview/my-results",
@@ -196,99 +202,65 @@ const DrivePreview = () => {
             headers: {
               Authorization: `Bearer ${token}`,
             },
-          }
+          },
         );
-        
-        const resultData =
-          await resultRes.json();
-    
-        const drivesData =
-          await drivesRes.json();
-    
-        // Interview schedules
-        const interviewRes =
-          await fetch(
-            "http://localhost:4000/api/drives/my-interviews",
-            {
-              headers: {
-                Authorization:
-                  `Bearer ${token}`,
-              },
-            }
-          );
-    
-        const interviewData =
-          await interviewRes.json();
-    
-        const assessmentDrives =
-          drivesData.drives || [];
-    
-        // Convert interviews into drive-like objects
-        const interviewDrives =
-        (interviewData.interviews || [])
-          .map((interview) => ({
-      
+
+        const resultData = await resultRes.json();
+
+        const drivesData = await drivesRes.json();
+
+        const interviewRes = await fetch(
+          "http://localhost:4000/api/drives/my-interviews",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          },
+        );
+
+        const interviewData = await interviewRes.json();
+
+        const assessmentDrives = drivesData.drives || [];
+
+        const interviewDrives = (interviewData.interviews || []).map(
+          (interview) => ({
             _id: interview._id,
-      
-            interviewId:
-              interview._id,
-      
-            // REAL DRIVE OBJECT ID
-            driveMongoId:
-              interview.drive?._id,
-      
-            // DISPLAY DRIVE ID
-            driveId:
-              interview.drive?.driveId || "",
-      
+
+            interviewId: interview._id,
+
+            driveMongoId: interview.drive?._id,
+
+            driveId: interview.drive?.driveId || "",
+
             hiringPositionName:
-              interview.drive
-                ?.hiringPositionName || "Interview",
-      
+              interview.drive?.hiringPositionName || "Interview",
+
             driveType: "Interview",
-      
-            assessmentStartDate:
-              interview.startDate,
-      
-            assessmentEndDate:
-              interview.endDate,
-      
-            timeDurationInMin:
-              interview.drive
-                ?.timeDurationInMin || 0,
-      
-            difficulty:
-              interview.drive
-                ?.difficulty || "Intermediate",
-      
-            status:
-              interview.status,
-      
+
+            assessmentStartDate: interview.startDate,
+
+            assessmentEndDate: interview.endDate,
+
+            timeDurationInMin: interview.drive?.timeDurationInMin || 0,
+
+            difficulty: interview.drive?.difficulty || "Intermediate",
+
+            status: interview.status,
+
             isInterview: true,
-          }));
-    
-        // Merge both
-        setAssignedDrives([
-          ...assessmentDrives,
-          ...interviewDrives,
-        ]);
-    
+          }),
+        );
+
+        setAssignedDrives([...assessmentDrives, ...interviewDrives]);
+
         setUserResults([
           ...(drivesData.results || []),
           ...(resultData.results || []),
         ]);
-    
       } catch (error) {
-    
-        console.error(
-          "Failed to fetch drives:",
-          error
-        );
-    
+        console.error("Failed to fetch drives:", error);
       } finally {
-    
-        if (isInitialLoad)
-          setLoading(false);
+        if (isInitialLoad) setLoading(false);
       }
     };
 
@@ -316,141 +288,101 @@ const DrivePreview = () => {
   const confirmStartInterview = (drive) => {
     closeInstructionsModal();
     if (drive.driveType === "Interview") {
-      navigate(
-        `/interview/${drive.driveMongoId}`,
-        { state: { drive } }
-      );
+      navigate(`/interview/${drive.driveMongoId}`, { state: { drive } });
     } else {
       navigate("/assessment", { state: { drive } });
     }
   };
 
   const getDriveStatus = (drive) => {
-
     const now = currentTime;
-  
-    // =========================
-    // INTERVIEW LOGIC
-    // =========================
+
     if (drive.driveType === "Interview") {
-
       const startTime = new Date(
-        drive.assessmentStartDate ||
-        drive.startDate
+        drive.assessmentStartDate || drive.startDate,
       ).getTime();
-    
+
       const endTime = new Date(
-        drive.assessmentEndDate ||
-        drive.endDate
+        drive.assessmentEndDate || drive.endDate,
       ).getTime();
-    
-      // check completed interview
-      const hasInterviewResult =
-        userResults.find((r) => {
 
-          const resultInterviewId =
-            String(
-              r.interviewId?._id ||
-              r.interviewId
-            );
+      const hasInterviewResult = userResults.find((r) => {
+        const resultInterviewId = String(r.interviewId?._id || r.interviewId);
 
-          const currentInterviewId =
-            String(
-              drive.interviewId
-            );
+        const currentInterviewId = String(drive.interviewId);
 
-          return (
-            resultInterviewId ===
-            currentInterviewId
-          );
-        });
-    
-      // already completed
+        return resultInterviewId === currentInterviewId;
+      });
+
       if (hasInterviewResult) {
-    
         return {
           state: "completed",
-          text: "Interview Completed",
+          text: "View Result",
           resultId: hasInterviewResult._id,
         };
       }
-    
+
       if (now < startTime) {
-    
         return {
           state: "upcoming",
           text: "Start Interview",
         };
       }
-    
+
       if (now >= startTime && now <= endTime) {
-    
         return {
           state: "active",
           text: "Start Interview",
         };
       }
-    
+
       return {
         state: "missed",
         text: "Interview Expired",
       };
     }
-  
-    // =========================
-    // ASSESSMENT LOGIC
-    // =========================
-  
-    const startTime = new Date(
-      drive.assessmentStartDate
-    ).getTime();
-  
-    const durationMs =
-      drive.timeDurationInMin * 60 * 1000;
-  
-    const endTime =
-      startTime + durationMs;
-  
+
+
+    const startTime = new Date(drive.assessmentStartDate).getTime();
+
+    const durationMs = drive.timeDurationInMin * 60 * 1000;
+
+    const endTime = startTime + durationMs;
+
     const hasResult = userResults.find(
-      (r) =>
-        r.driveId &&
-        r.driveId._id === drive._id
+      (r) => r.driveId && r.driveId._id === drive._id,
     );
-  
+
     if (now < startTime) {
-  
       return {
         state: "upcoming",
         text: "Start Assessment",
       };
     }
-  
+
     if (now >= startTime && now <= endTime) {
-  
       if (hasResult) {
-  
         return {
           state: "completed",
           text: "View Result",
           resultId: hasResult._id,
         };
       }
-  
+
       return {
         state: "active",
         text: "Start Assessment",
       };
     }
-  
+
     if (hasResult) {
-  
       return {
         state: "completed",
         text: "View Result",
         resultId: hasResult._id,
       };
     }
-  
+
     return {
       state: "missed",
       text: "Not Attempted",
@@ -459,51 +391,37 @@ const DrivePreview = () => {
 
   const handleAction = (statusInfo, drive) => {
     if (statusInfo.state === "upcoming") {
+      const isInterview = drive.driveType === "Interview";
 
-      const isInterview =
-        drive.driveType === "Interview";
-    
       openInfoModal(
-    
-        isInterview
-          ? "Interview Not Started"
-          : "Assessment Not Started",
-    
+        isInterview ? "Interview Not Started" : "Assessment Not Started",
+
         `${
-          isInterview
-            ? "This interview"
-            : "This assessment"
+          isInterview ? "This interview" : "This assessment"
         } will be enabled at ${new Date(
-          drive.assessmentStartDate ||
-          drive.startDate
-        ).toLocaleString()}. Please return at the scheduled time.`
-    
+          drive.assessmentStartDate || drive.startDate,
+        ).toLocaleString()}. Please return at the scheduled time.`,
       );
     } else if (statusInfo.state === "active") {
       setInstructionsModal({ isOpen: true, drive });
     } else if (statusInfo.state === "missed") {
+      const isInterview = drive.driveType === "Interview";
 
-      const isInterview =
-        drive.driveType === "Interview";
-    
       openInfoModal(
-    
-        isInterview
-          ? "Interview Not Attempted"
-          : "Assessment Not Attempted",
-    
+        isInterview ? "Interview Not Attempted" : "Assessment Not Attempted",
+
         `${
           isInterview
             ? "You did not attempt this interview."
             : "You did not attempt this assessment."
-        } The scheduled time window has passed.`
-    
+        } The scheduled time window has passed.`,
       );
     } else if (statusInfo.state === "completed") {
-      openInfoModal(
-        "Results",
-        "Your interview is complete. Results will be available soon."
-      );
+      const type = drive.driveType === "Interview" ? "interview" : "assessment";
+
+      const id = drive.driveMongoId || drive._id;
+
+      navigate(`/drive/result/${id}/${type}`);
     }
   };
 
@@ -512,11 +430,11 @@ const DrivePreview = () => {
       <SoftBackdrop />
       <LenisScroll />
       <Header />
-      
+
       <InfoModal {...modalConfig} onClose={closeInfoModal} />
-      
-      <InstructionsModal 
-        isOpen={instructionsModal.isOpen} 
+
+      <InstructionsModal
+        isOpen={instructionsModal.isOpen}
         drive={instructionsModal.drive}
         onClose={closeInstructionsModal}
         onConfirm={confirmStartInterview}
@@ -529,7 +447,6 @@ const DrivePreview = () => {
         transition={{ duration: 0.6, ease: "easeOut" }}
       >
         <DateTime />
-          
 
         <h1 className="text-3xl font-bold mb-10 bg-gradient-to-r from-indigo-500 via-indigo-400 to-indigo-300 bg-clip-text text-transparent">
           Welcome, {fullName}
@@ -588,17 +505,14 @@ const DrivePreview = () => {
                     <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-300">
                       <span className="flex items-center gap-1.5">
                         {new Date(
-                          drive.assessmentStartDate ||
-                          drive.startDate
+                          drive.assessmentStartDate || drive.startDate,
                         ).toLocaleString()}
                       </span>
                       <span className="flex items-center gap-1.5">
                         ⏱ {drive.timeDurationInMin} mins
                       </span>
                       <span className="flex items-center gap-1.5 uppercase text-xs font-bold text-indigo-300">
-                        <span>
-                          {drive.driveType}
-                        </span>
+                        <span>{drive.driveType}</span>
                       </span>
                     </div>
                   </div>

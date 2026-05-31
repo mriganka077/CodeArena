@@ -39,6 +39,8 @@ import assessmentroutes from "./routes/assessment.js"
 
 import interviewRoutes from "./routes/interview.js";
 
+import resultRoutes from './routes/result.js';
+
 
 dotenv.config();
 
@@ -189,6 +191,11 @@ app.use(
 app.use(
   "/api/candidates", 
   candidateRoutes
+);
+
+app.use(
+  '/api/result',
+   resultRoutes
 );
 
 app.use(
