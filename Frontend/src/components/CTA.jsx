@@ -31,7 +31,7 @@ export default function CTA() {
                             viewport={{ once: true }}
                             transition={{ type: "spring", stiffness: 250, damping: 70, mass: 1, delay: 0.3 }}
                         >
-                            <a href="/drive">                            
+                            <a href="/dashboard">                            
                                 <GhostButton className="px-8 py-3 gap-2">
                                     Start your assessment <ArrowRightIcon size={20} />
                                 </GhostButton>
