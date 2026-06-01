@@ -84,7 +84,9 @@ const ResultPage = () => {
     const complexData = [];
 
     const getOriginalKey = (possibleKeys) =>
-      Object.keys(resultData).find((k) => possibleKeys.includes(k.toLowerCase()));
+      Object.keys(resultData).find((k) =>
+        possibleKeys.includes(k.toLowerCase()),
+      );
 
     const kScore = getOriginalKey(["score"]);
     const kPercentage = getOriginalKey(["percentage"]);
@@ -105,7 +107,10 @@ const ResultPage = () => {
     ].filter(Boolean);
 
     Object.entries(resultData).forEach(([key, value]) => {
-      if (["_id", "driveId", "userId", "__v"].includes(key) || layoutExcludedKeys.includes(key)) {
+      if (
+        ["_id", "driveId", "userId", "__v"].includes(key) ||
+        layoutExcludedKeys.includes(key)
+      ) {
         return;
       }
 
@@ -123,11 +128,17 @@ const ResultPage = () => {
         "interviewid",
       ];
 
-      if (currentType === "assessment" && assessmentExclusions.includes(lowerKey)) {
+      if (
+        currentType === "assessment" &&
+        assessmentExclusions.includes(lowerKey)
+      ) {
         return;
       }
 
-      if (currentType === "interview" && interviewExclusions.includes(lowerKey)) {
+      if (
+        currentType === "interview" &&
+        interviewExclusions.includes(lowerKey)
+      ) {
         return;
       }
 
@@ -141,7 +152,9 @@ const ResultPage = () => {
     });
 
     const renderMetricBox = (key, value, customStatusColor) => {
-      const isTime = key.toLowerCase().includes("time") || key.toLowerCase().includes("duration");
+      const isTime =
+        key.toLowerCase().includes("time") ||
+        key.toLowerCase().includes("duration");
       let displayValue = value;
       if (typeof value === "boolean") {
         displayValue = value ? "Yes" : "No";
@@ -150,20 +163,20 @@ const ResultPage = () => {
       }
 
       return (
-        <div className="bg-white/[0.03] backdrop-blur-sm p-5 rounded-2xl border border-white/10 hover:bg-white/[0.05] transition-colors h-full flex flex-col justify-center">
-          <h3 className="text-gray-400 text-[10px] font-bold uppercase tracking-widest mb-2">
+        <div className="bg-white/[0.03] backdrop-blur-md p-5 md:p-6 rounded-[1.5rem] border border-white/10 hover:bg-white/[0.06] hover:border-white/20 transition-all duration-300 h-full flex flex-col justify-center">
+          <h3 className="text-gray-400 text-[11px] md:text-xs font-bold uppercase tracking-widest mb-2">
             {formatLabel(key)}
           </h3>
           {customStatusColor ? (
             <div>
               <span
-                className={`inline-block px-3 py-1 rounded-lg text-sm font-bold border ${customStatusColor}`}
+                className={`inline-block px-3 py-1.5 rounded-lg text-xs font-bold border shadow-sm ${customStatusColor}`}
               >
                 {String(displayValue).toUpperCase()}
               </span>
             </div>
           ) : (
-            <p className="text-white text-xl md:text-2xl font-semibold break-words">
+            <p className="text-white text-xl md:text-2xl lg:text-3xl font-semibold break-words">
               {displayValue}
             </p>
           )}
@@ -172,8 +185,8 @@ const ResultPage = () => {
     };
 
     const renderViolationsBlock = (key, value) => (
-      <div className="bg-white/[0.02] backdrop-blur-sm p-6 rounded-3xl border border-white/5 h-full">
-        <h3 className="text-rose-400 text-xs font-bold uppercase tracking-widest mb-4">
+      <div className="bg-white/[0.02] backdrop-blur-md p-5 md:p-6 rounded-[1.5rem] border border-white/5 hover:border-white/10 transition-colors h-full">
+        <h3 className="text-rose-400 text-[11px] md:text-xs font-bold uppercase tracking-widest mb-3">
           {formatLabel(key)}
         </h3>
         {Array.isArray(value) ? (
@@ -188,23 +201,23 @@ const ResultPage = () => {
             ))}
           </div>
         ) : typeof value === "object" && value !== null ? (
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             {Object.entries(value).map(([subKey, subVal]) => (
               <div
                 key={subKey}
                 className="flex justify-between items-start border-b border-white/5 pb-2 last:border-0 last:pb-0"
               >
-                <span className="text-gray-500 text-sm font-medium">
+                <span className="text-gray-500 text-xs md:text-sm font-medium">
                   {formatLabel(subKey)}
                 </span>
-                <span className="text-white text-sm font-semibold text-right pl-4">
+                <span className="text-white text-xs md:text-sm font-semibold text-right pl-3">
                   {typeof subVal === "object" ? "Nested Data" : String(subVal)}
                 </span>
               </div>
             ))}
           </div>
         ) : (
-          <p className="text-gray-300 text-sm md:text-base leading-relaxed whitespace-pre-wrap font-medium">
+          <p className="text-gray-300 text-xs md:text-sm leading-relaxed whitespace-pre-wrap font-medium">
             {String(value)}
           </p>
         )}
@@ -212,46 +225,90 @@ const ResultPage = () => {
     );
 
     return (
-      <div className="space-y-6">
+      <div className="space-y-4 md:space-y-5">
         {(currentType === "assessment" || currentType === "interview") && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-            <div className="lg:col-span-2 flex flex-col gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-5 mb-6 md:mb-8">
+            <div className="lg:col-span-2 flex flex-col gap-4 md:gap-5">
               {currentType === "assessment" ? (
                 <>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {renderMetricBox(kScore || "Score", kScore ? resultData[kScore] : "N/A")}
-                    {renderMetricBox(kPercentage || "Percentage", kPercentage ? resultData[kPercentage] : "N/A")}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
+                    {renderMetricBox(
+                      kScore || "Score",
+                      kScore ? resultData[kScore] : "N/A",
+                    )}
+                    {renderMetricBox(
+                      kPercentage || "Percentage",
+                      kPercentage ? resultData[kPercentage] : "N/A",
+                    )}
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {renderMetricBox(kTimeTaken || "Time Taken", kTimeTaken ? resultData[kTimeTaken] : "N/A")}
-                    {renderMetricBox(kTerminationReason || "Termination Reason", kTerminationReason ? resultData[kTerminationReason] : "N/A")}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
+                    {renderMetricBox(
+                      kTimeTaken || "Time Taken",
+                      kTimeTaken ? resultData[kTimeTaken] : "N/A",
+                    )}
+                    {renderMetricBox(
+                      kTerminationReason || "Termination Reason",
+                      kTerminationReason
+                        ? resultData[kTerminationReason]
+                        : "N/A",
+                    )}
                   </div>
-                  <div className="grid grid-cols-1 gap-4">
+                  <div className="grid grid-cols-1 gap-4 md:gap-5">
                     {(() => {
                       const passVal = kIsPass ? resultData[kIsPass] : "N/A";
-                      const isPassYes = passVal === true || String(passVal).toLowerCase() === "yes" || String(passVal).toLowerCase() === "true";
-                      const color = passVal !== "N/A"
-                        ? isPassYes ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" : "text-rose-400 bg-rose-500/10 border-rose-500/20"
-                        : "";
-                      return renderMetricBox(kIsPass || "Is Pass", passVal, color);
+                      const isPassYes =
+                        passVal === true ||
+                        String(passVal).toLowerCase() === "yes" ||
+                        String(passVal).toLowerCase() === "true";
+                      const color =
+                        passVal !== "N/A"
+                          ? isPassYes
+                            ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/20"
+                            : "text-rose-400 bg-rose-500/10 border-rose-500/20"
+                          : "";
+                      return renderMetricBox(
+                        kIsPass || "Is Pass",
+                        passVal,
+                        color,
+                      );
                     })()}
                   </div>
                 </>
               ) : (
                 <>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {renderMetricBox(kScore || "Score", kScore ? resultData[kScore] : "N/A")}
-                    {renderMetricBox(kTimeTaken || "Time Taken", kTimeTaken ? resultData[kTimeTaken] : "N/A")}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
+                    {renderMetricBox(
+                      kScore || "Score",
+                      kScore ? resultData[kScore] : "N/A",
+                    )}
+                    {renderMetricBox(
+                      kTimeTaken || "Time Taken",
+                      kTimeTaken ? resultData[kTimeTaken] : "N/A",
+                    )}
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {renderMetricBox(kTerminationReason || "Termination Reason", kTerminationReason ? resultData[kTerminationReason] : "N/A")}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
+                    {renderMetricBox(
+                      kTerminationReason || "Termination Reason",
+                      kTerminationReason
+                        ? resultData[kTerminationReason]
+                        : "N/A",
+                    )}
                     {(() => {
-                      const recVal = kRecommendation ? resultData[kRecommendation] : "N/A";
+                      const recVal = kRecommendation
+                        ? resultData[kRecommendation]
+                        : "N/A";
                       const isHire = String(recVal).toLowerCase() === "hire";
-                      const color = recVal !== "N/A"
-                        ? isHire ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" : "text-rose-400 bg-rose-500/10 border-rose-500/20"
-                        : "";
-                      return renderMetricBox(kRecommendation || "Recommendation", recVal, color);
+                      const color =
+                        recVal !== "N/A"
+                          ? isHire
+                            ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/20"
+                            : "text-rose-400 bg-rose-500/10 border-rose-500/20"
+                          : "";
+                      return renderMetricBox(
+                        kRecommendation || "Recommendation",
+                        recVal,
+                        color,
+                      );
                     })()}
                   </div>
                 </>
@@ -262,9 +319,13 @@ const ResultPage = () => {
               {kViolations ? (
                 renderViolationsBlock(kViolations, resultData[kViolations])
               ) : (
-                <div className="bg-white/[0.02] backdrop-blur-sm p-6 rounded-3xl border border-white/5 h-full flex flex-col justify-center items-center text-center">
-                  <h3 className="text-gray-400 text-xs font-bold uppercase tracking-widest mb-2">Violations</h3>
-                  <p className="text-gray-500 text-sm font-medium">No violations recorded.</p>
+                <div className="bg-white/[0.02] backdrop-blur-md p-5 md:p-6 rounded-[1.5rem] border border-white/5 h-full flex flex-col justify-center items-center text-center">
+                  <h3 className="text-gray-400 text-[11px] md:text-xs font-bold uppercase tracking-widest mb-2">
+                    Violations
+                  </h3>
+                  <p className="text-gray-500 text-xs md:text-sm font-medium">
+                    No violations recorded.
+                  </p>
                 </div>
               )}
             </div>
@@ -272,7 +333,7 @@ const ResultPage = () => {
         )}
 
         {metrics.length > 0 && (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5">
             {metrics.map(({ key, value }) => {
               const lowerKey = key.toLowerCase();
               const isStatus = lowerKey.includes("status");
@@ -289,15 +350,15 @@ const ResultPage = () => {
               return (
                 <div
                   key={key}
-                  className="bg-white/[0.03] backdrop-blur-sm p-5 rounded-2xl border border-white/10 hover:bg-white/[0.05] transition-colors flex flex-col justify-center"
+                  className="bg-white/[0.03] backdrop-blur-md p-5 rounded-[1.5rem] border border-white/10 hover:bg-white/[0.06] hover:border-white/20 transition-all duration-300 flex flex-col justify-center"
                 >
-                  <h3 className="text-gray-400 text-[10px] font-bold uppercase tracking-widest mb-2">
+                  <h3 className="text-gray-400 text-[11px] md:text-xs font-bold uppercase tracking-widest mb-2">
                     {formatLabel(key)}
                   </h3>
                   {isStatus ? (
                     <div>
                       <span
-                        className={`inline-block px-3 py-1 rounded-lg text-sm font-bold border ${getStatusStyle(
+                        className={`inline-block px-3 py-1.5 rounded-lg text-xs font-bold border shadow-sm ${getStatusStyle(
                           value,
                         )}`}
                       >
@@ -320,10 +381,10 @@ const ResultPage = () => {
             {longTexts.map(({ key, value }) => (
               <div
                 key={key}
-                className="bg-white/[0.02] backdrop-blur-sm p-6 md:p-8 rounded-3xl border border-white/5"
+                className="bg-white/[0.02] backdrop-blur-md p-6 md:p-8 rounded-[1.5rem] border border-white/5 hover:border-white/10 transition-colors"
               >
-                <h3 className="text-indigo-400 text-xs font-bold uppercase tracking-widest mb-4 flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
+                <h3 className="text-indigo-400 text-[11px] md:text-xs font-bold uppercase tracking-widest mb-3 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.6)]"></span>
                   {formatLabel(key)}
                 </h3>
                 <p className="text-gray-300 text-sm md:text-base leading-relaxed whitespace-pre-wrap font-medium">
@@ -335,13 +396,13 @@ const ResultPage = () => {
         )}
 
         {complexData.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
             {complexData.map(({ key, value }) => (
               <div
                 key={key}
-                className="bg-white/[0.02] backdrop-blur-sm p-6 rounded-3xl border border-white/5"
+                className="bg-white/[0.02] backdrop-blur-md p-6 rounded-[1.5rem] border border-white/5 hover:border-white/10 transition-colors"
               >
-                <h3 className="text-gray-400 text-xs font-bold uppercase tracking-widest mb-4">
+                <h3 className="text-gray-400 text-[11px] md:text-xs font-bold uppercase tracking-widest mb-4">
                   {formatLabel(key)}
                 </h3>
 
@@ -359,16 +420,16 @@ const ResultPage = () => {
                     ))}
                   </div>
                 ) : (
-                  <div className="space-y-3">
+                  <div className="space-y-2.5">
                     {Object.entries(value).map(([subKey, subVal]) => (
                       <div
                         key={subKey}
                         className="flex justify-between items-start border-b border-white/5 pb-2 last:border-0 last:pb-0"
                       >
-                        <span className="text-gray-500 text-sm font-medium">
+                        <span className="text-gray-500 text-xs md:text-sm font-medium">
                           {formatLabel(subKey)}
                         </span>
-                        <span className="text-white text-sm font-semibold text-right pl-4">
+                        <span className="text-white text-xs md:text-sm font-semibold text-right pl-3">
                           {typeof subVal === "object"
                             ? "Nested Data"
                             : String(subVal)}
@@ -389,52 +450,31 @@ const ResultPage = () => {
     <>
       <SoftBackdrop />
       <LenisScroll />
-      <div className="min-h-screen font-geist text-white">
+      <div className="min-h-screen font-geist text-white flex flex-col">
         <Header />
 
-        <main className="pt-10 pb-24 px-6 max-w-5xl mx-auto relative z-10">
-          <div className="mb-12">
-            <button
-              onClick={() => navigate(-1)}
-              className="text-gray-400 hover:text-white mb-6 flex items-center transition-colors text-sm font-bold tracking-wide group"
-            >
-              <span className="bg-white/5 p-2 rounded-full mr-3 group-hover:bg-white/10 transition-colors border border-white/5">
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M10 19l-7-7m0 0l7-7m-7 7h18"
-                  />
-                </svg>
-              </span>
-              RETURN TO DRIVE PREVIEW
-            </button>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-white via-white to-gray-500">
+        <main className="pt-6 pb-12 px-5 md:px-8 max-w-5xl mx-auto relative z-10 w-full flex-1">
+          <div className="mb-8 md:mb-6">
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-white via-white to-gray-400">
               {type.charAt(0).toUpperCase() + type.slice(1)} Result
             </h1>
-            <p className="text-gray-400 mt-3 font-medium text-lg">
+            <p className="text-gray-400 mt-2 font-medium text-sm md:text-base">
               Detailed breakdown of your performance metrics.
             </p>
           </div>
 
           {loading ? (
-            <div className="flex flex-col justify-center items-center h-64 bg-white/[0.02] border border-white/5 rounded-[2.5rem]">
+            <div className="flex flex-col justify-center items-center h-48 bg-white/[0.02] border border-white/5 rounded-[2rem]">
               <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-indigo-500 mb-4"></div>
-              <p className="text-gray-400 font-medium tracking-widest text-xs uppercase">
+              <p className="text-gray-400 font-bold tracking-widest text-xs uppercase">
                 Compiling Results...
               </p>
             </div>
           ) : error ? (
-            <div className="bg-red-500/10 border border-red-500/20 rounded-3xl p-10 text-center">
-              <div className="bg-red-500/20 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="bg-rose-500/10 border border-rose-500/20 rounded-[2rem] p-8 text-center backdrop-blur-md">
+              <div className="bg-rose-500/20 w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4">
                 <svg
-                  className="w-8 h-8 text-red-400"
+                  className="w-7 h-7 text-rose-400"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -447,11 +487,34 @@ const ResultPage = () => {
                   />
                 </svg>
               </div>
-              <p className="text-red-200 text-lg font-medium">{error}</p>
+              <p className="text-rose-200 text-sm md:text-base font-medium">
+                {error}
+              </p>
             </div>
           ) : (
             <div className="animate-fade-in-up">{renderSmartLayout()}</div>
           )}
+          <button
+            onClick={() => navigate(-1)}
+            className="text-gray-400 hover:text-white flex items-center transition-colors text-[11px] md:text-xs font-bold tracking-widest uppercase group"
+          >
+            <span className="bg-white/5 p-2 rounded-full mr-3 group-hover:bg-white/10 transition-all duration-300 border border-white/5 group-hover:scale-105">
+              <svg
+                className="w-3.5 h-3.5 md:w-4 md:h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                />
+              </svg>
+            </span>
+            Return to Drive Preview
+          </button>
         </main>
       </div>
     </>
