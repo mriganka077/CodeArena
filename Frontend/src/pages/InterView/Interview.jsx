@@ -621,76 +621,76 @@ useEffect(() => {
     };
   }, []);
 
-  // useEffect(() => {
-  //   if (status !== "active") return;
+  useEffect(() => {
+    if (status !== "active") return;
 
-  //   const handleViolation = (reason) => {
-  //     violations.current.tab += 1;
-  //     if (violations.current.tab >= 3) {
-  //       terminateInterview(`${reason}. Multiple violations detected.`);
-  //       return;
-  //     }
-  //     triggerAlert(
-  //       "Warning",
-  //       `${reason}. Warning ${violations.current.tab}/2`,
-  //       "danger",
-  //     );
-  //   };
+    const handleViolation = (reason) => {
+      violations.current.tab += 1;
+      if (violations.current.tab >= 3) {
+        terminateInterview(`${reason}. Multiple violations detected.`);
+        return;
+      }
+      triggerAlert(
+        "Warning",
+        `${reason}. Warning ${violations.current.tab}/2`,
+        "danger",
+      );
+    };
 
-  //   const handleVisibility = () => {
-  //     if (document.hidden) {
-  //       handleViolation("Tab switching detected");
-  //     }
-  //   };
+    const handleVisibility = () => {
+      if (document.hidden) {
+        handleViolation("Tab switching detected");
+      }
+    };
 
-  //   const handleFullscreen = () => {
-  //     if (isEndingInterview.current) return;
+    const handleFullscreen = () => {
+      if (isEndingInterview.current) return;
 
-  //     if (!document.fullscreenElement) {
-  //       violations.current.fullscreen += 1;
+      if (!document.fullscreenElement) {
+        violations.current.fullscreen += 1;
 
-  //       if (violations.current.fullscreen >= 3) {
-  //         terminateInterview("Multiple fullscreen violations detected.");
-  //         return;
-  //       }
+        if (violations.current.fullscreen >= 3) {
+          terminateInterview("Multiple fullscreen violations detected.");
+          return;
+        }
 
-  //       triggerAlert(
-  //         "Warning",
-  //         `Fullscreen exit detected. Warning ${violations.current.fullscreen}/2. Click Continue to resume interview.`,
-  //         "danger",
-  //         async () => {
-  //           try {
-  //             await document.documentElement.requestFullscreen();
-  //           } catch (err) {
-  //             console.error("Failed to re-enter fullscreen");
-  //           }
-  //         },
-  //       );
-  //     }
-  //   };
+        triggerAlert(
+          "Warning",
+          `Fullscreen exit detected. Warning ${violations.current.fullscreen}/2. Click Continue to resume interview.`,
+          "danger",
+          async () => {
+            try {
+              await document.documentElement.requestFullscreen();
+            } catch (err) {
+              console.error("Failed to re-enter fullscreen");
+            }
+          },
+        );
+      }
+    };
 
-  //   const handleKeyDown = (e) => {
-  //     const key = e.key.toLowerCase();
-  //     if (
-  //       key === "f12" ||
-  //       (e.altKey && key === "tab") ||
-  //       ((e.ctrlKey || e.metaKey) && ["c", "v", "u", "p"].includes(key))
-  //     ) {
-  //       e.preventDefault();
-  //       handleViolation("Restricted shortcut detected");
-  //     }
-  //   };
+    const handleKeyDown = (e) => {
+      const key = e.key.toLowerCase();
+      if (
+        key === "f12" ||
+        (e.altKey && key === "tab") ||
+        ((e.ctrlKey || e.metaKey) && ["c", "v", "u", "p"].includes(key))
+      ) {
+        e.preventDefault();
+        handleViolation("Restricted shortcut detected");
+      }
+    };
 
-  //   document.addEventListener("visibilitychange", handleVisibility);
-  //   document.addEventListener("fullscreenchange", handleFullscreen);
-  //   document.addEventListener("keydown", handleKeyDown, true);
+    document.addEventListener("visibilitychange", handleVisibility);
+    document.addEventListener("fullscreenchange", handleFullscreen);
+    document.addEventListener("keydown", handleKeyDown, true);
 
-  //   return () => {
-  //     document.removeEventListener("visibilitychange", handleVisibility);
-  //     document.removeEventListener("fullscreenchange", handleFullscreen);
-  //     document.removeEventListener("keydown", handleKeyDown, true);
-  //   };
-  // }, [status]);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibility);
+      document.removeEventListener("fullscreenchange", handleFullscreen);
+      document.removeEventListener("keydown", handleKeyDown, true);
+    };
+  }, [status]);
 
   useEffect(() => {
     const timer = setInterval(() => setElapsed((p) => p + 1), 1000);

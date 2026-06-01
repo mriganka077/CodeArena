@@ -30,7 +30,7 @@ import UserProfileForm from "./pages/Registration/UserProfileForm.jsx";
 import AdminAssessments from "./components/admin/sidebar/AdminAssessments.jsx";
 import AdminInterview from "./components/admin/sidebar/AdminInterview.jsx";
 import InterviewComplete from "./pages/InterView/InterviewComplete.jsx";
-import ResultPage from './pages/Drive/ResultPage'; // Add this line
+import ResultPage from './pages/Drive/ResultPage';
 
 
 function App() {
