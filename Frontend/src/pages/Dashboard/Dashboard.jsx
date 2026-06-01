@@ -1503,7 +1503,10 @@ const Dashboard = () => {
                         </div>
                         <button
                           onClick={() => {
-                            if (card.id === "practice") {
+                            if (card.id === "drive") {
+                              navigate("/drive");
+                            }
+                            else if (card.id === "practice") {
                               window.scrollTo({ top: 0, behavior: "instant" });
                               navigate("/domainselector?mode=practice");
                             } else if (card.id === "mock") {
