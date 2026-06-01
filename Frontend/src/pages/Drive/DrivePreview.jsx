@@ -63,78 +63,84 @@ const InstructionsModal = ({ isOpen, onClose, onConfirm, drive }) => {
             initial={{ scale: 0.9, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
-            className="relative w-full max-w-2xl bg-[#0f1117]/95 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] p-8 md:p-10 shadow-2xl overflow-hidden"
+            className="relative w-full max-w-3xl bg-[#0f1117]/95 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] p-8 md:p-10 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
           >
-            <div className="absolute top-0 left-0 w-full h-1.5 bg-indigo-500" />
 
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-2xl font-bold tracking-tight text-white mb-1">
-                  Assessment Guidelines
-                </h3>
-                <p className="text-indigo-400 text-sm font-mono font-bold">
-                  {drive?.hiringPositionName}
-                </p>
+            <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-red-600 via-orange-500 to-red-600" />
+
+            <div className="flex-1 overflow-y-auto pr-2 scrollbar-thin" data-lenis-prevent="true">
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-2xl font-bold tracking-tight text-white mb-1">
+                    Security & Environment Guidelines
+                  </h3>
+                  <p className="text-indigo-400 text-sm font-mono font-bold">
+                    {drive?.hiringPositionName}
+                  </p>
+                </div>
+
+                <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 text-sm text-red-200 shadow-inner">
+                  <p className="font-bold text-red-400 mb-1 flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
+                    Strict AI Proctoring is Enabled
+                  </p>
+                  <p>
+                    This assessment is monitored in real-time. Violating any of the
+                    following rules multiple times will result in automatic termination of your
+                    session.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-300">
+                  <div className="flex flex-col gap-1.5 bg-white/5 p-4 rounded-2xl border border-white/5 hover:bg-white/10 transition-colors">
+                    <strong className="text-white flex items-center gap-2">
+                      <span className="text-indigo-400 text-lg">👤</span> Face Visibility
+                    </strong>
+                    <p className="text-xs text-gray-400 leading-relaxed">Your full face must remain in frame. Looking away repeatedly or wearing masks/face coverings is strictly prohibited.</p>
+                  </div>
+
+                  <div className="flex flex-col gap-1.5 bg-white/5 p-4 rounded-2xl border border-white/5 hover:bg-white/10 transition-colors">
+                    <strong className="text-white flex items-center gap-2">
+                      <span className="text-indigo-400 text-lg">👥</span> Solo Environment
+                    </strong>
+                    <p className="text-xs text-gray-400 leading-relaxed">You must be completely alone. Detection of multiple faces in the camera frame will trigger an immediate violation.</p>
+                  </div>
+
+                  <div className="flex flex-col gap-1.5 bg-white/5 p-4 rounded-2xl border border-white/5 hover:bg-white/10 transition-colors">
+                    <strong className="text-white flex items-center gap-2">
+                      <span className="text-indigo-400 text-lg">💡</span> Adequate Lighting
+                    </strong>
+                    <p className="text-xs text-gray-400 leading-relaxed">Ensure your room is well-lit. Environments that are too dark for the AI to properly track your face will cause termination.</p>
+                  </div>
+
+                  <div className="flex flex-col gap-1.5 bg-white/5 p-4 rounded-2xl border border-white/5 hover:bg-white/10 transition-colors">
+                    <strong className="text-white flex items-center gap-2">
+                      <span className="text-indigo-400 text-lg">🎙️</span> Audio Monitoring
+                    </strong>
+                    <p className="text-xs text-gray-400 leading-relaxed">Continuous conversation, background speech, or suspicious audio frequency energy will be flagged by the microphone.</p>
+                  </div>
+
+                  <div className="flex flex-col gap-1.5 bg-white/5 p-4 rounded-2xl border border-white/5 hover:bg-white/10 transition-colors">
+                    <strong className="text-white flex items-center gap-2">
+                      <span className="text-indigo-400 text-lg">📱</span> Device Restriction
+                    </strong>
+                    <p className="text-xs text-gray-400 leading-relaxed">Cell phones and other electronic devices are actively detected via AI object detection. Visible usage is prohibited.</p>
+                  </div>
+
+                  <div className="flex flex-col gap-1.5 bg-white/5 p-4 rounded-2xl border border-white/5 hover:bg-white/10 transition-colors">
+                    <strong className="text-white flex items-center gap-2">
+                      <span className="text-indigo-400 text-lg">🔒</span> Browser Security
+                    </strong>
+                    <p className="text-xs text-gray-400 leading-relaxed">Forced Full-Screen. Exiting full-screen, switching tabs, clicking outside, or using shortcuts (Copy/Paste, Alt+Tab, F12) are blocked.</p>
+                  </div>
+                </div>
               </div>
-
-              <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 text-sm text-red-200">
-                <p className="font-bold text-red-400 mb-1 flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
-                  Strict AI Proctoring is Enabled
-                </p>
-                <p>
-                  This assessment is monitored in real-time. Violating the
-                  following rules will result in automatic termination of your
-                  session.
-                </p>
-              </div>
-
-              <ul className="space-y-4 text-sm text-gray-300">
-                <li className="flex items-start gap-3 bg-white/5 p-3 rounded-xl border border-white/5">
-                  <div>
-                    <strong className="text-white block mb-0.5">
-                      Camera & Lighting
-                    </strong>
-                    Your face must be clearly visible at all times. Ensure your
-                    room is well-lit. Face coverings or masks are strictly
-                    prohibited.
-                  </div>
-                </li>
-                <li className="flex items-start gap-3 bg-white/5 p-3 rounded-xl border border-white/5">
-                  <div>
-                    <strong className="text-white block mb-0.5">
-                      Environment Security
-                    </strong>
-                    You must be completely alone. Detection of multiple people
-                    in the camera frame will trigger an immediate violation.
-                  </div>
-                </li>
-                <li className="flex items-start gap-3 bg-white/5 p-3 rounded-xl border border-white/5">
-                  <div>
-                    <strong className="text-white block mb-0.5">
-                      Screen Focus
-                    </strong>
-                    You will be forced into Full-Screen mode. Do not exit
-                    full-screen, switch tabs, minimize the browser, or click
-                    outside the window.
-                  </div>
-                </li>
-                <li className="flex items-start gap-3 bg-white/5 p-3 rounded-xl border border-white/5">
-                  <div>
-                    <strong className="text-white block mb-0.5">
-                      Keyboard Restrictions
-                    </strong>
-                    Copy-pasting, Alt-Tabbing, and accessing Developer Tools are
-                    disabled and monitored.
-                  </div>
-                </li>
-              </ul>
             </div>
 
-            <div className="mt-8 flex flex-col sm:flex-row gap-4">
+            <div className="mt-8 flex flex-col sm:flex-row gap-4 shrink-0 pt-4 border-t border-white/10">
               <button
                 onClick={() => onConfirm(drive)}
-                className="flex-1 py-4 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-black uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-indigo-500/20"
+                className="flex-1 py-4 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-black uppercase tracking-widest transition-all active:scale-95 shadow-[0_0_20px_rgba(99,102,241,0.3)]"
               >
                 {drive?.driveType === "Interview"
                   ? "I Understand, Start Interview"
@@ -448,7 +454,7 @@ const DrivePreview = () => {
       >
         <DateTime />
 
-        <h1 className="text-3xl font-bold mb-10 bg-gradient-to-r from-indigo-500 via-indigo-400 to-indigo-300 bg-clip-text text-transparent">
+        <h1 className="text-3xl font-bold mb-6 bg-gradient-to-r from-indigo-500 via-indigo-400 to-indigo-300 bg-clip-text text-transparent">
           Welcome, {fullName}
         </h1>
 

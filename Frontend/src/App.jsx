@@ -30,7 +30,7 @@ import UserProfileForm from "./pages/Registration/UserProfileForm.jsx";
 import AdminAssessments from "./components/admin/sidebar/AdminAssessments.jsx";
 import AdminInterview from "./components/admin/sidebar/AdminInterview.jsx";
 import InterviewComplete from "./pages/InterView/InterviewComplete.jsx";
-import ResultPage from './pages/Drive/ResultPage';
+import ResultPage from './pages/Drive/ResultPage'; 
 
 
 function App() {
@@ -45,7 +45,7 @@ function App() {
       <Route
         path="/login"
         element={
-          isLoggedIn ? <Navigate to="/dashboard" replace /> : <AuthPage />
+          isLoggedIn ? <Navigate to="/" replace /> : <AuthPage />
         }
       />
       <Route path="/auth/callback" element={<AuthCallback />} />
