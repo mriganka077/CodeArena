@@ -140,7 +140,8 @@ function IconInput({ icon: Icon, locked, ...props }) {
 }
 
 function UploadZone({ file, name, onFileChange, onPreview, locked, savedDoc }) {
-  // If there's a saved doc (from DB) but no new file selected
+  const inputRef = useRef(null);
+
   if (locked && savedDoc && !file) {
     return (
       <div className="w-full h-36 bg-[#1a0b2e]/30 border border-amber-500/15 rounded-2xl flex flex-col items-center justify-center gap-2">
@@ -154,7 +155,10 @@ function UploadZone({ file, name, onFileChange, onPreview, locked, savedDoc }) {
   }
 
   return (
-    <label className={`relative group overflow-hidden w-full h-36 bg-[#1a0b2e]/40 border-2 border-dashed rounded-2xl flex flex-col items-center justify-center transition-all duration-300 ${locked ? "border-amber-500/15 cursor-not-allowed opacity-60" : "border-violet-500/25 cursor-pointer hover:border-violet-400/50 hover:bg-[#2a1454]/30"}`}>
+    <div className="relative group overflow-hidden w-full h-36 bg-[#1a0b2e]/40 border-2 border-dashed rounded-2xl flex flex-col items-center justify-center transition-all duration-300
+      border-violet-500/25 hover:border-violet-400/50 hover:bg-[#2a1454]/30 cursor-pointer"
+      onClick={() => !locked && inputRef.current?.click()}
+    >
       {file ? (
         <>
           {file.type?.startsWith("image/") ? (
@@ -167,14 +171,25 @@ function UploadZone({ file, name, onFileChange, onPreview, locked, savedDoc }) {
               <p className="text-white text-xs text-center px-4 font-medium">{file.name}</p>
             </div>
           )}
-          {!locked && (
-            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center rounded-2xl z-20">
-              <button type="button" onClick={(e) => { e.preventDefault(); onPreview(); }}
-                className="px-5 py-2 rounded-xl bg-gradient-to-r from-violet-500 to-indigo-500 text-white text-sm font-semibold shadow-lg shadow-violet-500/30 hover:scale-105 transition-all duration-200">
-                Preview
-              </button>
-            </div>
-          )}
+
+          {/* Hover overlay — Preview + Change buttons */}
+          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center gap-2 rounded-2xl z-20">
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onPreview(); }}
+              className="px-4 py-2 rounded-xl bg-gradient-to-r from-violet-500 to-indigo-500 text-white text-xs font-semibold shadow-lg shadow-violet-500/30 hover:scale-105 transition-all duration-200"
+            >
+              Preview
+            </button>
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); inputRef.current?.click(); }}
+              className="px-4 py-2 rounded-xl bg-white/10 border border-white/20 text-white text-xs font-semibold hover:bg-white/20 hover:scale-105 transition-all duration-200"
+            >
+              Change
+            </button>
+          </div>
+
           <div className="absolute top-2 right-2 z-30 bg-green-500/90 rounded-full p-0.5">
             <CheckCircle2 size={13} className="text-white" />
           </div>
@@ -190,8 +205,16 @@ function UploadZone({ file, name, onFileChange, onPreview, locked, savedDoc }) {
           </div>
         </div>
       )}
-      {!locked && <input type="file" name={name} accept="image/*,.pdf" onChange={onFileChange} hidden />}
-    </label>
+
+      <input
+        ref={inputRef}
+        type="file"
+        name={name}
+        accept="image/*,.pdf"
+        onChange={onFileChange}
+        hidden
+      />
+    </div>
   );
 }
 
