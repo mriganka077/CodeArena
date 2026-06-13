@@ -47,8 +47,7 @@ const AdminDashboard = () => {
                 <SoftBackdrop />
             </div>
 
-            {/* <div className="relative min-h-screen flex flex-col bg-transparent"> */}
-            {/* <div className="relative h-screen flex flex-col bg-transparent overflow-hidden"> */}
+
             <div className="relative h-screen flex flex-col bg-transparent">
 
                 <Header now={now} />
@@ -61,8 +60,6 @@ const AdminDashboard = () => {
                         setActiveTab={setActiveTab}
                     />
 
-                    {/* <main className="flex-1 min-h-screen p-6 space-y-6"> */}
-                    {/* <main className="flex-1 h-[calc(100vh-73px)] overflow-y-auto p-6 space-y-6"> */}
                     <main className="flex-1 h-[calc(100vh-73px)] overflow-y-scroll p-6 space-y-6">
 
                         {activeTab === "dashboard" && (
