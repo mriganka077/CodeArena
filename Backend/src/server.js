@@ -41,6 +41,8 @@ import interviewRoutes from "./routes/interview.js";
 
 import resultRoutes from './routes/result.js';
 
+import adminDashboardRoutes from "./routes/adminDashboard.js";
+
 
 dotenv.config();
 
@@ -231,6 +233,8 @@ app.use(
 app.use(
   "/api/interview", 
   interviewRoutes);
+
+app.use("/api/dashboard", adminDashboardRoutes);
 
 // ============================
 // HEALTH CHECK
