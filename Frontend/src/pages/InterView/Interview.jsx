@@ -5,11 +5,13 @@ import Header from "../../components/Header";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../../context/AuthContext";
 import { useLocation, useNavigate } from "react-router-dom";
-import { FaceDetector, ObjectDetector, FilesetResolver } from "@mediapipe/tasks-vision";
+import {
+  FaceDetector,
+  ObjectDetector,
+  FilesetResolver,
+} from "@mediapipe/tasks-vision";
 import vapi from "../../lib/vapi";
 import { useParams } from "react-router-dom";
-
-
 
 const CustomModal = ({ isOpen, title, message, type, onClose, onConfirm }) => {
   return (
@@ -228,10 +230,7 @@ const Interview = () => {
 
   const params = useParams();
 
-const driveId =
-  location.state?.type === "domain"
-    ? null
-    : params.driveId;
+  const driveId = location.state?.type === "domain" ? null : params.driveId;
 
   const [elapsed, setElapsed] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
@@ -259,8 +258,7 @@ const driveId =
   const analysisTimeoutRef = useRef(null);
   const transcriptRef = useRef([]);
   const [conversationTranscript, setConversationTranscript] = useState([]);
-  const selectedDomain =
-  location.state?.domain || "Full Stack Development";
+  const selectedDomain = location.state?.domain || "Full Stack Development";
 
   const [modalConfig, setModalConfig] = useState({
     isOpen: false,
@@ -295,9 +293,6 @@ const driveId =
   });
 
   const submitInterviewResult = async (
-
-    
-   
     finalStatus = "completed",
     reason = "",
   ) => {
@@ -312,46 +307,35 @@ const driveId =
       console.log("Transcript Count:", transcriptRef.current.length);
       console.log("Transcript:", transcriptRef.current);
       console.log("Drive ID:", driveId);
-      console.log(
-        "Interview ID:",
-        location.state?.drive?.interviewId
-      );
+      console.log("Interview ID:", location.state?.drive?.interviewId);
 
-      const response = await fetch(
-        apiUrl,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
+      const response = await fetch(apiUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          driveId,
 
-            driveId,
-          
-            interviewId:
-              location.state?.drive?.interviewId,
-          
-            domain: selectedDomain,
+          interviewId: location.state?.drive?.interviewId,
 
-            sessionId:
-              location.state?.sessionId,
-          
-            timeTaken: elapsed,
-          
-            status: finalStatus,
-          
-            violations:
-              violations.current,
-          
-            terminationReason: reason,
-          
-            transcript:
-              transcriptRef.current,
-          })
-        }
-      );
-      
+          domain: selectedDomain,
+
+          sessionId: location.state?.sessionId,
+
+          timeTaken: elapsed,
+
+          status: finalStatus,
+
+          violations: violations.current,
+
+          terminationReason: reason,
+
+          transcript: transcriptRef.current,
+        }),
+      });
+
       const data = await response.json();
 
       console.log(data);
@@ -364,43 +348,31 @@ const driveId =
 
   const terminateInterview = async (reason) => {
     isEndingInterview.current = true;
-  
+
     setStatus("ended");
-  
+
     if (streamRef.current) {
-      streamRef.current
-        .getTracks()
-        .forEach((track) => track.stop());
+      streamRef.current.getTracks().forEach((track) => track.stop());
     }
-  
+
     if (document.fullscreenElement) {
       await document.exitFullscreen().catch(() => {});
     }
-  
+
     window.speechSynthesis.cancel();
-  
+
     try {
-  
       await vapi.stop();
-  
-      await new Promise((resolve) =>
-        setTimeout(resolve, 3000)
-      );
-  
+
+      await new Promise((resolve) => setTimeout(resolve, 3000));
     } catch (e) {
       console.error(e);
     }
-  
-    await submitInterviewResult(
-      "abandoned",
-      reason
-    );
-  
-    triggerAlert(
-      "Interview Terminated",
-      reason,
-      "danger",
-      () => navigate("/drive")
+
+    await submitInterviewResult("abandoned", reason);
+
+    triggerAlert("Interview Terminated", reason, "danger", () =>
+      navigate("/drive"),
     );
   };
 
@@ -417,73 +389,43 @@ const driveId =
     }
   };
 
-  const startVapiInterview =
-  async () => {
-
+  const startVapiInterview = async () => {
     try {
+      const isDomainInterview = location.state?.type === "domain";
 
-      const isDomainInterview =
-        location.state?.type === "domain";
-
-      const assistantId =
-        isDomainInterview
-          ? import.meta.env
-              .VITE_VAPI_DOMAIN_ASSISTANT_ID
-          : import.meta.env
-              .VITE_VAPI_DRIVE_ASSISTANT_ID;
+      const assistantId = isDomainInterview
+        ? import.meta.env.VITE_VAPI_DOMAIN_ASSISTANT_ID
+        : import.meta.env.VITE_VAPI_DRIVE_ASSISTANT_ID;
 
       const variableValues = {
-
-        candidateName:
-          user?.firstName ||
-          "Candidate",
+        candidateName: user?.firstName || "Candidate",
       };
 
       if (isDomainInterview) {
-
-        variableValues.domain =
-          selectedDomain;
+        variableValues.domain = selectedDomain;
       }
 
-      await vapi.start(
-        assistantId,
-        {
-          variableValues,
-        }
-      );
+      await vapi.start(assistantId, {
+        variableValues,
+      });
 
       setCallActive(true);
-
     } catch (error) {
-
       console.log(error);
     }
-};
+  };
 
+  useEffect(() => {
+    const isDomainInterview = location.state?.type === "domain";
 
-useEffect(() => {
+    if (!isDomainInterview && !driveId) {
+      console.error("Drive ID missing");
 
-  const isDomainInterview =
-    location.state?.type === "domain";
-
-  if (
-    !isDomainInterview &&
-    !driveId
-  ) {
-
-    console.error(
-      "Drive ID missing"
-    );
-
-    triggerAlert(
-      "Drive Error",
-      "Invalid interview URL.",
-      "danger",
-      () => navigate("/drive")
-    );
-  }
-
-}, [driveId]);
+      triggerAlert("Drive Error", "Invalid interview URL.", "danger", () =>
+        navigate("/drive"),
+      );
+    }
+  }, [driveId]);
 
   useEffect(() => {
     vapi.on("call-start", () => {
@@ -506,106 +448,77 @@ useEffect(() => {
     });
 
     vapi.on("message", (message) => {
-
-      console.log(
-        "Current Transcript Length:",
-        transcriptRef.current.length
-      );
+      console.log("Current Transcript Length:", transcriptRef.current.length);
 
       console.log("VAPI MESSAGE:", message);
-    
-      if (message.type !== "transcript") return;
-    
-      const transcriptText =
-        message.transcript?.trim();
-    
-      if (!transcriptText) return;
-    
-      const role =
-        message.role ||
-        message.speaker ||
-        "assistant";
-    
-        setConversationTranscript((prev) => {
 
-          const updated = [...prev];
-        
-          const lastMessage =
-            updated[updated.length - 1];
-        
-          // =====================================
-          // STREAMING TRANSCRIPT UPDATE
-          // =====================================
-        
-          if (
-            lastMessage &&
-            lastMessage.role === role &&
-            transcriptText.startsWith(
-              lastMessage.text
-            )
-          ) {
-          
-            updated[
-              updated.length - 1
-            ] = {
-          
-              ...lastMessage,
-          
-              text: transcriptText,
-          
-              timestamp:
-                new Date().toISOString(),
-            };
-          
-            transcriptRef.current =
-              updated;
-          
-            return updated;
-          }
-        
-          // =====================================
-          // NEW MESSAGE
-          // =====================================
-          const newTranscript = [
-            ...prev,
-            {
-              role,
-              text: transcriptText,
-              timestamp:
-                new Date().toISOString(),
-            },
-          ];
-          
-          transcriptRef.current =
-            newTranscript;
-          
-          return newTranscript;
-          
-        });
-    
+      if (message.type !== "transcript") return;
+
+      const transcriptText = message.transcript?.trim();
+
+      if (!transcriptText) return;
+
+      const role = message.role || message.speaker || "assistant";
+
+      setConversationTranscript((prev) => {
+        const updated = [...prev];
+
+        const lastMessage = updated[updated.length - 1];
+
+        // =====================================
+        // STREAMING TRANSCRIPT UPDATE
+        // =====================================
+
+        if (
+          lastMessage &&
+          lastMessage.role === role &&
+          transcriptText.startsWith(lastMessage.text)
+        ) {
+          updated[updated.length - 1] = {
+            ...lastMessage,
+
+            text: transcriptText,
+
+            timestamp: new Date().toISOString(),
+          };
+
+          transcriptRef.current = updated;
+
+          return updated;
+        }
+
+        // =====================================
+        // NEW MESSAGE
+        // =====================================
+        const newTranscript = [
+          ...prev,
+          {
+            role,
+            text: transcriptText,
+            timestamp: new Date().toISOString(),
+          },
+        ];
+
+        transcriptRef.current = newTranscript;
+
+        return newTranscript;
+      });
+
       // ========================================
       // UI
       // ========================================
-    
+
       if (role === "assistant") {
-    
-        setCurrentQuestion(
-          transcriptText
-        );
+        setCurrentQuestion(transcriptText);
       }
-    
+
       if (role === "user") {
-    
         setCandidateSpeaking(true);
-    
-        setCandidateAnswer(
-          transcriptText
-        );
-    
+
+        setCandidateAnswer(transcriptText);
+
         setTimeout(() => {
-    
           setCandidateSpeaking(false);
-    
         }, 1200);
       }
     });
@@ -732,77 +645,47 @@ useEffect(() => {
   }, []);
 
   const endInterview = async () => {
-
     isEndingInterview.current = true;
-  
+
     setStatus("ended");
-  
-    const isDomainInterview =
-      location.state?.type === "domain";
-  
+
+    const isDomainInterview = location.state?.type === "domain";
+
     try {
-  
       if (streamRef.current) {
-        streamRef.current
-          .getTracks()
-          .forEach(track =>
-            track.stop()
-          );
+        streamRef.current.getTracks().forEach((track) => track.stop());
       }
-  
-      if (
-        document.fullscreenElement
-      ) {
-        await document
-          .exitFullscreen()
-          .catch(() => {});
+
+      if (document.fullscreenElement) {
+        await document.exitFullscreen().catch(() => {});
       }
-  
+
       window.speechSynthesis.cancel();
-  
+
       try {
-  
         await vapi.stop();
-  
-        await new Promise(resolve =>
-          setTimeout(resolve, 3000)
-        );
-  
+
+        await new Promise((resolve) => setTimeout(resolve, 3000));
       } catch (e) {}
-  
-      console.log(
-        "FINAL TRANSCRIPT",
-        transcriptRef.current
-      );
-  
-      const data =
-        await submitInterviewResult(
-          "completed",
-          "User ended call"
-        );
-  
+
+      console.log("FINAL TRANSCRIPT", transcriptRef.current);
+
+      const data = await submitInterviewResult("completed", "User ended call");
+
       if (data?.result) {
-  
         localStorage.setItem(
           "latestInterviewResult",
-          JSON.stringify(data.result)
+          JSON.stringify(data.result),
         );
-  
-        navigate(
-          isDomainInterview
-            ? "/interviewfeedback"
-            : "/interviewdone",
-          {
-            replace: true,
-            state: {
-              result: data.result,
-            },
-          }
-        );
+
+        navigate(isDomainInterview ? "/interviewfeedback" : "/interviewdone", {
+          replace: true,
+          state: {
+            result: data.result,
+          },
+        });
       }
-  
     } catch (err) {
-  
       console.error(err);
     }
   };
@@ -854,196 +737,238 @@ useEffect(() => {
     };
   }, [status]);
 
-  // useEffect(() => {
-  //   if (status !== "active" || !isModelsLoaded) return;
-    
-  //   const canvas = document.createElement("canvas");
-  //   const ctx = canvas.getContext("2d", { willReadFrequently: true });
-  //   canvas.width = 64;
-  //   canvas.height = 36;
-  //   let isRunning = true;
+  useEffect(() => {
+    if (status !== "active" || !isModelsLoaded) return;
 
-  //   const performAnalysis = async () => {
-  //     if (!isRunning || isAnalyzing.current || modalConfig.isOpen) return;
-  //     isAnalyzing.current = true;
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    canvas.width = 64;
+    canvas.height = 36;
+    let isRunning = true;
 
-  //     try {
-  //       const video = videoRef.current;
-  //       if (!video || video.readyState < 2 || video.paused || video.ended) {
-  //         isAnalyzing.current = false;
-  //         return;
-  //       }
+    const performAnalysis = async () => {
+      if (!isRunning || isAnalyzing.current || modalConfig.isOpen) return;
+      isAnalyzing.current = true;
 
-  //       const checkCooldown = () => Date.now() - lastViolationTime.current < 4000;
+      try {
+        const video = videoRef.current;
+        if (!video || video.readyState < 2 || video.paused || video.ended) {
+          isAnalyzing.current = false;
+          return;
+        }
 
-  //       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-  //       const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const checkCooldown = () =>
+          Date.now() - lastViolationTime.current < 4000;
 
-  //       let totalBrightness = 0;
-  //       for (let i = 0; i < frame.data.length; i += 16) {
-  //         totalBrightness +=
-  //           (frame.data[i] + frame.data[i + 1] + frame.data[i + 2]) / 3;
-  //       }
-  //       const avgBrightness = totalBrightness / (frame.data.length / 16);
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
-  //       if (avgBrightness < 30) {
-  //         if (!checkCooldown()) {
-  //           violations.current.brightness += 1;
-  //           lastViolationTime.current = Date.now();
-  //           if (violations.current.brightness >= 4)
-  //             terminateInterview("Environment too dark.");
-  //           else
-  //             triggerAlert(
-  //               "Lighting Warning",
-  //               `Warning ${violations.current.brightness}/3: Lighting is too dark. Please turn on a light.`,
-  //               "danger",
-  //             );
-  //         }
-  //         isAnalyzing.current = false;
-  //         return;
-  //       }
+        let totalBrightness = 0;
+        for (let i = 0; i < frame.data.length; i += 16) {
+          totalBrightness +=
+            (frame.data[i] + frame.data[i + 1] + frame.data[i + 2]) / 3;
+        }
+        const avgBrightness = totalBrightness / (frame.data.length / 16);
 
-  //       let faceCount = 0;
-  //       let isMasked = false;
+        if (avgBrightness < 30) {
+          if (!checkCooldown()) {
+            violations.current.brightness += 1;
+            lastViolationTime.current = Date.now();
+            if (violations.current.brightness >= 4)
+              terminateInterview("Environment too dark.");
+            else
+              triggerAlert(
+                "Lighting Warning",
+                `Warning ${violations.current.brightness}/3: Lighting is too dark. Please turn on a light.`,
+                "danger",
+              );
+          }
+          isAnalyzing.current = false;
+          return;
+        }
 
-  //       if (faceDetectorRef.current) {
-  //         const results = faceDetectorRef.current.detectForVideo(
-  //           video,
-  //           performance.now(),
-  //         );
-  //         faceCount = results.detections.length;
+        let faceCount = 0;
+        let isMasked = false;
 
-  //         if (faceCount === 1) {
-  //           const face = results.detections[0];
-  //           const score = face.categories[0].score;
+        if (faceDetectorRef.current) {
+          const results = faceDetectorRef.current.detectForVideo(
+            video,
+            performance.now(),
+          );
+          faceCount = results.detections.length;
 
-  //           if (score < 0.82) {
-  //             isMasked = true;
-  //           }
-  //         }
-  //       }
+          if (faceCount === 1) {
+            const face = results.detections[0];
+            const score = face.categories[0].score;
 
-  //       if (faceCount === 0) {
-  //         missingFaceFrames.current += 1;
-  //         const allowedMissingFrames = 3;
+            if (score < 0.82) {
+              isMasked = true;
+            }
+          }
+        }
 
-  //         if (missingFaceFrames.current >= allowedMissingFrames) {
-  //           if (!checkCooldown()) {
-  //             violations.current.noFace += 1;
-  //             lastViolationTime.current = Date.now();
-  //             missingFaceFrames.current = 0;
-  //             if (violations.current.noFace >= 4) {
-  //               terminateInterview("Face obscured or not visible.");
-  //             } else {
-  //               triggerAlert(
-  //                 "Visibility Violation",
-  //                 `Warning ${violations.current.noFace}/3: Face not detected! Please look directly at the screen.`,
-  //                 "danger",
-  //               );
-  //             }
-  //           }
-  //         }
-  //       } else if (faceCount > 1) {
-  //         missingFaceFrames.current = 0;
-  //         if (!checkCooldown()) {
-  //           violations.current.multiPerson += 1;
-  //           lastViolationTime.current = Date.now();
-  //           if (violations.current.multiPerson >= 3) {
-  //             terminateInterview(
-  //               "Multiple people detected in the environment.",
-  //             );
-  //           } else {
-  //             triggerAlert(
-  //               "Security Violation",
-  //               `Warning ${violations.current.multiPerson}/2: Multiple faces detected! You must take this assessment alone.`,
-  //               "danger",
-  //             );
-  //           }
-  //         }
-  //       } else if (isMasked) {
-  //         missingFaceFrames.current = 0;
-  //         maskFrames.current += 1;
+        if (faceCount === 0) {
+          missingFaceFrames.current += 1;
+          const allowedMissingFrames = 3;
 
-  //         if (maskFrames.current >= 3) {
-  //           if (!checkCooldown()) {
-  //             violations.current.mask += 1;
-  //             lastViolationTime.current = Date.now();
-  //             maskFrames.current = 0;
-  //             if (violations.current.mask >= 3) {
-  //               terminateInterview(
-  //                 "Face covering or mask detected repeatedly.",
-  //               );
-  //             } else {
-  //               triggerAlert(
-  //                 "Security Violation",
-  //                 `Warning ${violations.current.mask}/2: Face covering or mask detected! Please ensure your full face is visible.`,
-  //                 "danger",
-  //               );
-  //             }
-  //           }
-  //         }
-  //       } else {
-  //         missingFaceFrames.current = 0;
-  //         maskFrames.current = 0;
-  //       }
+          if (missingFaceFrames.current >= allowedMissingFrames) {
+            if (!checkCooldown()) {
+              violations.current.noFace += 1;
+              lastViolationTime.current = Date.now();
+              missingFaceFrames.current = 0;
+              if (violations.current.noFace >= 4) {
+                terminateInterview("Face obscured or not visible.");
+              } else {
+                triggerAlert(
+                  "Visibility Violation",
+                  `Warning ${violations.current.noFace}/3: Face not detected! Please look directly at the screen.`,
+                  "danger",
+                );
+              }
+            }
+          }
+        } else if (faceCount > 1) {
+          missingFaceFrames.current = 0;
+          if (!checkCooldown()) {
+            violations.current.multiPerson += 1;
+            lastViolationTime.current = Date.now();
+            if (violations.current.multiPerson >= 3) {
+              terminateInterview(
+                "Multiple people detected in the environment.",
+              );
+            } else {
+              triggerAlert(
+                "Security Violation",
+                `Warning ${violations.current.multiPerson}/2: Multiple faces detected! You must take this assessment alone.`,
+                "danger",
+              );
+            }
+          }
+        } else if (isMasked) {
+          missingFaceFrames.current = 0;
+          maskFrames.current += 1;
 
-  //       let isPhoneDetected = false;
-  //       if (objectDetectorRef.current) {
-  //         const objResults = objectDetectorRef.current.detectForVideo(
-  //           video,
-  //           performance.now(),
-  //         );
+          if (maskFrames.current >= 3) {
+            if (!checkCooldown()) {
+              violations.current.mask += 1;
+              lastViolationTime.current = Date.now();
+              maskFrames.current = 0;
+              if (violations.current.mask >= 3) {
+                terminateInterview(
+                  "Face covering or mask detected repeatedly.",
+                );
+              } else {
+                triggerAlert(
+                  "Security Violation",
+                  `Warning ${violations.current.mask}/2: Face covering or mask detected! Please ensure your full face is visible.`,
+                  "danger",
+                );
+              }
+            }
+          }
+        } else {
+          missingFaceFrames.current = 0;
+          maskFrames.current = 0;
+        }
 
-  //         for (const detection of objResults.detections) {
-  //           const hasPhone = detection.categories.some(
-  //             (cat) => cat.categoryName === "cell phone",
-  //           );
+        let isPhoneDetected = false;
+        let phoneFoundInFrame = false;
 
-  //           if (hasPhone) {
-  //             isPhoneDetected = true;
-  //             break;
-  //           }
-  //         }
-  //       }
+        if (objectDetectorRef.current) {
+          const objResults = objectDetectorRef.current.detectForVideo(
+            video,
+            performance.now(),
+          );
 
-  //       if (isPhoneDetected) {
-  //         if (!checkCooldown()) {
-  //           violations.current.phone += 1;
-  //           lastViolationTime.current = Date.now();
+          for (const detection of objResults.detections) {
+            const deviceCategory = detection.categories.find((cat) => {
+              const name = cat.categoryName.toLowerCase();
 
-  //           if (violations.current.phone >= 3) {
-  //             terminateInterview(
-  //               "Use of an electronic device (cell phone) detected.",
-  //             );
-  //           } else {
-  //             triggerAlert(
-  //               "Security Violation",
-  //               `Warning ${violations.current.phone}/2: Cell phone detected! Electronic devices are strictly prohibited.`,
-  //               "danger",
-  //             );
-  //           }
-  //         }
-  //       }
-  //     } catch (err) {
-  //       console.error("Analysis Error:", err);
-  //     } finally {
-  //       isAnalyzing.current = false;
-  //     }
-  //   };
+              return (
+                name.includes("phone") ||
+                name.includes("cell") ||
+                name.includes("mobile") ||
+                name.includes("remote")
+              );
+            });
 
-  //   const loop = async () => {
-  //     if (!isRunning) return;
-  //     await performAnalysis();
-  //     analysisTimeoutRef.current = setTimeout(loop, 150);
-  //   };
+            if (!deviceCategory) continue;
 
-  //   loop();
+            if (deviceCategory.score < 0.12) continue;
 
-  //   return () => {
-  //     isRunning = false;
-  //     if (analysisTimeoutRef.current) clearTimeout(analysisTimeoutRef.current);
-  //   };
-  // }, [status, isModelsLoaded, modalConfig.isOpen]);
+            const box = detection.boundingBox;
+
+            if (!box) continue;
+
+            const width = box.width;
+            const height = box.height;
+
+            const aspectRatio = width / height;
+
+            if (aspectRatio < 0.35 || aspectRatio > 3.2) {
+              continue;
+            }
+
+            const area = width * height;
+            const frameArea = video.videoWidth * video.videoHeight;
+            const relativeSize = area / frameArea;
+
+            if (relativeSize < 0.001) continue;
+
+            phoneFoundInFrame = true;
+            break;
+          }
+
+          if (phoneFoundInFrame) {
+            phoneFrames.current += 1;
+
+            if (phoneFrames.current >= 4) {
+              isPhoneDetected = true;
+              phoneFrames.current = 0;
+            }
+          } else {
+            phoneFrames.current = Math.max(phoneFrames.current - 1, 0);
+          }
+        }
+
+        if (isPhoneDetected) {
+          if (!checkCooldown()) {
+            violations.current.phone += 1;
+            lastViolationTime.current = Date.now();
+
+            if (violations.current.phone >= 3) {
+              terminateInterview(
+                "Use of an electronic device (cell phone) detected.",
+              );
+            } else {
+              triggerAlert(
+                "Security Violation",
+                `Warning ${violations.current.phone}/2: Cell phone detected! Electronic devices are strictly prohibited.`,
+                "danger",
+              );
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Analysis Error:", err);
+      } finally {
+        isAnalyzing.current = false;
+      }
+    };
+
+    const loop = async () => {
+      if (!isRunning) return;
+      await performAnalysis();
+      analysisTimeoutRef.current = setTimeout(loop, 150);
+    };
+
+    loop();
+
+    return () => {
+      isRunning = false;
+      if (analysisTimeoutRef.current) clearTimeout(analysisTimeoutRef.current);
+    };
+  }, [status, isModelsLoaded, modalConfig.isOpen]);
 
   return (
     <>

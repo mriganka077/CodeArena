@@ -15,7 +15,7 @@ export default function AuthCallback() {
       const payload = JSON.parse(atob(base64));
       login({ id: payload.id }, token);
 
-      window.location.href = isNew ? "/registration" : "/dashboard";
+      window.location.href = isNew ? "/registration" : "/";
     } else {
       window.location.href = "/login?error=google_failed";
     }

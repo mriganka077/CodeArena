@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, forwardRef, } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import {
@@ -201,6 +201,38 @@ const TInput = ({
         </div>
     );
 };
+
+
+const CustomDateInput = forwardRef(({ value, onClick, placeholderText }, ref) => {
+  const isEmpty = !value || value.trim() === "";
+
+  return (
+    <div className="relative w-full" onClick={onClick}>
+      <div
+        ref={ref}
+        className="w-full pl-3 pr-10 py-2.5 rounded-xl text-xs border border-white/[0.08] cursor-pointer flex items-center"
+        style={{ background: "rgba(8,6,18,0.85)", minHeight: "38px" }}
+      >
+        {isEmpty ? (
+          <span style={{ color: "rgba(255,255,255,0.20)" }}>
+            {placeholderText}
+          </span>
+        ) : (
+          <span style={{ color: "rgba(255,255,255,0.80)" }}>
+            {value}
+          </span>
+        )}
+      </div>
+      <Calendar
+        size={14}
+        className="absolute right-3 top-1/2 -translate-y-1/2 text-white/35 pointer-events-none"
+      />
+    </div>
+  );
+});
+
+CustomDateInput.displayName = "CustomDateInput";
+
 
 const SInput = ({
     value,
@@ -874,7 +906,9 @@ const CreateDriveModal = ({
 
                                             className="dark-input w-full pl-3 pr-10 py-2.5 rounded-xl text-xs text-white/80 border border-white/8 outline-none"
 
-                                            placeholderText="Select start date"
+                                            // placeholderText="Select start date"
+                                            customInput={<CustomDateInput placeholderText="Select start date"/>}
+
                                         />
                                     </Field>
 
@@ -943,7 +977,9 @@ const CreateDriveModal = ({
 
                                             className="dark-input w-full pl-3 pr-10 py-2.5 rounded-xl text-xs text-white/80 border border-white/8 outline-none"
 
-                                            placeholderText="Select end date"
+                                            // placeholderText="Select end date"
+                                            customInput={<CustomDateInput placeholderText="Select end date"/>}
+
                                         />
                                     </Field>
                                 </div>
