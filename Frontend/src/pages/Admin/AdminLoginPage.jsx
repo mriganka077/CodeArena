@@ -144,7 +144,7 @@ export default function AdminLoginPage() {
       localStorage.setItem("adminToken", data.token);
       localStorage.setItem("adminUser", JSON.stringify(data.admin));
       
-      window.location.href = "/admindash";
+      window.location.href = "/admin";
     } catch (err) {
       setError(err.message);
       setOtp("");
