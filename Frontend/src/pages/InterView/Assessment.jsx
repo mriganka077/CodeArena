@@ -627,448 +627,448 @@ const Assessment = () => {
     loadModels();
   }, []);
 
-  // useEffect(() => {
-  //   let isComponentActive = true;
-  //   async function enableCamera() {
-  //     try {
-  //       if (streamRef.current)
-  //         streamRef.current.getTracks().forEach((track) => track.stop());
-  //       const stream = await navigator.mediaDevices.getUserMedia({
-  //         video: { width: 1280, height: 720 },
-  //         audio: true,
-  //       });
-  //       if (!isComponentActive || status !== "active") {
-  //         stream.getTracks().forEach((track) => track.stop());
-  //         return;
-  //       }
-  //       streamRef.current = stream;
-  //       if (videoRef.current) videoRef.current.srcObject = stream;
+  useEffect(() => {
+    let isComponentActive = true;
+    async function enableCamera() {
+      try {
+        if (streamRef.current)
+          streamRef.current.getTracks().forEach((track) => track.stop());
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { width: 1280, height: 720 },
+          audio: true,
+        });
+        if (!isComponentActive || status !== "active") {
+          stream.getTracks().forEach((track) => track.stop());
+          return;
+        }
+        streamRef.current = stream;
+        if (videoRef.current) videoRef.current.srcObject = stream;
 
-  //       const AudioContext = window.AudioContext || window.webkitAudioContext;
-  //       const audioCtx = new AudioContext();
-  //       const source = audioCtx.createMediaStreamSource(stream);
-  //       const analyser = audioCtx.createAnalyser();
-  //       analyser.fftSize = 256;
-  //       source.connect(analyser);
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+        const source = audioCtx.createMediaStreamSource(stream);
+        const analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 256;
+        source.connect(analyser);
 
-  //       audioAnalyserRef.current = analyser;
-  //       audioContextRef.current = audioCtx;
+        audioAnalyserRef.current = analyser;
+        audioContextRef.current = audioCtx;
 
-  //       stream.getTracks().forEach((track) => {
-  //         track.onended = () => {
-  //           if (status === "active" && isComponentActive)
-  //             terminateSession("Hardware Error: Camera Disconnected.");
-  //         };
-  //       });
-  //     } catch (err) {
-  //       if (isComponentActive) setCameraError("Camera access denied.");
-  //     }
-  //   }
-  //   if (status === "active") enableCamera();
-  //   else {
-  //     if (streamRef.current) {
-  //       streamRef.current.getTracks().forEach((track) => track.stop());
-  //       streamRef.current = null;
-  //     }
-  //     if (videoRef.current) videoRef.current.srcObject = null;
-  //   }
-  //   return () => {
-  //     isComponentActive = false;
-  //     if (streamRef.current) {
-  //       streamRef.current.getTracks().forEach((track) => track.stop());
-  //       streamRef.current = null;
-  //     }
-  //     if (
-  //       audioContextRef.current &&
-  //       audioContextRef.current.state !== "closed"
-  //     ) {
-  //       audioContextRef.current.close();
-  //     }
-  //   };
-  // }, [status]);
+        stream.getTracks().forEach((track) => {
+          track.onended = () => {
+            if (status === "active" && isComponentActive)
+              terminateSession("Hardware Error: Camera Disconnected.");
+          };
+        });
+      } catch (err) {
+        if (isComponentActive) setCameraError("Camera access denied.");
+      }
+    }
+    if (status === "active") enableCamera();
+    else {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
+      }
+      if (videoRef.current) videoRef.current.srcObject = null;
+    }
+    return () => {
+      isComponentActive = false;
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
+      }
+      if (
+        audioContextRef.current &&
+        audioContextRef.current.state !== "closed"
+      ) {
+        audioContextRef.current.close();
+      }
+    };
+  }, [status]);
 
-  // useEffect(() => {
-  //   if (status !== "active" || !isModelsLoaded) return;
-  //   const canvas = document.createElement("canvas");
-  //   const ctx = canvas.getContext("2d", { willReadFrequently: true });
-  //   canvas.width = 64;
-  //   canvas.height = 36;
-  //   let isRunning = true;
+  useEffect(() => {
+    if (status !== "active" || !isModelsLoaded) return;
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    canvas.width = 64;
+    canvas.height = 36;
+    let isRunning = true;
 
-  //   const performAnalysis = async () => {
-  //     if (!isRunning || isAnalyzing.current || modalConfig.isOpen) return;
-  //     isAnalyzing.current = true;
+    const performAnalysis = async () => {
+      if (!isRunning || isAnalyzing.current || modalConfig.isOpen) return;
+      isAnalyzing.current = true;
 
-  //     try {
-  //       const video = videoRef.current;
-  //       if (!video || video.readyState < 2 || video.paused || video.ended) {
-  //         isAnalyzing.current = false;
-  //         return;
-  //       }
+      try {
+        const video = videoRef.current;
+        if (!video || video.readyState < 2 || video.paused || video.ended) {
+          isAnalyzing.current = false;
+          return;
+        }
 
-  //       const checkCooldown = () =>
-  //         Date.now() - lastViolationTime.current < 4000;
+        const checkCooldown = () =>
+          Date.now() - lastViolationTime.current < 4000;
 
-  //       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-  //       const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
-  //       let totalBrightness = 0;
-  //       for (let i = 0; i < frame.data.length; i += 16) {
-  //         totalBrightness +=
-  //           (frame.data[i] + frame.data[i + 1] + frame.data[i + 2]) / 3;
-  //       }
-  //       const avgBrightness = totalBrightness / (frame.data.length / 16);
+        let totalBrightness = 0;
+        for (let i = 0; i < frame.data.length; i += 16) {
+          totalBrightness +=
+            (frame.data[i] + frame.data[i + 1] + frame.data[i + 2]) / 3;
+        }
+        const avgBrightness = totalBrightness / (frame.data.length / 16);
 
-  //       if (avgBrightness < 30) {
-  //         if (!checkCooldown()) {
-  //           violations.current.brightness += 1;
-  //           lastViolationTime.current = Date.now();
-  //           if (violations.current.brightness >= 4)
-  //             terminateSession("Environment too dark.");
-  //           else
-  //             triggerAlert(
-  //               "Lighting Warning",
-  //               `Warning ${violations.current.brightness}/3: Lighting is too dark. Please turn on a light.`,
-  //               "danger",
-  //             );
-  //         }
-  //         isAnalyzing.current = false;
-  //         return;
-  //       }
+        if (avgBrightness < 30) {
+          if (!checkCooldown()) {
+            violations.current.brightness += 1;
+            lastViolationTime.current = Date.now();
+            if (violations.current.brightness >= 4)
+              terminateSession("Environment too dark.");
+            else
+              triggerAlert(
+                "Lighting Warning",
+                `Warning ${violations.current.brightness}/3: Lighting is too dark. Please turn on a light.`,
+                "danger",
+              );
+          }
+          isAnalyzing.current = false;
+          return;
+        }
 
-  //       if (audioAnalyserRef.current) {
-  //         const analyser = audioAnalyserRef.current;
-  //         const dataArray = new Uint8Array(analyser.frequencyBinCount);
-  //         analyser.getByteFrequencyData(dataArray);
+        if (audioAnalyserRef.current) {
+          const analyser = audioAnalyserRef.current;
+          const dataArray = new Uint8Array(analyser.frequencyBinCount);
+          analyser.getByteFrequencyData(dataArray);
 
-  //         let volumeSum = 0;
-  //         let speechFrequencyEnergy = 0;
+          let volumeSum = 0;
+          let speechFrequencyEnergy = 0;
 
-  //         // UPDATED: Narrowed frequency bins to better target human speech and music vocals
-  //         for (let i = 0; i < dataArray.length; i++) {
-  //           volumeSum += dataArray[i];
-  //           if (i > 1 && i < 25) {
-  //             speechFrequencyEnergy += dataArray[i];
-  //           }
-  //         }
+          // UPDATED: Narrowed frequency bins to better target human speech and music vocals
+          for (let i = 0; i < dataArray.length; i++) {
+            volumeSum += dataArray[i];
+            if (i > 1 && i < 25) {
+              speechFrequencyEnergy += dataArray[i];
+            }
+          }
 
-  //         const avgVolume = volumeSum / dataArray.length;
-  //         const speechEnergy = speechFrequencyEnergy / 23; // UPDATED divisor to match new bin range
+          const avgVolume = volumeSum / dataArray.length;
+          const speechEnergy = speechFrequencyEnergy / 23; // UPDATED divisor to match new bin range
 
-  //         // UPDATED: Adjusted thresholds to catch talking/music reliably
-  //         const isSuspiciousAudio = avgVolume > 35 && speechEnergy > 40;
+          // UPDATED: Adjusted thresholds to catch talking/music reliably
+          const isSuspiciousAudio = avgVolume > 35 && speechEnergy > 40;
 
-  //         if (isSuspiciousAudio) {
-  //           noiseFrames.current += 1;
-  //         } else {
-  //           // UPDATED: Decay faster (-2 instead of -1) so short noises (coughs/sneezes) are quickly forgotten
-  //           noiseFrames.current = Math.max(noiseFrames.current - 2, 0);
-  //         }
+          if (isSuspiciousAudio) {
+            noiseFrames.current += 1;
+          } else {
+            // UPDATED: Decay faster (-2 instead of -1) so short noises (coughs/sneezes) are quickly forgotten
+            noiseFrames.current = Math.max(noiseFrames.current - 2, 0);
+          }
 
-  //         if (noiseFrames.current >= 30) {
-  //           if (!checkCooldown()) {
-  //             violations.current.noise += 1;
+          if (noiseFrames.current >= 30) {
+            if (!checkCooldown()) {
+              violations.current.noise += 1;
 
-  //             lastViolationTime.current = Date.now();
+              lastViolationTime.current = Date.now();
 
-  //             noiseFrames.current = 0;
+              noiseFrames.current = 0;
 
-  //             if (violations.current.noise >= 4) {
-  //               terminateSession(
-  //                 "Continuous conversation or background speech detected.",
-  //               );
-  //             } else {
-  //               triggerAlert(
-  //                 "Environment Warning",
-  //                 `Warning ${violations.current.noise}/3: Continuous speech or distracting audio detected. Please remain alone in a quiet environment.`,
-  //                 "danger",
-  //               );
-  //             }
-  //           }
-  //         }
-  //       }
+              if (violations.current.noise >= 4) {
+                terminateSession(
+                  "Continuous conversation or background speech detected.",
+                );
+              } else {
+                triggerAlert(
+                  "Environment Warning",
+                  `Warning ${violations.current.noise}/3: Continuous speech or distracting audio detected. Please remain alone in a quiet environment.`,
+                  "danger",
+                );
+              }
+            }
+          }
+        }
 
-  //       let faceCount = 0;
-  //       let isMasked = false;
+        let faceCount = 0;
+        let isMasked = false;
 
-  //       if (faceDetectorRef.current) {
-  //         const results = faceDetectorRef.current.detectForVideo(
-  //           video,
-  //           performance.now(),
-  //         );
-  //         faceCount = results.detections.length;
+        if (faceDetectorRef.current) {
+          const results = faceDetectorRef.current.detectForVideo(
+            video,
+            performance.now(),
+          );
+          faceCount = results.detections.length;
 
-  //         if (faceCount === 1) {
-  //           const face = results.detections[0];
-  //           const score = face.categories[0].score;
+          if (faceCount === 1) {
+            const face = results.detections[0];
+            const score = face.categories[0].score;
 
-  //           if (score < 0.82) {
-  //             isMasked = true;
-  //           }
-  //         }
-  //       }
+            if (score < 0.82) {
+              isMasked = true;
+            }
+          }
+        }
 
-  //       if (faceCount === 0) {
-  //         missingFaceFrames.current += 1;
-  //         const allowedMissingFrames = isCurrentCoding ? 3 : 2;
+        if (faceCount === 0) {
+          missingFaceFrames.current += 1;
+          const allowedMissingFrames = isCurrentCoding ? 3 : 2;
 
-  //         if (missingFaceFrames.current >= allowedMissingFrames) {
-  //           if (!checkCooldown()) {
-  //             violations.current.noFace += 1;
-  //             lastViolationTime.current = Date.now();
-  //             missingFaceFrames.current = 0;
-  //             if (violations.current.noFace >= 4) {
-  //               terminateSession("Face obscured or not visible.");
-  //             } else {
-  //               triggerAlert(
-  //                 "Visibility Violation",
-  //                 `Warning ${violations.current.noFace}/3: Face not detected! Please look directly at the screen.`,
-  //                 "danger",
-  //               );
-  //             }
-  //           }
-  //         }
-  //       } else if (faceCount > 1) {
-  //         missingFaceFrames.current = 0;
-  //         if (!checkCooldown()) {
-  //           violations.current.multiPerson += 1;
-  //           lastViolationTime.current = Date.now();
-  //           if (violations.current.multiPerson >= 3) {
-  //             terminateSession("Multiple people detected in the environment.");
-  //           } else {
-  //             triggerAlert(
-  //               "Security Violation",
-  //               `Warning ${violations.current.multiPerson}/2: Multiple faces detected! You must take this assessment alone.`,
-  //               "danger",
-  //             );
-  //           }
-  //         }
-  //       } else if (isMasked) {
-  //         missingFaceFrames.current = 0;
-  //         maskFrames.current += 1;
+          if (missingFaceFrames.current >= allowedMissingFrames) {
+            if (!checkCooldown()) {
+              violations.current.noFace += 1;
+              lastViolationTime.current = Date.now();
+              missingFaceFrames.current = 0;
+              if (violations.current.noFace >= 4) {
+                terminateSession("Face obscured or not visible.");
+              } else {
+                triggerAlert(
+                  "Visibility Violation",
+                  `Warning ${violations.current.noFace}/3: Face not detected! Please look directly at the screen.`,
+                  "danger",
+                );
+              }
+            }
+          }
+        } else if (faceCount > 1) {
+          missingFaceFrames.current = 0;
+          if (!checkCooldown()) {
+            violations.current.multiPerson += 1;
+            lastViolationTime.current = Date.now();
+            if (violations.current.multiPerson >= 3) {
+              terminateSession("Multiple people detected in the environment.");
+            } else {
+              triggerAlert(
+                "Security Violation",
+                `Warning ${violations.current.multiPerson}/2: Multiple faces detected! You must take this assessment alone.`,
+                "danger",
+              );
+            }
+          }
+        } else if (isMasked) {
+          missingFaceFrames.current = 0;
+          maskFrames.current += 1;
 
-  //         if (maskFrames.current >= 3) {
-  //           if (!checkCooldown()) {
-  //             violations.current.mask += 1;
-  //             lastViolationTime.current = Date.now();
-  //             maskFrames.current = 0;
-  //             if (violations.current.mask >= 3) {
-  //               terminateSession("Face covering or mask detected repeatedly.");
-  //             } else {
-  //               triggerAlert(
-  //                 "Security Violation",
-  //                 `Warning ${violations.current.mask}/2: Face covering or mask detected! Please ensure your full face is visible.`,
-  //                 "danger",
-  //               );
-  //             }
-  //           }
-  //         }
-  //       } else {
-  //         missingFaceFrames.current = 0;
-  //         maskFrames.current = 0;
-  //       }
+          if (maskFrames.current >= 3) {
+            if (!checkCooldown()) {
+              violations.current.mask += 1;
+              lastViolationTime.current = Date.now();
+              maskFrames.current = 0;
+              if (violations.current.mask >= 3) {
+                terminateSession("Face covering or mask detected repeatedly.");
+              } else {
+                triggerAlert(
+                  "Security Violation",
+                  `Warning ${violations.current.mask}/2: Face covering or mask detected! Please ensure your full face is visible.`,
+                  "danger",
+                );
+              }
+            }
+          }
+        } else {
+          missingFaceFrames.current = 0;
+          maskFrames.current = 0;
+        }
 
-  //       let isPhoneDetected = false;
-  //       let phoneFoundInFrame = false; // Tracks if any phone was found in the current frame
+        let isPhoneDetected = false;
+        let phoneFoundInFrame = false; // Tracks if any phone was found in the current frame
 
-  //       if (objectDetectorRef.current) {
-  //         const objResults = objectDetectorRef.current.detectForVideo(
-  //           video,
-  //           performance.now(),
-  //         );
+        if (objectDetectorRef.current) {
+          const objResults = objectDetectorRef.current.detectForVideo(
+            video,
+            performance.now(),
+          );
 
-  //         for (const detection of objResults.detections) {
-  //           const deviceCategory = detection.categories.find((cat) => {
-  //             const name = cat.categoryName.toLowerCase();
+          for (const detection of objResults.detections) {
+            const deviceCategory = detection.categories.find((cat) => {
+              const name = cat.categoryName.toLowerCase();
 
-  //             return (
-  //               name.includes("phone") ||
-  //               name.includes("cell") ||
-  //               name.includes("mobile") ||
-  //               name.includes("remote")
-  //             );
-  //           });
+              return (
+                name.includes("phone") ||
+                name.includes("cell") ||
+                name.includes("mobile") ||
+                name.includes("remote")
+              );
+            });
 
-  //           if (!deviceCategory) continue;
+            if (!deviceCategory) continue;
 
-  //           if (deviceCategory.score < 0.12) continue;
+            if (deviceCategory.score < 0.12) continue;
 
-  //           const box = detection.boundingBox;
+            const box = detection.boundingBox;
 
-  //           if (!box) continue;
+            if (!box) continue;
 
-  //           const width = box.width;
-  //           const height = box.height;
+            const width = box.width;
+            const height = box.height;
 
-  //           const aspectRatio = width / height;
+            const aspectRatio = width / height;
 
-  //           if (aspectRatio < 0.35 || aspectRatio > 3.2) {
-  //             continue;
-  //           }
+            if (aspectRatio < 0.35 || aspectRatio > 3.2) {
+              continue;
+            }
 
-  //           const area = width * height;
-  //           const frameArea = video.videoWidth * video.videoHeight;
-  //           const relativeSize = area / frameArea;
+            const area = width * height;
+            const frameArea = video.videoWidth * video.videoHeight;
+            const relativeSize = area / frameArea;
 
-  //           if (relativeSize < 0.001) continue;
+            if (relativeSize < 0.001) continue;
 
-  //           phoneFoundInFrame = true;
-  //           break; // We found at least one phone, no need to check other objects in this frame
-  //         }
+            phoneFoundInFrame = true;
+            break; // We found at least one phone, no need to check other objects in this frame
+          }
 
-  //         if (phoneFoundInFrame) {
-  //           phoneFrames.current += 1;
+          if (phoneFoundInFrame) {
+            phoneFrames.current += 1;
 
-  //           if (phoneFrames.current >= 4) {
-  //             isPhoneDetected = true;
-  //             phoneFrames.current = 0;
-  //           }
-  //         } else {
-  //           phoneFrames.current = Math.max(phoneFrames.current - 1, 0);
-  //         }
-  //       }
+            if (phoneFrames.current >= 4) {
+              isPhoneDetected = true;
+              phoneFrames.current = 0;
+            }
+          } else {
+            phoneFrames.current = Math.max(phoneFrames.current - 1, 0);
+          }
+        }
 
-  //       if (isPhoneDetected) {
-  //         if (!checkCooldown()) {
-  //           violations.current.phone += 1;
-  //           lastViolationTime.current = Date.now();
+        if (isPhoneDetected) {
+          if (!checkCooldown()) {
+            violations.current.phone += 1;
+            lastViolationTime.current = Date.now();
 
-  //           if (violations.current.phone >= 3) {
-  //             terminateSession(
-  //               "Use of an electronic device (cell phone) detected.",
-  //             );
-  //           } else {
-  //             triggerAlert(
-  //               "Security Violation",
-  //               `Warning ${violations.current.phone}/2: Cell phone detected! Electronic devices are strictly prohibited.`,
-  //               "danger",
-  //             );
-  //           }
-  //         }
-  //       }
-  //     } catch (err) {
-  //       console.error("Analysis Error:", err);
-  //     } finally {
-  //       isAnalyzing.current = false;
-  //     }
-  //   };
+            if (violations.current.phone >= 3) {
+              terminateSession(
+                "Use of an electronic device (cell phone) detected.",
+              );
+            } else {
+              triggerAlert(
+                "Security Violation",
+                `Warning ${violations.current.phone}/2: Cell phone detected! Electronic devices are strictly prohibited.`,
+                "danger",
+              );
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Analysis Error:", err);
+      } finally {
+        isAnalyzing.current = false;
+      }
+    };
 
-  //   const loop = async () => {
-  //     if (!isRunning) return;
-  //     await performAnalysis();
-  //     analysisTimeoutRef.current = setTimeout(loop, 150);
-  //   };
-  //   loop();
+    const loop = async () => {
+      if (!isRunning) return;
+      await performAnalysis();
+      analysisTimeoutRef.current = setTimeout(loop, 150);
+    };
+    loop();
 
-  //   return () => {
-  //     isRunning = false;
-  //     if (analysisTimeoutRef.current) clearTimeout(analysisTimeoutRef.current);
-  //   };
-  // }, [status, isModelsLoaded, modalConfig.isOpen, isCurrentCoding]);
+    return () => {
+      isRunning = false;
+      if (analysisTimeoutRef.current) clearTimeout(analysisTimeoutRef.current);
+    };
+  }, [status, isModelsLoaded, modalConfig.isOpen, isCurrentCoding]);
 
-  // useEffect(() => {
-  //   if (status !== "active") return;
-  //   isTerminating.current = false;
+  useEffect(() => {
+    if (status !== "active") return;
+    isTerminating.current = false;
 
-  //   const handleFocusLoss = (reason) => {
-  //     if (isTerminating.current) return;
+    const handleFocusLoss = (reason) => {
+      if (isTerminating.current) return;
 
-  //     const now = Date.now();
-  //     if (now - lastViolationTime.current < 2000 || modalConfig.isOpen) return;
-  //     lastViolationTime.current = now;
-  //     violations.current.tab += 1;
-  //     if (violations.current.tab >= 3)
-  //       terminateSession(`Session terminated: ${reason}.`);
-  //     else
-  //       triggerAlert(
-  //         "Environment Warning",
-  //         `Warning ${violations.current.tab}/2: ${reason} is strictly prohibited.`,
-  //         "danger",
-  //       );
-  //   };
+      const now = Date.now();
+      if (now - lastViolationTime.current < 2000 || modalConfig.isOpen) return;
+      lastViolationTime.current = now;
+      violations.current.tab += 1;
+      if (violations.current.tab >= 3)
+        terminateSession(`Session terminated: ${reason}.`);
+      else
+        triggerAlert(
+          "Environment Warning",
+          `Warning ${violations.current.tab}/2: ${reason} is strictly prohibited.`,
+          "danger",
+        );
+    };
 
-  //   const handleFullscreenChange = () => {
-  //     if (
-  //       !document.fullscreenElement &&
-  //       status === "active" &&
-  //       !isTerminating.current
-  //     ) {
-  //       document.documentElement
-  //         .requestFullscreen()
-  //         .then(() => handleFocusLoss("Exiting full-screen"))
-  //         .catch(() => terminateSession("Security protocol failed."));
-  //     }
-  //   };
+    const handleFullscreenChange = () => {
+      if (
+        !document.fullscreenElement &&
+        status === "active" &&
+        !isTerminating.current
+      ) {
+        document.documentElement
+          .requestFullscreen()
+          .then(() => handleFocusLoss("Exiting full-screen"))
+          .catch(() => terminateSession("Security protocol failed."));
+      }
+    };
 
-  //   const handleVisibilityChange = () => {
-  //     if (document.hidden && !isTerminating.current)
-  //       handleFocusLoss("Tab switching");
-  //   };
+    const handleVisibilityChange = () => {
+      if (document.hidden && !isTerminating.current)
+        handleFocusLoss("Tab switching");
+    };
 
-  //   const handleBlur = () => {
-  //     if (!isTerminating.current) handleFocusLoss("Window focus loss");
-  //   };
+    const handleBlur = () => {
+      if (!isTerminating.current) handleFocusLoss("Window focus loss");
+    };
 
-  //   const handleKeyDown = (e) => {
-  //     const key = e.key.toLowerCase();
-  //     const ctrlOrMeta = e.ctrlKey || e.metaKey;
-  //     if (key === "escape") {
-  //       e.preventDefault();
-  //       return;
-  //     }
-  //     if (
-  //       (ctrlOrMeta && ["c", "v", "u", "p"].includes(key)) ||
-  //       (e.altKey && key === "tab") ||
-  //       key === "f12"
-  //     ) {
-  //       e.preventDefault();
-  //       e.stopPropagation();
-  //       const now = Date.now();
-  //       if (now - lastViolationTime.current < 1000) return;
-  //       lastViolationTime.current = now;
-  //       violations.current.keyboard += 1;
-  //       if (violations.current.keyboard >= 3)
-  //         terminateSession("Prohibited keyboard shortcut.");
-  //       else
-  //         triggerAlert(
-  //           "Restricted Action",
-  //           `Warning ${violations.current.keyboard}/2: Shortcuts disabled.`,
-  //           "danger",
-  //         );
-  //     }
-  //   };
+    const handleKeyDown = (e) => {
+      const key = e.key.toLowerCase();
+      const ctrlOrMeta = e.ctrlKey || e.metaKey;
+      if (key === "escape") {
+        e.preventDefault();
+        return;
+      }
+      if (
+        (ctrlOrMeta && ["c", "v", "u", "p"].includes(key)) ||
+        (e.altKey && key === "tab") ||
+        key === "f12"
+      ) {
+        e.preventDefault();
+        e.stopPropagation();
+        const now = Date.now();
+        if (now - lastViolationTime.current < 1000) return;
+        lastViolationTime.current = now;
+        violations.current.keyboard += 1;
+        if (violations.current.keyboard >= 3)
+          terminateSession("Prohibited keyboard shortcut.");
+        else
+          triggerAlert(
+            "Restricted Action",
+            `Warning ${violations.current.keyboard}/2: Shortcuts disabled.`,
+            "danger",
+          );
+      }
+    };
 
-  //   document.addEventListener("fullscreenchange", handleFullscreenChange);
-  //   document.addEventListener("visibilitychange", handleVisibilityChange);
-  //   document.addEventListener("keydown", handleKeyDown, true);
-  //   document.addEventListener("contextmenu", (e) => e.preventDefault());
-  //   window.addEventListener("blur", handleBlur);
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    document.addEventListener("keydown", handleKeyDown, true);
+    document.addEventListener("contextmenu", (e) => e.preventDefault());
+    window.addEventListener("blur", handleBlur);
 
-  //   return () => {
-  //     document.removeEventListener("fullscreenchange", handleFullscreenChange);
-  //     document.removeEventListener("visibilitychange", handleVisibilityChange);
-  //     document.removeEventListener("keydown", handleKeyDown, true);
-  //     document.removeEventListener("contextmenu", (e) => e.preventDefault());
-  //     window.removeEventListener("blur", handleBlur);
-  //   };
-  // }, [status, modalConfig.isOpen]);
+    return () => {
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      document.removeEventListener("keydown", handleKeyDown, true);
+      document.removeEventListener("contextmenu", (e) => e.preventDefault());
+      window.removeEventListener("blur", handleBlur);
+    };
+  }, [status, modalConfig.isOpen]);
 
-  // const toggleInterview = () => {
-  //   if (!isModelsLoaded)
-  //     return triggerAlert(
-  //       "System Initializing",
-  //       "Please wait for AI proctoring models.",
-  //       "info",
-  //     );
-  //   if (status === "idle") setIsSetupModalOpen(true);
-  //   else
-  //     triggerAlert(
-  //       "Submit Assessment?",
-  //       "Your progress will be finalized.",
-  //       "danger",
-  //       () => submitAssessment("Completed", "User Submitted"),
-  //     );
-  // };
+  const toggleInterview = () => {
+    if (!isModelsLoaded)
+      return triggerAlert(
+        "System Initializing",
+        "Please wait for AI proctoring models.",
+        "info",
+      );
+    if (status === "idle") setIsSetupModalOpen(true);
+    else
+      triggerAlert(
+        "Submit Assessment?",
+        "Your progress will be finalized.",
+        "danger",
+        () => submitAssessment("Completed", "User Submitted"),
+      );
+  };
 
   const startActualInterview = () => {
     setIsSetupModalOpen(false);
@@ -1397,7 +1397,7 @@ const Assessment = () => {
 
             <div className="flex justify-center shrink-0">
               <button
-                onClick={() => submitAssessment("Completed", "User Submitted")}
+                 onClick={toggleInterview}
                 disabled={status === "idle"}
                 className={`w-full max-w-[300px] flex items-center justify-center gap-3 py-4 rounded-2xl border transition-all active:scale-95 text-[10px] font-black uppercase tracking-[0.2em]
           ${
