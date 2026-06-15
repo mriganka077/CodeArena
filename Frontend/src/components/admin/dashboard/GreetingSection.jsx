@@ -17,8 +17,10 @@ const GreetingSection = ({ now }) => {
 
                 if (!token) return;
 
+                const API_URL = import.meta.env.VITE_API_URL;
+
                 const res = await fetch(
-                    "http://localhost:4000/api/admin/me",
+                    `${API_URL}/admin/me`,
                     {
                         headers: {
                             Authorization: `Bearer ${token}`,

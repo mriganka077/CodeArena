@@ -183,7 +183,7 @@ const CodeEditor = ({
       setOutput("Running...");
 
       const response = await axios.post(
-        "http://localhost:4000/api/compiler/run",
+        `${import.meta.env.VITE_API_URL}/compiler/run`,
         {
           code,
           language,
@@ -235,7 +235,7 @@ const CodeEditor = ({
   
       const res = await axios.post(
         
-        "http://localhost:4000/api/compiler/submit",
+        `${import.meta.env.VITE_API_URL}/compiler/submit`,
         {
           code,
           language,

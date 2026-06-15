@@ -112,6 +112,10 @@ const AdminProfile = () => {
     const fileRef = useRef();
     const [admin, setAdmin] = useState(null);
 
+    const API_URL = import.meta.env.VITE_API_URL;
+
+    const BASE_URL = API_URL.replace("/api", "");
+
     useEffect(() => {
         const fetchAdmin = async () => {
             
@@ -126,7 +130,7 @@ const AdminProfile = () => {
                 }
     
                 const res = await fetch(
-                    "http://localhost:4000/api/admin/me",
+                    `${API_URL}/admin/me`,
                     {
                         headers: {
                             Authorization: `Bearer ${token}`,
@@ -179,7 +183,7 @@ const AdminProfile = () => {
             formData.append("photo", file);
     
             const res = await axios.put(
-                "http://localhost:4000/api/admin/upload-photo",
+                `${API_URL}/admin/upload-photo`,
                 formData,
                 {
                     headers: {
@@ -193,7 +197,7 @@ const AdminProfile = () => {
     
                 setAdmin((prev) => ({
                     ...prev,
-                    photo: `http://localhost:4000${res.data.photo}`,
+                    photo: `${BASE_URL}${res.data.photo}`,
                 }));
     
                 showToast("Photo uploaded successfully");
@@ -214,7 +218,7 @@ const AdminProfile = () => {
             const token = localStorage.getItem("adminToken");
     
             const res = await axios.put(
-                "http://localhost:4000/api/admin/update-profile",
+                `${API_URL}/admin/update-profile`,
                 {
                     firstName,
                     lastName,
@@ -275,7 +279,7 @@ const AdminProfile = () => {
             const token = localStorage.getItem("adminToken");
     
             const res = await axios.put(
-                "http://localhost:4000/api/admin/change-password",
+                `${API_URL}/admin/change-password`,
                 {
                     currentPassword: currentPwd,
                     newPassword: newPwd,
@@ -383,7 +387,7 @@ const AdminProfile = () => {
                                             <img
                                                 src={
                                                     avatarPreview ||
-                                                    `http://localhost:4000${admin?.photo}`
+                                                    `${BASE_URL}${admin?.photo}`
                                                 }
                                                 alt="avatar"
                                                 className="w-full h-full object-cover"

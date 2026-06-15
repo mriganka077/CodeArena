@@ -6,7 +6,9 @@ export default function VerifyEmail() {
   const [status, setStatus] = useState("verifying");
 
   useEffect(() => {
-    fetch(`http://localhost:4000/api/auth/verify-email/${token}`)
+    const API_URL = import.meta.env.VITE_API_URL;
+
+    fetch(`${API_URL}/auth/verify-email/${token}`)
       .then((r) => r.json())
       .then((data) => {
         if (data.success) {

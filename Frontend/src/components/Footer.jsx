@@ -14,8 +14,17 @@ export default function Footer() {
                 <div className="flex flex-col md:flex-row items-start justify-between gap-10 py-10 border-b border-white/10">
                     <div>
                         {/* <img src='/logo.svg' alt="logo" className="h-8" /> */}
-                        <a href="/" className="text-2xl font-bold text-slate-200 hover:text-white transition-colors cursor-pointer">
-                            CodeArena
+                        <a
+                            href="/"
+                            className="
+                        text-2xl font-bold tracking-tight
+                        text-slate-200
+                        hover:text-white
+                        transition-all duration-300
+                        cursor-pointer
+                    "
+                        >
+                            Code<span className="text-violet-400">Arena</span>
                         </a>
                         <p className="max-w-[410px] mt-6 text-sm leading-relaxed">
                         We are an AI powered platform focused on technical interviews and coding assessments—helping teams hire skilled developers efficiently and without bias.
@@ -47,7 +56,7 @@ export default function Footer() {
 
                 <p className="py-4 text-center text-sm text-gray-400">
                     © {new Date().getFullYear()}{' '}
-                    <a href="https://prebuiltui.com/tailwind-templates?ref=pixel-forge">
+                    <a href="">
                         CodeArena
                     </a>
                     . All rights reserved.

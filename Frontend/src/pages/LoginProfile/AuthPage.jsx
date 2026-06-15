@@ -6,6 +6,9 @@ import { useAuth } from "../../context/AuthContext.jsx";
 
 import SoftBackdrop from "../../components/SoftBackdrop";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
+
 const EyeIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
@@ -217,7 +220,7 @@ function LoginForm() {
         setShow2FA(true);
       } else {
         login(data.user, data.token);
-        window.location.href = "/dashboard";
+        navigate("/dashboard");
       }
     } catch (err) {
       setError(err.message);
@@ -230,7 +233,9 @@ function LoginForm() {
     try {
       setLoading(true);
   
-      const res = await fetch("http://localhost:4000/api/auth/verify-otp", {
+      const res = await fetch(
+        `${API_URL}/auth/verify-otp`,
+        {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import SoftBackdropNew from "../../components/SoftBackdropNew";
 
-const API = "http://localhost:4000/api";
+const API = import.meta.env.VITE_API_URL;
 
 const authHeader = () => ({
   Authorization: `Bearer ${localStorage.getItem("token")}`,

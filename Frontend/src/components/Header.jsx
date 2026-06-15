@@ -36,8 +36,20 @@ const Header = () => {
         <>
             <header className="p-5 shadow-lg flex justify-between items-center bg-white/5 backdrop-blur-md relative">
 
-                <a href="/" className="text-2xl font-bold text-slate-200 hover:text-white transition-colors cursor-pointer">
+                {/* <a href="/" className="text-2xl font-bold text-slate-200 hover:text-white transition-colors cursor-pointer">
                     CodeArena
+                </a> */}
+                <a
+                    href="/"
+                    className="
+                        text-2xl font-bold tracking-tight
+                        text-slate-200
+                        hover:text-white
+                        transition-all duration-300
+                        cursor-pointer
+                    "
+                >
+                    Code<span className="text-violet-400">Arena</span>
                 </a>
 
                 
@@ -52,7 +64,11 @@ const Header = () => {
                                 <div className="w-9 h-9 rounded-full overflow-hidden bg-[#0f172a] flex items-center justify-center text-sm text-white">
                                     {user?.picture ? (
                                         <img
-                                            src={user.picture.startsWith('http') ? user.picture : `http://localhost:4000${user.picture}`}
+                                        src={
+                                            user.picture.startsWith("http")
+                                              ? user.picture
+                                              : `${import.meta.env.VITE_API_URL.replace("/api", "")}${user.picture}`
+                                          }
                                             alt="Profile"
                                             referrerPolicy="no-referrer"
                                             className="w-full h-full object-cover"

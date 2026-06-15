@@ -26,8 +26,20 @@ export default function Navbar() {
         >
             <div className='max-w-6xl mx-auto flex items-center justify-between bg-black/50 backdrop-blur-md border border-white/4 rounded-2xl p-3'>
 
-                <a href="/" className="text-2xl font-bold text-slate-200 hover:text-white transition-colors cursor-pointer">
+                {/* <a href="/" className="text-2xl font-bold text-slate-200 hover:text-white transition-colors cursor-pointer">
                     CodeArena
+                </a> */}
+                <a
+                    href="/"
+                    className="
+                        text-2xl font-bold tracking-tight
+                        text-slate-200
+                        hover:text-white
+                        transition-all duration-300
+                        cursor-pointer
+                    "
+                >
+                    Code<span className="text-violet-400">Arena</span>
                 </a>
 
                 <div className='hidden md:flex items-center gap-8 text-sm font-medium text-gray-300'>

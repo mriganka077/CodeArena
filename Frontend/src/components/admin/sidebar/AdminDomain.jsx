@@ -14,7 +14,8 @@ import {
 
 // ── Simulated async backend calls ─────────────────────────────────────────────
 
-const API_URL = "http://localhost:4000/api/domains";
+const API_URL =
+  `${import.meta.env.VITE_API_URL}/domains`;
 const api = {
 
     getAll: async () => {

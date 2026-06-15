@@ -7,7 +7,7 @@ import SoftBackdrop from './SoftBackdrop';
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+const API_URL = import.meta.env.VITE_API_URL;
 
 /* ─── tiny icon components (inline SVG so no extra deps) ─── */
 const IconSpark = () => (
@@ -110,7 +110,7 @@ const QuestionsPanelPrac = ({
     setLoading(true); setError(''); setHint(''); setSubmitResult(null);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${API_URL}/api/ai/practice-generate`, {
+      const res = await fetch(`${API_URL}/ai/practice-generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ domain, difficulty }),
@@ -132,7 +132,7 @@ const QuestionsPanelPrac = ({
     try {
       const token = localStorage.getItem('token');
       const res = await axios.post(
-        `${API_URL}/api/practice/analyze`,
+        `${API_URL}/practice/analyze`,
         { type: 'CODING', question: q.question, code: codes[currentIndex] || '', output: outputs[currentIndex] || '', language: q.language || 'python3' },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -153,7 +153,7 @@ const QuestionsPanelPrac = ({
         language: q.language || 'python3', output: outputs[i] || '',
       }));
       const res = await axios.post(
-        `${API_URL}/api/practice/submit`,
+        `${API_URL}/practice/submit`,
         { domain, difficulty, attempts },
         { headers: { Authorization: `Bearer ${token}` } }
       );

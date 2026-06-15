@@ -56,8 +56,10 @@ const Header = ({ now }) => {
 
                 if (!token) return;
 
+                const API_URL = import.meta.env.VITE_API_URL;
+
                 const res = await fetch(
-                    "http://localhost:4000/api/admin/me",
+                    `${API_URL}/admin/me`,
                     {
                         headers: {
                             Authorization: `Bearer ${token}`,
@@ -100,8 +102,15 @@ const Header = ({ now }) => {
             }}
         >
             <div className="flex items-center gap-3">
-                <span className="text-white font-bold text-base tracking-wide">
-                    CodeArena
+                <span className="
+                        font-bold tracking-tight
+                        text-slate-200
+                        hover:text-white
+                        transition-all duration-300
+                        cursor-pointer
+                    "
+                >
+                    Code<span className="text-violet-400">Arena</span>
                 </span>
 
                 <span className="text-[9px] font-semibold px-2 py-0.5 rounded-full border border-purple-500/40 text-purple-400 uppercase tracking-widest">
@@ -142,7 +151,7 @@ const Header = ({ now }) => {
                 >
                     {admin?.photo ? (
                         <img
-                            src={`http://localhost:4000${admin.photo}`}
+                            src={`${import.meta.env.VITE_API_URL.replace("/api", "")}${admin.photo}`}
                             alt="admin"
                             className="w-full h-full object-cover"
                         />

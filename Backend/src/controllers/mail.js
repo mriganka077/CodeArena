@@ -105,7 +105,7 @@ export const sendShortlistMail = async (req, res) => {
                                 text-align:center;
                             ">
 
-                                <a href="http://localhost:5173"
+                                <a href="${process.env.FRONTEND_URL}"
                                 style="
                                     display:inline-block;
                                     background:linear-gradient(135deg,#6366f1,#8b5cf6);

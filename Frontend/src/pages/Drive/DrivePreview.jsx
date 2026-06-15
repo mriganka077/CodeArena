@@ -7,6 +7,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 const InfoModal = ({ isOpen, title, message, onClose }) => {
   return (
     <AnimatePresence>
@@ -196,14 +198,14 @@ const DrivePreview = () => {
       try {
         const token = localStorage.getItem("token");
 
-        const drivesRes = await fetch("http://localhost:4000/api/my-drives", {
+        const drivesRes = await fetch(`${API_URL}/my-drives`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
 
         const resultRes = await fetch(
-          "http://localhost:4000/api/interview/my-results",
+          `${API_URL}/interview/my-results`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -216,7 +218,7 @@ const DrivePreview = () => {
         const drivesData = await drivesRes.json();
 
         const interviewRes = await fetch(
-          "http://localhost:4000/api/drives/my-interviews",
+          `${API_URL}/drives/my-interviews`,
           {
             headers: {
               Authorization: `Bearer ${token}`,

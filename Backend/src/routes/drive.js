@@ -1,5 +1,6 @@
 import express from "express";
 import { protect } from "../middleware/auth.js";
+import { adminProtect } from "../middleware/adminProtect.js";
 
 import {
   getAllDrives,
@@ -47,7 +48,7 @@ router.put("/:id/end-drive", endDrive);
 
 router.get(
   "/admin",
-  protect,
+  adminProtect,
   getAllAdminInterviews
 );
 

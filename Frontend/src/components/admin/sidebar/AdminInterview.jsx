@@ -1481,7 +1481,7 @@ const AdminInterview = () => {
   
         fetchInterviews();
   
-      }, 1000); // every 1 second
+      }, 10000); 
     };
   
     startRealtime();
@@ -1494,17 +1494,19 @@ const AdminInterview = () => {
 
     try {
   
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("adminToken");
+      console.log("Admin Token:", localStorage.getItem("adminToken"));
   
+      const API_URL = import.meta.env.VITE_API_URL;
+
       const response = await fetch(
-        "http://localhost:4000/api/drives/admin",
+        `${API_URL}/drives/admin`,
         {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-  
           cache: "no-store",
         }
       );

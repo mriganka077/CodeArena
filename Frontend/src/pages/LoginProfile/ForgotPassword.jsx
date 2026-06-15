@@ -15,6 +15,9 @@ const ForgotPassword = () => {
 
   const otpRefs = useRef([]);
 
+  const API_URL = import.meta.env.VITE_API_URL;
+
+
   useEffect(() => {
     let timer;
     if (resendTimer > 0) {
@@ -37,7 +40,7 @@ const ForgotPassword = () => {
     if (!email || !email.includes("@")) return;
   
     try {
-      const res = await fetch("http://localhost:4000/api/auth/forgot-password", {
+      const res = await fetch(`${API_URL}/auth/forgot-password`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -82,7 +85,7 @@ const ForgotPassword = () => {
     if (newPass !== confirmPass) return alert("Passwords do not match");
   
     try {
-      const res = await fetch("http://localhost:4000/api/auth/reset-password", {
+      const res = await fetch(`${API_URL}/auth/reset-password`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -137,8 +140,20 @@ const ForgotPassword = () => {
     otpRefs.current[Math.min(paste.length, 5)]?.focus();
   };
 
-  const startResendTimer = () => {
-    setResendTimer(30);
+  const startResendTimer = async () => {
+    try {
+      await fetch(`${API_URL}/auth/forgot-password`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email }),
+      });
+  
+      setResendTimer(30);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const checkStrength = (val) => {

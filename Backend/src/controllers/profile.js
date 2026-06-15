@@ -243,7 +243,7 @@ async function analyzeWithOpenRouter(resumeText) {
     headers: {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
-      "HTTP-Referer": "http://localhost:3000",
+      "HTTP-Referer": process.env.CLIENT_URL,
     },
     body: JSON.stringify({
       model: "meta-llama/llama-3.3-70b-instruct:free",

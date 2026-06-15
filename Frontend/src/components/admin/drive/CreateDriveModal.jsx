@@ -180,8 +180,8 @@ const TInput = ({
                 onChange={onChange}
                 placeholder={placeholder}
                 className={`dark-input w-full ${Icon && !isDate
-                        ? "pl-10"
-                        : "pl-3"
+                    ? "pl-10"
+                    : "pl-3"
                     } ${isDate
                         ? "pr-10"
                         : "pr-3"
@@ -204,31 +204,31 @@ const TInput = ({
 
 
 const CustomDateInput = forwardRef(({ value, onClick, placeholderText }, ref) => {
-  const isEmpty = !value || value.trim() === "";
+    const isEmpty = !value || value.trim() === "";
 
-  return (
-    <div className="relative w-full" onClick={onClick}>
-      <div
-        ref={ref}
-        className="w-full pl-3 pr-10 py-2.5 rounded-xl text-xs border border-white/[0.08] cursor-pointer flex items-center"
-        style={{ background: "rgba(8,6,18,0.85)", minHeight: "38px" }}
-      >
-        {isEmpty ? (
-          <span style={{ color: "rgba(255,255,255,0.20)" }}>
-            {placeholderText}
-          </span>
-        ) : (
-          <span style={{ color: "rgba(255,255,255,0.80)" }}>
-            {value}
-          </span>
-        )}
-      </div>
-      <Calendar
-        size={14}
-        className="absolute right-3 top-1/2 -translate-y-1/2 text-white/35 pointer-events-none"
-      />
-    </div>
-  );
+    return (
+        <div className="relative w-full" onClick={onClick}>
+            <div
+                ref={ref}
+                className="w-full pl-3 pr-10 py-2.5 rounded-xl text-xs border border-white/[0.08] cursor-pointer flex items-center"
+                style={{ background: "rgba(8,6,18,0.85)", minHeight: "38px" }}
+            >
+                {isEmpty ? (
+                    <span style={{ color: "rgba(255,255,255,0.20)" }}>
+                        {placeholderText}
+                    </span>
+                ) : (
+                    <span style={{ color: "rgba(255,255,255,0.80)" }}>
+                        {value}
+                    </span>
+                )}
+            </div>
+            <Calendar
+                size={14}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/35 pointer-events-none"
+            />
+        </div>
+    );
 });
 
 CustomDateInput.displayName = "CustomDateInput";
@@ -291,11 +291,10 @@ const SInput = ({
                     setOpen(!open)
                 }
                 className={`w-full px-3 py-2.5 rounded-xl text-xs text-left outline-none transition flex items-center justify-between
-                ${
-                    error
+                ${error
                         ? "border border-rose-500/50"
                         : "border border-white/8 hover:border-indigo-500/40"
-                }`}
+                    }`}
                 style={{
                     background:
                         "rgba(8,6,18,0.85)",
@@ -308,11 +307,10 @@ const SInput = ({
 
                 <ChevronDown
                     size={13}
-                    className={`text-white/30 transition duration-200 ${
-                        open
+                    className={`text-white/30 transition duration-200 ${open
                             ? "rotate-180"
                             : ""
-                    }`}
+                        }`}
                 />
 
             </button>
@@ -322,7 +320,7 @@ const SInput = ({
                 {open && (
 
                     <motion.div
-                    
+
                         initial={{
                             opacity: 0,
                             y: -8,
@@ -366,11 +364,10 @@ const SInput = ({
                                     setOpen(false);
                                 }}
                                 className={`w-full px-3 py-3 text-left text-xs transition
-                                ${
-                                    value === item
+                                ${value === item
                                         ? "bg-violet-500/20 text-violet-300"
                                         : "text-white/75 hover:bg-white/5"
-                                }`}
+                                    }`}
                             >
                                 {item}
                             </button>
@@ -454,17 +451,17 @@ const CreateDriveModal = ({
     const getLocalDateTime = () => {
 
         const now = new Date();
-    
+
         now.setMinutes(
             now.getMinutes() -
             now.getTimezoneOffset()
         );
-    
+
         return now
             .toISOString()
             .slice(0, 16);
     };
-    
+
     const todayDateTime =
         getLocalDateTime();
     const [done, setDone] = useState(false);
@@ -530,6 +527,8 @@ const CreateDriveModal = ({
         setErrors({}); setStep(3);
     };
 
+    const API_URL = import.meta.env.VITE_API_URL;
+
     const handleAutoFill = async () => {
 
         try {
@@ -537,7 +536,7 @@ const CreateDriveModal = ({
             setGenerating(true);
 
             const response = await axios.post(
-                "http://localhost:4000/api/ai/generate-drive-prompt",
+                `${API_URL}/ai/generate-drive-prompt`,
                 {
                     title: form.title,
                     tag: form.tag,
@@ -594,39 +593,39 @@ const CreateDriveModal = ({
                 driveId: Math.floor(
                     100000 + Math.random() * 900000
                 ).toString(),
-            
+
                 hiringPositionName: form.title,
-            
+
                 assessmentStartDate:
                     form.assessmentStartDate,
-            
+
                 assessmentEndDate:
                     form.assessmentEndDateend,
-            
+
                 driveType: form.type,
-            
+
                 difficulty: form.difficulty,
-            
+
                 timeDurationInMin: Number(form.duration),
-            
+
                 mcqCount: Number(form.mcqCount || 0),
-            
+
                 codeCount:
                     form.type === "Assessment"
                         ? Number(form.codeCount || 0)
                         : 0,
-            
+
                 mcqMarks: Number(form.marksPerMcq || 0),
-            
+
                 codeMarks:
                     form.type === "Assessment"
                         ? Number(form.marksPerCode || 0)
                         : 0,
-            
+
                 totalMarks:
                     (Number(form.mcqCount || 0) *
                         Number(form.marksPerMcq || 0)) +
-            
+
                     (Number(form.codeCount || 0) *
                         Number(form.marksPerCode || 0)),
             };
@@ -634,14 +633,14 @@ const CreateDriveModal = ({
             const response = editData
 
                 ? await axios.put(
-                    `http://localhost:4000/api/drives/${editData._id}`,
+                    `${API_URL}/drives/${editData._id}`,
                     payload
                 )
 
                 : await axios.post(
-                    "http://localhost:4000/api/drives",
+                    `${API_URL}/drives`,
                     payload
-                );
+                )
 
             if (response.data.success) {
 
@@ -787,8 +786,8 @@ const CreateDriveModal = ({
                                 <React.Fragment key={s}>
                                     <div className={`flex items-center gap-1.5 text-[10px] font-semibold transition ${step >= s ? "text-indigo-300" : "text-white/20"}`}>
                                         <div className={`w-5 h-5 rounded-full flex items-center justify-center font-bold transition border ${step > s ? "bg-indigo-500 border-indigo-400 text-white"
-                                                : step === s ? "border-indigo-500/70 text-indigo-300 bg-indigo-500/10"
-                                                    : "border-white/10 text-white/20"}`}
+                                            : step === s ? "border-indigo-500/70 text-indigo-300 bg-indigo-500/10"
+                                                : "border-white/10 text-white/20"}`}
                                             style={{ fontSize: 10 }}>
                                             {step > s ? <CheckCircle2 size={10} /> : s}
                                         </div>
@@ -907,7 +906,7 @@ const CreateDriveModal = ({
                                             className="dark-input w-full pl-3 pr-10 py-2.5 rounded-xl text-xs text-white/80 border border-white/8 outline-none"
 
                                             // placeholderText="Select start date"
-                                            customInput={<CustomDateInput placeholderText="Select start date"/>}
+                                            customInput={<CustomDateInput placeholderText="Select start date" />}
 
                                         />
                                     </Field>
@@ -978,7 +977,7 @@ const CreateDriveModal = ({
                                             className="dark-input w-full pl-3 pr-10 py-2.5 rounded-xl text-xs text-white/80 border border-white/8 outline-none"
 
                                             // placeholderText="Select end date"
-                                            customInput={<CustomDateInput placeholderText="Select end date"/>}
+                                            customInput={<CustomDateInput placeholderText="Select end date" />}
 
                                         />
                                     </Field>

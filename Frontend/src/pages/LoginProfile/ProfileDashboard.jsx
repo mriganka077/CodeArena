@@ -3,7 +3,12 @@ import SoftBackdropNew from "../../components/SoftBackdropNew";
 import Header from "../../components/Header";
 import { useAuth } from "../../context/AuthContext.jsx";
 
-const API = "http://localhost:4000/api";
+
+const API_URL = import.meta.env.VITE_API_URL;
+
+const SERVER_URL = API_URL?.replace("/api", "");
+
+const API = API_URL;
 
 const COLORS = {
   deepNavy: "#050816",
@@ -168,7 +173,8 @@ const Spinner = () => (
 
 function DocPreviewModal({ doc, onClose }) {
   if (!doc) return null;
-  const url = doc.url || (doc.path ? `http://localhost:4000${doc.path}` : null);
+
+const url = doc.url || (doc.path ? `${SERVER_URL}${doc.path}` : null);
   if (!url) return null;
   const isImage = /\.(jpg|jpeg|png)$/i.test(doc.name || "");
   return (
@@ -640,9 +646,10 @@ function ResumeSection({ initialData, onSaved }) {
 
   useEffect(() => {
     if (initialData?.resumeUrl) {
-      const fullUrl = initialData.resumeUrl.startsWith("http")
+
+        const fullUrl = initialData.resumeUrl.startsWith("http")
         ? initialData.resumeUrl
-        : `http://localhost:4000${initialData.resumeUrl}`;
+        : `${SERVER_URL}${initialData.resumeUrl}`;
       setResume({ name: initialData.resumeOriginalName || "Resume", url: fullUrl });
     }
   }, [initialData]);
@@ -664,7 +671,7 @@ function ResumeSection({ initialData, onSaved }) {
       if (!json.success) throw new Error(json.message);
       const fullUrl = json.resumeUrl.startsWith("http")
         ? json.resumeUrl
-        : `http://localhost:4000${json.resumeUrl}`;
+        : `${SERVER_URL}${json.resumeUrl}`;
       setResume({ name: json.originalName, size: json.size, url: fullUrl });
       setToast({ msg: "Resume uploaded!", type: "success" });
       onSaved && onSaved();
@@ -1006,7 +1013,12 @@ function KycSection({ initialData, onSaved }) {
       });
       const json = await res.json();
       if (!json.success) throw new Error(json.message);
-      const docInfo = { name: file.name, size: `${Math.round(file.size / 1024)} KB`, path: `/uploads/kyc/${file.name}` };
+      const docInfo = {
+        name: json.doc.name,
+        size: json.doc.size,
+        path: json.doc.path,
+        url: json.doc.url
+      };
       if (field === "aadhaar") setAadhaarDoc(docInfo);
       if (field === "pan") setPanDoc(docInfo);
       setToast({ msg: `${field === "aadhaar" ? "Aadhaar" : "PAN"} document uploaded!`, type: "success" });
@@ -1188,10 +1200,11 @@ export default function ProfilePage() {
   const profilePct = calcCompletion(profile);
   const pctColor = profilePct >= 80 ? COLORS.green : profilePct >= 50 ? COLORS.accent : COLORS.amber;
 
+
   const photoSrc = profile?.picture
     ? profile.picture.startsWith("http")
       ? profile.picture
-      : `http://localhost:4000${profile.picture}`
+      : `${SERVER_URL}${profile.picture}`
     : null;
 
   const initials = `${profile?.firstName?.[0] || ""}${profile?.lastName?.[0] || ""}`.toUpperCase() || "?";
