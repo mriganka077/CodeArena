@@ -25,7 +25,12 @@ export const initGoogleStrategy = () => {
           if (user) {
             user.googleId = profile.id;
             user.isVerified = true;
-            if (photo) user.picture = photo;
+
+            // Don't overwrite uploaded profile photo
+            if (!user.picture && photo) {
+              user.picture = photo;
+            }
+
             await user.save();
           } else {
             user = await User.create({
