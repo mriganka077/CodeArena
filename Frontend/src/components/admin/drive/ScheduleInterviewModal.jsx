@@ -629,7 +629,7 @@ const DrivePanel = ({
                         src={
                           c.picture.startsWith("http")
                             ? c.picture
-                            : `http://localhost:4000${c.picture}`
+                            : `${import.meta.env.VITE_API_URL.replace("/api", "")}${c.picture}`
                         }
                         alt={`${c.firstName} ${c.lastName}`}
                         referrerPolicy="no-referrer"
@@ -1029,6 +1029,9 @@ The Hiring Team`,
 };
 
 // ── Main Modal ────────────────────────────────────────────────────────────────
+const API_URL = import.meta.env.VITE_API_URL;
+
+
 const ScheduleInterviewModal = ({ onClose }) => {
   const [step, setStep] = useState(0);
   const [form, setForm] = useState({
@@ -1047,8 +1050,10 @@ const ScheduleInterviewModal = ({ onClose }) => {
   
       try {
   
+        const API_URL = import.meta.env.VITE_API_URL;
+
         const res = await fetch(
-          "http://localhost:4000/api/drives"
+          `${API_URL}/drives`
         );
   
         const data = await res.json();
@@ -1171,7 +1176,7 @@ const ScheduleInterviewModal = ({ onClose }) => {
                     try {
                   
                       await fetch(
-                        "http://localhost:4000/api/drives/schedule-interview",
+                        `${API_URL}/drives/schedule-interview`,
                         {
                           method: "POST",
                           headers: {

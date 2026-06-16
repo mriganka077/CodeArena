@@ -11,23 +11,36 @@ import Pricing from "../../components/Pricing";
 import Faq from "../../components/Faq";
 import CTA from "../../components/CTA";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 export default function Home() {
     const [msg, setMsg] = useState("Loading...");
     const ref = useRef(null);
+
 
     useEffect(() => {
         const fetchData = async () => {
             try {
                 ref.current.continuousStart();
-                const res = await fetch("http://localhost:4000/api/test");
+
+                const res = await fetch(
+                    `${API_URL}/test`
+                );
+
                 const data = await res.json();
+
                 setMsg(data.message);
+
                 ref.current.complete();
+
             } catch (err) {
+
                 console.error(err);
+
                 ref.current.complete();
             }
         };
+
         fetchData();
     }, []);
 

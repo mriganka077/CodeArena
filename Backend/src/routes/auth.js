@@ -235,7 +235,16 @@ router.post("/google", async (req, res) => {
         isVerified: true,
       });
     } else {
-      user.picture = picture || user.picture; 
+      console.log("GOOGLE ROUTE VERSION 2");
+      console.log("BEFORE:", user.picture);
+      console.log("GOOGLE PICTURE:", picture);
+
+      if (!user.picture) {
+        user.picture = picture || "";
+      }
+
+      console.log("AFTER:", user.picture);
+    
       user.googleId = sub;
       await user.save();
     }

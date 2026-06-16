@@ -52,13 +52,26 @@ connectDB();
 
 const app = express();
 
+app.set("trust proxy", 1);
+
 // ============================
 // CORS
 // ============================
 
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://codearena.cloud",
+];
+
 app.use(
   cors({
-    origin: process.env.CLIENT_URL,
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
   })
 );
@@ -93,8 +106,10 @@ app.use(
     saveUninitialized: false,
 
     cookie: {
-      secure: false,
-    },
+      secure: process.env.NODE_ENV === "production",
+      httpOnly: true,
+      sameSite: "lax",
+    }, 
   })
 );
 
@@ -106,14 +121,6 @@ app.use(passport.initialize());
 
 app.use(passport.session());
 
-// ============================
-// STATIC
-// ============================
-
-app.use(
-  "/uploads",
-  express.static("uploads")
-);
 
 // ============================
 // RATE LIMITER
@@ -294,6 +301,6 @@ const PORT =
 app.listen(PORT, () => {
 
   console.log(
-    `Server running on http://localhost:${PORT}`
+    (`Server running in ${process.env.NODE_ENV} mode`)
   );
 });

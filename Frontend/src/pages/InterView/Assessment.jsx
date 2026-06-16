@@ -11,6 +11,9 @@ import LenisScroll from "../../components/lenis";
 import { useAuth } from "../../context/AuthContext";
 import CodeEditor from "../../components/CodeEditor";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
+
 const CustomModal = ({
   isOpen,
   title,
@@ -226,8 +229,8 @@ const Assessment = () => {
   const drive = location.state?.drive;
 
   const photoSrc = user?.picture?.startsWith("http")
-    ? user.picture
-    : `http://localhost:4000${user.picture}`;
+  ? user.picture
+  : `${import.meta.env.VITE_API_URL.replace('/api', '')}${user.picture}`;
 
   const [timeLeft, setTimeLeft] = useState(
     drive ? drive.timeDurationInMin * 60 : 0,
@@ -331,7 +334,7 @@ const Assessment = () => {
 
         if (drive.mcqCount && drive.mcqCount > 0) {
           const res = await fetch(
-            `${import.meta.env.VITE_API_URL}/api/ai/generate`,
+            `${API_URL}/ai/generate`,
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -354,7 +357,7 @@ const Assessment = () => {
 
         if (drive.codeCount && drive.codeCount > 0) {
           const res = await fetch(
-            `${import.meta.env.VITE_API_URL}/api/ai/generate`,
+            `${API_URL}/ai/generate`,
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -502,7 +505,7 @@ const Assessment = () => {
     try {
       const token = localStorage.getItem("token");
 
-      await fetch(`${import.meta.env.VITE_API_URL}/api/submit-result`, {
+      await fetch(`${API_URL}/submit-result`, {
         method: "POST",
 
         headers: {
@@ -1394,7 +1397,7 @@ const Assessment = () => {
 
             <div className="flex justify-center shrink-0">
               <button
-                onClick={toggleInterview}
+                 onClick={toggleInterview}
                 disabled={status === "idle"}
                 className={`w-full max-w-[300px] flex items-center justify-center gap-3 py-4 rounded-2xl border transition-all active:scale-95 text-[10px] font-black uppercase tracking-[0.2em]
           ${

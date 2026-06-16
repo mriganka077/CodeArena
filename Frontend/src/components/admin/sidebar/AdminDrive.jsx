@@ -237,8 +237,8 @@ const endDrive = async () => {
         setEndDriveLoading(true);
 
         await axios.put(
-            `http://localhost:4000/api/drives/${drive._id}/end-drive`
-        );
+            `${API_URL}/drives/${drive._id}/end-drive`
+          );
 
         setShowDeleteModal(false);
 
@@ -271,7 +271,7 @@ const endDrive = async () => {
             setCandLoading(true);
     
             const res = await axios.get(
-                `http://localhost:4000/api/drives/${drive._id}/candidates`
+                `${API_URL}/drives/${drive._id}/candidates`
             );
     
             setCandidates(
@@ -306,7 +306,7 @@ const endDrive = async () => {
             setFetchingCandidates(true);
     
             const res = await axios.get(
-                "http://localhost:4000/api/candidates",
+                `${API_URL}/candidates`,
                 {
                     headers: {
                         Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -358,7 +358,7 @@ const endDrive = async () => {
             setAssignLoading(true);
     
             await axios.post(
-                `http://localhost:4000/api/drives/${drive._id}/assign-candidates`,
+                `${API_URL}/drives/${drive._id}/assign-candidates`,
                 {
                     candidateIds: selectedCandidates,
                 },
@@ -387,7 +387,7 @@ const endDrive = async () => {
             setDeleteLoading(true);
     
             await axios.delete(
-                `http://localhost:4000/api/drives/${drive._id}`
+                `${API_URL}/drives/${drive._id}`
             );
     
             setShowDeleteModal(false);
@@ -407,6 +407,8 @@ const endDrive = async () => {
             setDeleteLoading(false);
         }
     };
+
+    const API_URL = import.meta.env.VITE_API_URL;
 
     return (
         <AnimatePresence>
@@ -750,7 +752,11 @@ const endDrive = async () => {
                                                                 style={{ background: "rgba(99,102,241,0.2)" }}>
                                                                 {c?.picture ? (
                                                                     <img
-                                                                        src={c.picture.startsWith("http") ? c.picture : `http://localhost:4000${c.picture}`}
+                                                                    src={
+                                                                        c.picture.startsWith("http")
+                                                                          ? c.picture
+                                                                          : `${import.meta.env.VITE_API_URL.replace("/api", "")}${c.picture}`
+                                                                      }
                                                                         alt={`${c.firstName} ${c.lastName}`}
                                                                         referrerPolicy="no-referrer"
                                                                         className="w-full h-full object-cover"
@@ -1177,7 +1183,7 @@ const endDrive = async () => {
                                                                                 src={
                                                                                     candidate.picture.startsWith("http")
                                                                                         ? candidate.picture
-                                                                                        : `http://localhost:4000${candidate.picture}`
+                                                                                        : `${import.meta.env.VITE_API_URL.replace("/api", "")}${candidate.picture}`
                                                                                 }
                                                                                 alt={`${candidate.firstName} ${candidate.lastName}`}
                                                                                 referrerPolicy="no-referrer"
@@ -2383,7 +2389,9 @@ const AdminDrive = () => {
     useEffect(() => {
         const fetchDrives = async () => {
             try {
-                const res = await axios.get("http://localhost:4000/api/drives");
+                const API_URL = import.meta.env.VITE_API_URL;
+
+                const res = await axios.get(`${API_URL}/drives`);
                 setDrives(res.data.drives);
                 console.log(res.data);
             } catch (error) {

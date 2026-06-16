@@ -25,7 +25,7 @@ const openrouter = axios.create({
       "application/json",
 
     "HTTP-Referer":
-      "http://localhost:5173",
+      process.env.VITE_API_URL,
 
     "X-Title":
       "CodeArena",

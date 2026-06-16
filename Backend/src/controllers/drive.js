@@ -851,18 +851,18 @@ export const getAllAdminInterviews = async (
                         // ==========================
 
                         assessmentScore:
-                            assessmentResult?.percentage || 0,
+                            assessmentResult?.percentage ?? null,
 
                         score:
-                            assessmentResult?.score || 0,
+                            interviewResult?.score ?? null,
 
                         percentage:
-                            assessmentResult?.percentage || 0,
-
-                        rank: 0,
+                            assessmentResult?.percentage ?? null,
 
                         recommendation:
-                            interviewResult?.recommendation || "No Hire",
+                            interviewResult?.recommendation ?? null,
+
+                        rank: 0,
 
                         feedback:
                             interviewResult?.feedback || "",

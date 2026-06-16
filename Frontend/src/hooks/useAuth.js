@@ -1,4 +1,5 @@
-const API_URL = "http://localhost:4000/api";
+const API_URL = import.meta.env.VITE_API_URL;
+
 
 // ── Signup (now returns a message, not a token) ───────────────────────────────
 export const signup = async ({ firstName, lastName, email, password }) => {
@@ -70,7 +71,7 @@ export const verifySetup2FA = async (token) => {
 
 // ── Google OAuth: redirect browser to backend ─────────────────────────────────
 export const loginWithGoogle = () => {
-  window.location.href = "http://localhost:4000/api/auth/google";
+  window.location.href = `${API_URL}/auth/google`;
 };
 
 // ── Handle Google OAuth callback (call on /auth/callback page) ───────────────

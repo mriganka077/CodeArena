@@ -13,6 +13,9 @@ import {
 import vapi from "../../lib/vapi";
 import { useParams } from "react-router-dom";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
+
 const CustomModal = ({ isOpen, title, message, type, onClose, onConfirm }) => {
   return (
     <AnimatePresence>
@@ -300,8 +303,8 @@ const Interview = () => {
       const token = localStorage.getItem("token");
       const apiUrl =
         location.state?.type === "domain"
-          ? "http://localhost:4000/api/mockinterview/submit-result"
-          : "http://localhost:4000/api/interview/submit-result";
+          ? `${API_URL}/mockinterview/submit-result`
+          : `${API_URL}/interview/submit-result`;
 
       console.log("Submitting Interview");
       console.log("Transcript Count:", transcriptRef.current.length);

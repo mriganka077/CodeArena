@@ -1,7 +1,9 @@
 import axios from "axios";
+import dotenv from "dotenv";
 
-const JUDGE0_API =
-  "http://54.243.229.182:2358";
+dotenv.config();
+
+const JUDGE0_API = process.env.JUDGE0_API;
 
 export const LANGUAGE_IDS = {
 

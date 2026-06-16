@@ -3,7 +3,7 @@ import axios from 'axios';
 import Editor from '@monaco-editor/react';
 import { useEffect } from 'react';  
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+const API_URL = import.meta.env.VITE_API_URL;
 
 const langLabel = (lang) => {
   const map = { python3: 'Python', nodejs: 'JavaScript', java: 'Java', cpp17: 'C++', c: 'C', php: 'PHP', typescript: 'TypeScript', go: 'Go', sql: 'SQL' };
@@ -51,7 +51,7 @@ const CodeEditorPrac = ({ currentQuestion, currentIndex, code, output, onCodeCha
     onOutputChange('Running…');
     setMetaText('');
     try {
-      const res = await axios.post(`${API_URL}/api/compiler/run`, { code, language, input: customInput });
+      const res = await axios.post(`${API_URL}/compiler/run`, { code, language, input: customInput });
       const d = res.data?.data || {};
       const finalOutput = d.stdout || d.stderr || d.compile_output || 'No output';
       onOutputChange(finalOutput);
@@ -82,7 +82,7 @@ const CodeEditorPrac = ({ currentQuestion, currentIndex, code, output, onCodeCha
       );
   
       const res = await axios.post(
-        `${API_URL}/api/compiler/submit`,
+        `${API_URL}/compiler/submit`,
         {
           code,
           language,

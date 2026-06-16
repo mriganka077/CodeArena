@@ -13,8 +13,7 @@ import {
   X,
 } from "lucide-react";
 
-const API_URL = "http://localhost:4000/api/admin";
-const USER_API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const API_URL = import.meta.env.VITE_API_URL;
 
 // ─── Glass styles ─────────────────────────────────────────────────────────────
 const glass = {
@@ -477,7 +476,7 @@ export default function DomainSelectorPage() {
       setLoadingDomains(true);
       setFetchError(null);
       try {
-        const res = await fetch(`${API_URL}/domains`);
+        const res = await fetch(`${API_URL}/admin/domains`);
         const result = await res.json();
         if (result.success) {
           setGroups(result.data);
@@ -526,7 +525,7 @@ export default function DomainSelectorPage() {
           );
 
         const res = await fetch(
-          `${USER_API_URL}/api/mockinterview`,
+          `${API_URL}/mockinterview`,
           {
             method: "POST",
 

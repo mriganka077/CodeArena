@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-const API_URL = "http://localhost:4000/api";
+const API_URL = import.meta.env.VITE_API_URL;
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
@@ -144,7 +144,7 @@ export default function AdminLoginPage() {
       localStorage.setItem("adminToken", data.token);
       localStorage.setItem("adminUser", JSON.stringify(data.admin));
       
-      window.location.href = "/admindash";
+      window.location.href = "/admin";
     } catch (err) {
       setError(err.message);
       setOtp("");

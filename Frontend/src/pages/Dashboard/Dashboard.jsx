@@ -181,7 +181,7 @@ const SectionHeader = ({
 };
 
 const Dashboard = () => {
-  const navigate = useNavigate(); // ✅ ADD THIS
+  const navigate = useNavigate(); 
 
   // ─── Dropdown State ───
   const [analyticsOpen, setAnalyticsOpen] = useState(true);
@@ -251,7 +251,7 @@ const Dashboard = () => {
   ]);
 
   // ─── Backend Fetch Function ───
-  const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
+  const API_BASE = import.meta.env.VITE_API_URL;
 
   const fetchDashboardData = useCallback(async () => {
     setLoading(true);
@@ -260,7 +260,7 @@ const Dashboard = () => {
       const token = localStorage.getItem("token"); // optional auth
 
       const res = await fetch(
-        `${API_BASE}/api/dashboard/summary?period=${graphPeriod}`,
+        `${API_BASE}/dashboard/summary?period=${graphPeriod}`,
         {
           method: "GET",
           headers: {
@@ -309,7 +309,7 @@ const Dashboard = () => {
       const token = localStorage.getItem("token");
 
       const res = await fetch(
-        `${API_BASE}/api/dashboard/activity?period=${period}`,
+        `${API_BASE}/dashboard/activity?period=${period}`,
         {
           headers: {
             "Content-Type": "application/json",

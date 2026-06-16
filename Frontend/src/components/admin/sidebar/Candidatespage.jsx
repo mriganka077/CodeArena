@@ -41,6 +41,10 @@ import LenisScroll from "../../lenis";
 import axios from "axios";
 
 
+const API_URL = import.meta.env.VITE_API_URL;
+
+const BASE_URL = API_URL.replace("/api", "");
+
 // ── helpers ────────────────────────────────────────────────────────────────────
 const statusStyle = {
     Active: { cls: "bg-emerald-500/15 text-emerald-400 border border-emerald-500/25", dot: "#4ade80" },
@@ -71,7 +75,7 @@ const Avatar = ({ candidate, size = 40, className = "" }) => {
                     src={
                         candidate.picture.startsWith("http")
                             ? candidate.picture
-                            : `http://localhost:4000${candidate.picture}`
+                            : `${BASE_URL}${candidate.picture}`
                     }
                     alt={`${candidate.firstName} ${candidate.lastName}`}
                     referrerPolicy="no-referrer"
@@ -456,7 +460,7 @@ const CandidateDrawer = ({
                                                             {ed.docs.map((doc, j) => (
                                                                 <a
                                                                     key={doc._id ?? j}
-                                                                    href={`http://localhost:4000${doc.path}`}
+                                                                    href={`${BASE_URL}${doc.path}`}
                                                                     download={doc.name}
                                                                     target="_blank"
                                                                     rel="noopener noreferrer"
@@ -501,7 +505,7 @@ const CandidateDrawer = ({
                                         {/* Resume */}
                                         {candidate.resumeUrl && (
                                             <a
-                                                href={`http://localhost:4000${candidate.resumeUrl}`}
+                                                 href={`${BASE_URL}${candidate.resumeUrl}`}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                                 download={candidate.resumeOriginalName}
@@ -540,7 +544,7 @@ const CandidateDrawer = ({
                                         {/* Aadhaar */}
                                         {candidate.aadhaarDoc?.path && (
                                             <a
-                                                href={`http://localhost:4000${candidate.aadhaarDoc.path}`}
+                                                href={`${BASE_URL}${candidate.aadhaarDoc.path}`}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                                 download={candidate.aadhaarDoc.name}
@@ -580,7 +584,7 @@ const CandidateDrawer = ({
                                         {/* PAN */}
                                         {candidate.panDoc?.path && (
                                             <a
-                                                href={`http://localhost:4000${candidate.panDoc.path}`}
+                                                href={`${BASE_URL}${candidate.panDoc.path}`}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                                 download={candidate.panDoc.name}
@@ -966,7 +970,7 @@ const CandidateDrawer = ({
                                                 setSendingMail(true);
 
                                                 const res = await axios.post(
-                                                    "http://localhost:4000/api/mail/shortlist",
+                                                    `${API_URL}/mail/shortlist`,
                                                     {
                                                         email: selectedCandidate.email,
                                                         subject: mailData.subject,
@@ -1061,8 +1065,8 @@ const CandidatesPage = () => {
             try {
 
                 const res = await axios.get(
-                    "http://localhost:4000/api/candidates"
-                );
+                    `${API_URL}/candidates`
+                  );
 
                 setCandidates(res.data.candidates);
 
@@ -1115,8 +1119,8 @@ const CandidatesPage = () => {
             setDeleteLoading(true);
 
             await axios.delete(
-                `http://localhost:4000/api/candidates/${deleteCandidateData._id}`
-            );
+                `${API_URL}/candidates/${deleteCandidateData._id}`
+              );
 
             setCandidates((prev) =>
                 prev.filter(

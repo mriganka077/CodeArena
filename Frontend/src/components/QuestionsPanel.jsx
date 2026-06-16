@@ -9,6 +9,10 @@ const QuestionsPanel = ({ onQuestionChange }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+
+  const API_URL = import.meta.env.VITE_API_URL;
+
+
   // Fetch Questions
   const fetchQuestions = async () => {
 
@@ -18,7 +22,7 @@ const QuestionsPanel = ({ onQuestionChange }) => {
       setError("");
 
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/ai/generate`,
+        `${API_URL}/ai/generate`,
         {
           method: "POST",
           headers: {
