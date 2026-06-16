@@ -581,7 +581,7 @@ const QuestionsPanelPrac = ({
                 Submitting…
               </>
             ) : (
-              <><IconCheck /> Submit All Questions</>
+              <><IconCheck /> Submit All Answers</>
             )}
           </button>
         )}

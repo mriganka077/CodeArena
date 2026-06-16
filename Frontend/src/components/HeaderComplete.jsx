@@ -36,8 +36,21 @@ const Header = () => {
         <>
             <header className="p-5 shadow-lg flex justify-between items-center bg-white/5 backdrop-blur-md relative z-50">
 
-                <a href="/" className="text-2xl font-bold text-slate-200 hover:text-white transition-colors cursor-pointer">
+                {/* <a href="/" className="text-2xl font-bold text-slate-200 hover:text-white transition-colors cursor-pointer">
                     CodeArena
+                </a> */}
+
+                <a
+                    href="/"
+                    className="
+                        text-2xl font-bold tracking-tight
+                        text-slate-200
+                        hover:text-white
+                        transition-all duration-300
+                        cursor-pointer
+                    "
+                >
+                    Code<span className="text-violet-400">Arena</span>
                 </a>
 
                 

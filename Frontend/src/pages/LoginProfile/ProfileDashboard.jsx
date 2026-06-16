@@ -22,6 +22,21 @@ const COLORS = {
   red: "#f87171",
 };
 
+// ── Glassmorphism style helper ────────────────────────────────────────────────
+const glass = (opts = {}) => ({
+  background: "rgba(20, 10, 40, 0.55)",
+  backdropFilter: "blur(18px) saturate(1.4)",
+  WebkitBackdropFilter: "blur(18px) saturate(1.4)",
+  border: opts.active
+    ? `1px solid rgba(108, 99, 255, 0.45)`
+    : `1px solid rgba(108, 99, 255, 0.18)`,
+  boxShadow: opts.active
+    ? "0 8px 32px rgba(108,99,255,0.18), inset 0 1px 0 rgba(255,255,255,0.07)"
+    : "0 8px 32px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.05)",
+  borderRadius: opts.radius ?? 18,
+  ...opts.extra,
+});
+
 const EMPTY_EDU = {
   _id: null,
   degree: "", institution: "", university: "",
@@ -174,7 +189,7 @@ const Spinner = () => (
 function DocPreviewModal({ doc, onClose }) {
   if (!doc) return null;
 
-const url = doc.url || (doc.path ? `${SERVER_URL}${doc.path}` : null);
+  const url = doc.url || (doc.path ? `${SERVER_URL}${doc.path}` : null);
   if (!url) return null;
   const isImage = /\.(jpg|jpeg|png)$/i.test(doc.name || "");
   return (
@@ -184,20 +199,22 @@ const url = doc.url || (doc.path ? `${SERVER_URL}${doc.path}` : null);
         position: "fixed", inset: 0, zIndex: 10000,
         background: "rgba(0,0,0,0.75)", display: "flex",
         alignItems: "center", justifyContent: "center", padding: 24,
+        backdropFilter: "blur(6px)",
       }}
     >
       <div
         onClick={e => e.stopPropagation()}
         style={{
-          background: COLORS.cardDark, borderRadius: 18, overflow: "hidden",
-          border: `1px solid ${COLORS.midPurple}`, width: "100%", maxWidth: 860,
+          ...glass({ active: true }),
+          overflow: "hidden",
+          width: "100%", maxWidth: 860,
           display: "flex", flexDirection: "column",
           maxHeight: "90vh", boxShadow: "0 24px 80px rgba(0,0,0,0.6)",
         }}
       >
         <div style={{
           display: "flex", alignItems: "center", justifyContent: "space-between",
-          padding: "14px 20px", borderBottom: `1px solid ${COLORS.midPurple}55`,
+          padding: "14px 20px", borderBottom: `1px solid rgba(108,99,255,0.2)`,
           flexShrink: 0,
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -211,13 +228,13 @@ const url = doc.url || (doc.path ? `${SERVER_URL}${doc.path}` : null);
           <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
             <a
               href={url} target="_blank" rel="noreferrer"
-              style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: COLORS.accent, fontFamily: "'Space Mono',monospace", border: `1px solid ${COLORS.accent}44`, padding: "4px 12px", borderRadius: 8, textDecoration: "none" }}
+              style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: COLORS.accent, fontFamily: "'Space Mono',monospace", border: `1px solid ${COLORS.accent}44`, padding: "4px 12px", borderRadius: 8, textDecoration: "none", background: "rgba(108,99,255,0.1)" }}
             >
               Open <ExternalLinkIcon size={11} color={COLORS.accent} />
             </a>
             <button
               onClick={onClose}
-              style={{ background: "none", border: `1px solid ${COLORS.grayMuted}44`, color: COLORS.grayMuted, borderRadius: 8, padding: "4px 12px", fontSize: 12, fontFamily: "'Space Mono',monospace", cursor: "pointer" }}
+              style={{ background: "rgba(255,255,255,0.05)", border: `1px solid rgba(161,161,170,0.3)`, color: COLORS.grayMuted, borderRadius: 8, padding: "4px 12px", fontSize: 12, fontFamily: "'Space Mono',monospace", cursor: "pointer" }}
             >
               ✕ Close
             </button>
@@ -243,11 +260,11 @@ function Toast({ message, type = "success", onDone }) {
   return (
     <div style={{
       position: "fixed", bottom: 28, right: 28,
-      background: COLORS.cardDark, border: `1px solid ${color}55`,
+      ...glass({ active: false, radius: 12 }),
+      border: `1px solid ${color}44`,
       color, fontFamily: "'Space Mono',monospace", fontSize: 12,
-      padding: "10px 18px", borderRadius: 12, display: "flex",
+      padding: "10px 18px", display: "flex",
       alignItems: "center", gap: 8, zIndex: 9999,
-      boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
     }}>
       {type === "success" ? <CheckIcon size={12} /> : "✕"} {message}
     </div>
@@ -257,11 +274,9 @@ function Toast({ message, type = "success", onDone }) {
 function SectionCard({ children, editing, style }) {
   return (
     <div style={{
-      background: `linear-gradient(135deg, ${COLORS.cardDark} 60%, ${COLORS.darkPurple} 100%)`,
-      borderRadius: 18, padding: 24,
-      boxShadow: "0 0 24px 2px rgba(108,99,255,0.10)",
-      border: editing ? `1px solid ${COLORS.accent}55` : `1px solid ${COLORS.midPurple}55`,
-      transition: "border 0.2s",
+      ...glass({ active: editing }),
+      padding: 24,
+      transition: "border 0.2s, box-shadow 0.2s",
       ...style,
     }}>
       {children}
@@ -272,10 +287,12 @@ function SectionCard({ children, editing, style }) {
 function EditBanner() {
   return (
     <div style={{
-      background: `${COLORS.accent}10`, border: `1px solid ${COLORS.accent}33`,
+      background: `rgba(108,99,255,0.1)`,
+      border: `1px solid rgba(108,99,255,0.3)`,
       borderRadius: 10, padding: "8px 14px", marginBottom: 18,
       display: "flex", alignItems: "center", gap: 8,
       fontSize: 11, color: COLORS.accent, fontFamily: "'Space Mono',monospace",
+      backdropFilter: "blur(8px)",
     }}>
       <PencilIcon size={11} /> Editing mode — click Save when done.
     </div>
@@ -292,9 +309,10 @@ function SectionHeader({ title, subtitle, editing, saving, onToggle }) {
       <button onClick={onToggle} disabled={saving} style={{
         display: "flex", alignItems: "center", gap: 7,
         padding: "8px 16px", borderRadius: 10, flexShrink: 0, marginLeft: 16,
-        border: editing ? `1.5px solid ${COLORS.green}` : `1.5px solid ${COLORS.accent}66`,
+        border: editing ? `1.5px solid ${COLORS.green}` : `1.5px solid rgba(108,99,255,0.4)`,
         color: editing ? COLORS.green : COLORS.accent,
-        background: editing ? `${COLORS.green}15` : `${COLORS.accent}10`,
+        background: editing ? `rgba(34,197,94,0.1)` : `rgba(108,99,255,0.1)`,
+        backdropFilter: "blur(8px)",
         fontFamily: "'Space Mono',monospace", fontSize: 11, fontWeight: 700,
         cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.7 : 1,
         transition: "all 0.2s",
@@ -311,9 +329,10 @@ function EditableInput({ label, value, editing, onChange, textarea, type = "text
     fontSize: 13, fontFamily: "'DM Sans',sans-serif",
     outline: "none", resize: "none", transition: "all 0.2s",
     boxSizing: "border-box", color: (editing && !readOnly) ? "#fff" : "#e2e8f0",
-    background: (editing && !readOnly) ? `${COLORS.midPurple}55` : "transparent",
-    border: (editing && !readOnly) ? `1.5px solid ${COLORS.accent}88` : "1.5px solid transparent",
-    boxShadow: (editing && !readOnly) ? `0 0 0 3px ${COLORS.accent}18` : "none",
+    background: (editing && !readOnly) ? "rgba(108,99,255,0.15)" : "rgba(255,255,255,0.03)",
+    border: (editing && !readOnly) ? `1.5px solid rgba(108,99,255,0.55)` : "1.5px solid rgba(255,255,255,0.06)",
+    boxShadow: (editing && !readOnly) ? `0 0 0 3px rgba(108,99,255,0.1)` : "none",
+    backdropFilter: "blur(6px)",
     cursor: readOnly ? "default" : "text",
   };
   return (
@@ -341,8 +360,9 @@ function AddSkillInput({ onAdd }) {
   if (!show) return (
     <button onClick={() => setShow(true)} style={{
       fontSize: 11, color: COLORS.accent, fontFamily: "'Space Mono',monospace",
-      background: `${COLORS.accent}12`, border: `1px solid ${COLORS.accent}44`,
+      background: `rgba(108,99,255,0.12)`, border: `1px solid rgba(108,99,255,0.3)`,
       padding: "5px 12px", borderRadius: 8, cursor: "pointer",
+      backdropFilter: "blur(6px)",
     }}>+ Add Skill</button>
   );
   return (
@@ -351,13 +371,14 @@ function AddSkillInput({ onAdd }) {
         onKeyDown={e => { if (e.key === "Enter") submit(); if (e.key === "Escape") setShow(false); }}
         placeholder="e.g. TypeScript"
         style={{
-          background: `${COLORS.midPurple}55`, border: `1.5px solid ${COLORS.accent}88`,
+          background: `rgba(108,99,255,0.15)`, border: `1.5px solid rgba(108,99,255,0.5)`,
           color: "#fff", borderRadius: 8, padding: "5px 12px", fontSize: 12,
           fontFamily: "'Space Mono',monospace", outline: "none", width: 150,
-          boxShadow: `0 0 0 3px ${COLORS.accent}18`,
+          boxShadow: `0 0 0 3px rgba(108,99,255,0.1)`,
+          backdropFilter: "blur(6px)",
         }} />
       <button onClick={submit} style={{ background: COLORS.accent, border: "none", color: "#fff", borderRadius: 8, padding: "5px 12px", fontSize: 11, fontFamily: "'Space Mono',monospace", cursor: "pointer" }}>Add</button>
-      <button onClick={() => setShow(false)} style={{ background: "transparent", border: `1px solid ${COLORS.grayMuted}44`, color: COLORS.grayMuted, borderRadius: 8, padding: "5px 10px", fontSize: 11, fontFamily: "'Space Mono',monospace", cursor: "pointer" }}>✕</button>
+      <button onClick={() => setShow(false)} style={{ background: "transparent", border: `1px solid rgba(161,161,170,0.3)`, color: COLORS.grayMuted, borderRadius: 8, padding: "5px 10px", fontSize: 11, fontFamily: "'Space Mono',monospace", cursor: "pointer" }}>✕</button>
     </div>
   );
 }
@@ -432,7 +453,7 @@ function PersonalSection({ initialData, onSaved }) {
           </div>
         </div>
 
-        <div style={{ borderTop: `1px solid ${COLORS.midPurple}55`, marginTop: 20, paddingTop: 20 }}>
+        <div style={{ borderTop: `1px solid rgba(108,99,255,0.18)`, marginTop: 20, paddingTop: 20 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
             <label style={{ fontSize: 10, color: editing ? COLORS.accent : COLORS.grayMuted, fontFamily: "'Space Mono',monospace", letterSpacing: 1, textTransform: "uppercase", transition: "color 0.2s" }}>
               Technical Skills
@@ -441,7 +462,7 @@ function PersonalSection({ initialData, onSaved }) {
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
             {skills.map((s, i) => (
-              <span key={i} style={{ background: COLORS.midPurple, color: COLORS.accent, fontFamily: "'Space Mono',monospace", fontSize: 11, padding: "5px 12px", borderRadius: 99, border: `1px solid ${COLORS.accent}33`, display: "flex", alignItems: "center", gap: 6 }}>
+              <span key={i} style={{ background: "rgba(42,20,84,0.7)", backdropFilter: "blur(8px)", color: COLORS.accent, fontFamily: "'Space Mono',monospace", fontSize: 11, padding: "5px 12px", borderRadius: 99, border: `1px solid rgba(108,99,255,0.25)`, display: "flex", alignItems: "center", gap: 6 }}>
                 {s}
                 {editing && (
                   <button onClick={() => setSkills(p => p.filter((_, j) => j !== i))} style={{ background: "none", border: "none", color: `${COLORS.accent}99`, cursor: "pointer", padding: 0, fontSize: 12, lineHeight: 1, display: "flex" }}>✕</button>
@@ -464,9 +485,11 @@ function EduCard({ edu, editing, onFieldChange, onDocUpload, onRemoveDoc, upload
   const [previewDoc, setPreviewDoc] = useState(null);
   return (
     <div style={{
-      border: editing ? `1.5px solid ${COLORS.accent}55` : `1px solid ${COLORS.midPurple}99`,
+      border: editing ? `1.5px solid rgba(108,99,255,0.4)` : `1px solid rgba(108,99,255,0.14)`,
       borderRadius: 14, padding: 16, marginBottom: 14, position: "relative",
-      background: editing ? `${COLORS.accent}05` : "transparent", transition: "all 0.2s",
+      background: editing ? `rgba(108,99,255,0.07)` : "rgba(255,255,255,0.02)",
+      backdropFilter: "blur(10px)",
+      transition: "all 0.2s",
     }}>
       {edu.current && (
         <span style={{ position: "absolute", top: 12, right: 12, background: `${COLORS.green}22`, color: COLORS.green, fontSize: 9, fontFamily: "'Space Mono',monospace", padding: "3px 10px", borderRadius: 99, border: `1px solid ${COLORS.green}44`, display: "flex", alignItems: "center", gap: 4 }}>
@@ -483,18 +506,18 @@ function EduCard({ edu, editing, onFieldChange, onDocUpload, onRemoveDoc, upload
         <EditableInput label="CGPA / %" value={edu.cgpa} editing={editing} onChange={v => onFieldChange(edu._id ? String(edu._id) : edu.tempId, "cgpa", v)} />
       </div>
 
-      <div style={{ borderTop: `1px solid ${COLORS.midPurple}44`, marginTop: 14, paddingTop: 14 }}>
+      <div style={{ borderTop: `1px solid rgba(108,99,255,0.14)`, marginTop: 14, paddingTop: 14 }}>
         <label style={{ fontSize: 10, color: editing ? COLORS.accent : COLORS.grayMuted, fontFamily: "'Space Mono',monospace", letterSpacing: 1, textTransform: "uppercase", display: "block", marginBottom: 8, transition: "color 0.2s" }}>
           Supporting Documents <span style={{ color: COLORS.grayMuted, fontSize: 9, textTransform: "none", letterSpacing: 0 }}>(PDF only)</span>
         </label>
         {edu.docs.map((d, i) => (
-          <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, background: `${COLORS.cardDark}99`, padding: "7px 12px", borderRadius: 9, border: `1px solid ${COLORS.midPurple}44`, marginBottom: 6, fontSize: 12 }}>
+          <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, background: `rgba(255,255,255,0.04)`, backdropFilter: "blur(6px)", padding: "7px 12px", borderRadius: 9, border: `1px solid rgba(108,99,255,0.15)`, marginBottom: 6, fontSize: 12 }}>
             <FileIcon size={14} color={COLORS.green} />
             <span style={{ color: COLORS.green, fontFamily: "'Space Mono',monospace", fontSize: 11, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.name}</span>
             <span style={{ fontSize: 10, color: COLORS.grayMuted, flexShrink: 0 }}>{d.size}</span>
             <button
               onClick={() => setPreviewDoc(d)}
-              style={{ background: "none", border: `1px solid ${COLORS.accent}44`, color: COLORS.accent, cursor: "pointer", fontSize: 10, padding: "2px 8px", borderRadius: 6, fontFamily: "'Space Mono',monospace", flexShrink: 0 }}
+              style={{ background: "rgba(108,99,255,0.1)", border: `1px solid rgba(108,99,255,0.3)`, color: COLORS.accent, cursor: "pointer", fontSize: 10, padding: "2px 8px", borderRadius: 6, fontFamily: "'Space Mono',monospace", flexShrink: 0 }}
             >
               Preview
             </button>
@@ -504,7 +527,7 @@ function EduCard({ edu, editing, onFieldChange, onDocUpload, onRemoveDoc, upload
           </div>
         ))}
         {editing && edu.docs.length === 0 && (
-          <label style={{ display: "flex", alignItems: "center", gap: 8, border: `2px dashed ${COLORS.accent}66`, borderRadius: 10, padding: "9px 14px", cursor: uploadingDocId === (edu._id ? String(edu._id) : edu.tempId) ? "not-allowed" : "pointer", fontSize: 12, color: COLORS.grayMuted, marginTop: 4, transition: "border 0.2s", opacity: uploadingDocId === (edu._id ? String(edu._id) : edu.tempId) ? 0.6 : 1 }}>
+          <label style={{ display: "flex", alignItems: "center", gap: 8, border: `2px dashed rgba(108,99,255,0.4)`, borderRadius: 10, padding: "9px 14px", cursor: uploadingDocId === (edu._id ? String(edu._id) : edu.tempId) ? "not-allowed" : "pointer", fontSize: 12, color: COLORS.grayMuted, marginTop: 4, transition: "border 0.2s", opacity: uploadingDocId === (edu._id ? String(edu._id) : edu.tempId) ? 0.6 : 1, background: "rgba(108,99,255,0.05)", backdropFilter: "blur(6px)" }}>
             {uploadingDocId === (edu._id ? String(edu._id) : edu.tempId)
               ? <><Spinner /><span style={{ color: COLORS.accent, fontFamily: "'Space Mono',monospace", fontSize: 11 }}>Uploading...</span></>
               : <><UploadIcon size={14} color={COLORS.accent} /><span style={{ color: COLORS.accent, fontFamily: "'Space Mono',monospace", fontSize: 11 }}>Upload PDF</span><span style={{ marginLeft: "auto", fontSize: 10 }}>PDF only</span></>
@@ -625,7 +648,7 @@ function EducationSection({ initialData, onSaved }) {
         ))}
         {editing && (
           <button onClick={() => setEduList(p => [...p, { ...EMPTY_EDU, tempId: `temp-${Date.now()}` }])}
-            style={{ width: "100%", border: `1.5px dashed ${COLORS.accent}44`, borderRadius: 12, padding: "10px 0", color: COLORS.accent, fontFamily: "'Space Mono',monospace", fontSize: 12, background: "none", cursor: "pointer" }}>
+            style={{ width: "100%", border: `1.5px dashed rgba(108,99,255,0.35)`, borderRadius: 12, padding: "10px 0", color: COLORS.accent, fontFamily: "'Space Mono',monospace", fontSize: 12, background: "rgba(108,99,255,0.06)", backdropFilter: "blur(6px)", cursor: "pointer" }}>
             + Add Another Education
           </button>
         )}
@@ -646,8 +669,7 @@ function ResumeSection({ initialData, onSaved }) {
 
   useEffect(() => {
     if (initialData?.resumeUrl) {
-
-        const fullUrl = initialData.resumeUrl.startsWith("http")
+      const fullUrl = initialData.resumeUrl.startsWith("http")
         ? initialData.resumeUrl
         : `${SERVER_URL}${initialData.resumeUrl}`;
       setResume({ name: initialData.resumeOriginalName || "Resume", url: fullUrl });
@@ -741,13 +763,18 @@ function ResumeSection({ initialData, onSaved }) {
           </div>
 
           {!resume ? (
-            <label style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", border: `2px dashed ${COLORS.midPurple}`, borderRadius: 16, padding: "48px 24px", cursor: uploading ? "not-allowed" : "pointer", transition: "all 0.2s", opacity: uploading ? 0.7 : 1 }}
-              onMouseEnter={e => { if (!uploading) { e.currentTarget.style.borderColor = COLORS.accent; e.currentTarget.style.background = `${COLORS.accent}08`; } }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = COLORS.midPurple; e.currentTarget.style.background = "transparent"; }}>
+            <label style={{
+              display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+              border: `2px dashed rgba(108,99,255,0.35)`, borderRadius: 16, padding: "48px 24px",
+              cursor: uploading ? "not-allowed" : "pointer", transition: "all 0.2s", opacity: uploading ? 0.7 : 1,
+              background: "rgba(108,99,255,0.05)", backdropFilter: "blur(8px)",
+            }}
+              onMouseEnter={e => { if (!uploading) { e.currentTarget.style.borderColor = COLORS.accent; e.currentTarget.style.background = `rgba(108,99,255,0.1)`; } }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(108,99,255,0.35)"; e.currentTarget.style.background = "rgba(108,99,255,0.05)"; }}>
               {uploading
                 ? <><Spinner /><p style={{ fontFamily: "'Space Mono',monospace", fontSize: 12, color: COLORS.accent, marginTop: 12 }}>Uploading...</p></>
                 : <>
-                  <div style={{ width: 56, height: 56, borderRadius: 14, background: `${COLORS.midPurple}88`, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
+                  <div style={{ width: 56, height: 56, borderRadius: 14, background: `rgba(42,20,84,0.7)`, backdropFilter: "blur(8px)", border: "1px solid rgba(108,99,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
                     <FileIcon size={26} color={COLORS.accent} />
                   </div>
                   <p style={{ fontFamily: "'Space Mono',monospace", fontSize: 13, color: "#fff", margin: 0 }}>Drag & drop your resume</p>
@@ -758,8 +785,8 @@ function ResumeSection({ initialData, onSaved }) {
               <input type="file" style={{ display: "none" }} accept=".pdf,.docx" onChange={handleFile} disabled={uploading} />
             </label>
           ) : (
-            <div style={{ border: `1px solid ${COLORS.green}44`, borderRadius: 14, padding: 16, background: `${COLORS.cardDark}88`, display: "flex", alignItems: "center", gap: 14 }}>
-              <div style={{ width: 42, height: 42, borderRadius: 10, background: `${COLORS.green}22`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <div style={{ border: `1px solid rgba(34,197,94,0.3)`, borderRadius: 14, padding: 16, background: `rgba(34,197,94,0.06)`, backdropFilter: "blur(10px)", display: "flex", alignItems: "center", gap: 14 }}>
+              <div style={{ width: 42, height: 42, borderRadius: 10, background: `rgba(34,197,94,0.15)`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                 <FileIcon size={20} color={COLORS.green} />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
@@ -767,21 +794,16 @@ function ResumeSection({ initialData, onSaved }) {
                 {resume.size && <p style={{ fontSize: 11, color: COLORS.grayMuted, marginTop: 3 }}>{resume.size}</p>}
               </div>
               <div style={{ display: "flex", gap: 8 }}>
-                <button
-                  onClick={() => setPreviewDoc({ name: resume.name, url: resume.url })}
-                  style={{ fontSize: 11, color: COLORS.accent, fontFamily: "'Space Mono',monospace", border: `1px solid ${COLORS.accent}44`, padding: "4px 12px", borderRadius: 8, background: "none", cursor: "pointer" }}
-                >
-                  Preview
-                </button>
-                <label style={{ fontSize: 11, color: COLORS.accent, fontFamily: "'Space Mono',monospace", border: `1px solid ${COLORS.accent}44`, padding: "4px 12px", borderRadius: 8, cursor: "pointer" }}>
+                <button onClick={() => setPreviewDoc({ name: resume.name, url: resume.url })} style={{ fontSize: 11, color: COLORS.accent, fontFamily: "'Space Mono',monospace", border: `1px solid rgba(108,99,255,0.3)`, padding: "4px 12px", borderRadius: 8, background: "rgba(108,99,255,0.1)", cursor: "pointer" }}>Preview</button>
+                <label style={{ fontSize: 11, color: COLORS.accent, fontFamily: "'Space Mono',monospace", border: `1px solid rgba(108,99,255,0.3)`, padding: "4px 12px", borderRadius: 8, background: "rgba(108,99,255,0.1)", cursor: "pointer" }}>
                   Replace <input type="file" style={{ display: "none" }} accept=".pdf,.docx" onChange={handleFile} />
                 </label>
-                <button onClick={handleDelete} style={{ fontSize: 11, color: COLORS.red, fontFamily: "'Space Mono',monospace", border: `1px solid ${COLORS.red}44`, padding: "4px 12px", borderRadius: 8, background: "none", cursor: "pointer" }}>Remove</button>
+                <button onClick={handleDelete} style={{ fontSize: 11, color: COLORS.red, fontFamily: "'Space Mono',monospace", border: `1px solid rgba(248,113,113,0.3)`, padding: "4px 12px", borderRadius: 8, background: "rgba(248,113,113,0.07)", cursor: "pointer" }}>Remove</button>
               </div>
             </div>
           )}
 
-          <div style={{ marginTop: 20, padding: 16, borderRadius: 12, background: `${COLORS.accent}0D`, border: `1px solid ${COLORS.accent}22` }}>
+          <div style={{ marginTop: 20, padding: 16, borderRadius: 12, background: `rgba(108,99,255,0.08)`, border: `1px solid rgba(108,99,255,0.18)`, backdropFilter: "blur(8px)" }}>
             <p style={{ fontSize: 10, color: COLORS.accent, fontFamily: "'Space Mono',monospace", letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Resume Tips</p>
             {["Keep your resume to 1–2 pages maximum", "Highlight projects, GitHub links, and measurable results", "Use consistent formatting and clear section headers", "Our AI will analyze your resume and suggest improvements"].map((tip, i) => (
               <p key={i} style={{ fontSize: 12, color: COLORS.grayMuted, margin: "0 0 6px", display: "flex", alignItems: "flex-start", gap: 6 }}>
@@ -795,12 +817,13 @@ function ResumeSection({ initialData, onSaved }) {
             disabled={!resume || analyzing}
             style={{
               width: "100%", marginTop: 16, padding: "13px 0", borderRadius: 12,
-              background: !resume ? `${COLORS.midPurple}55` : `linear-gradient(90deg, ${COLORS.accent}, ${COLORS.midPurple})`,
+              background: !resume ? `rgba(42,20,84,0.5)` : `linear-gradient(90deg, ${COLORS.accent}, ${COLORS.midPurple})`,
               color: !resume ? COLORS.grayMuted : "#fff",
               fontFamily: "'Space Mono',monospace", fontSize: 13, fontWeight: 700,
               border: "none", cursor: !resume ? "not-allowed" : analyzing ? "wait" : "pointer",
               display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
               opacity: analyzing ? 0.8 : 1, transition: "all 0.2s",
+              backdropFilter: "blur(8px)",
             }}>
             {analyzing ? <><Spinner /> Analyzing with AI...</> : "✦ Analyze Resume with AI"}
           </button>
@@ -812,11 +835,11 @@ function ResumeSection({ initialData, onSaved }) {
               <h2 style={{ fontFamily: "'Space Mono',monospace", fontSize: 16, fontWeight: 700, margin: 0 }}>AI Analysis Results</h2>
               <p style={{ fontSize: 12, color: COLORS.grayMuted, marginTop: 4 }}>Powered by AI — tap Analyze again to refresh</p>
             </div>
-            <div style={{ display: "flex", gap: 20, justifyContent: "center", marginBottom: 24, padding: 20, background: `${COLORS.midPurple}33`, borderRadius: 14 }}>
+            <div style={{ display: "flex", gap: 20, justifyContent: "center", marginBottom: 24, padding: 20, background: `rgba(42,20,84,0.5)`, backdropFilter: "blur(10px)", border: "1px solid rgba(108,99,255,0.15)", borderRadius: 14 }}>
               <ScoreRing score={analysis.overallScore} size={80} label="Overall" />
               <ScoreRing score={analysis.atsScore} size={80} label="ATS Score" />
             </div>
-            <div style={{ marginBottom: 20, padding: 14, background: `${COLORS.accent}0D`, border: `1px solid ${COLORS.accent}22`, borderRadius: 12 }}>
+            <div style={{ marginBottom: 20, padding: 14, background: `rgba(108,99,255,0.08)`, border: `1px solid rgba(108,99,255,0.18)`, backdropFilter: "blur(8px)", borderRadius: 12 }}>
               <p style={{ fontSize: 12, color: "#e2e8f0", lineHeight: 1.7, margin: 0 }}>{analysis.summary}</p>
             </div>
             <div style={{ marginBottom: 20 }}>
@@ -829,7 +852,7 @@ function ResumeSection({ initialData, onSaved }) {
                       <span style={{ fontSize: 12, color: "#e2e8f0", textTransform: "capitalize" }}>{key}</span>
                       <span style={{ fontSize: 11, color, fontFamily: "'Space Mono',monospace", fontWeight: 700 }}>{score}/100</span>
                     </div>
-                    <div style={{ height: 4, borderRadius: 99, background: COLORS.midPurple }}>
+                    <div style={{ height: 4, borderRadius: 99, background: "rgba(42,20,84,0.8)" }}>
                       <div style={{ width: `${score}%`, height: "100%", background: color, borderRadius: 99, transition: "width 0.5s ease" }} />
                     </div>
                   </div>
@@ -837,7 +860,7 @@ function ResumeSection({ initialData, onSaved }) {
               })}
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 20 }}>
-              <div style={{ padding: 14, background: `${COLORS.green}0D`, border: `1px solid ${COLORS.green}22`, borderRadius: 12 }}>
+              <div style={{ padding: 14, background: `rgba(34,197,94,0.07)`, border: `1px solid rgba(34,197,94,0.2)`, backdropFilter: "blur(8px)", borderRadius: 12 }}>
                 <p style={{ fontSize: 10, color: COLORS.green, fontFamily: "'Space Mono',monospace", letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Strengths</p>
                 {(analysis.strengths || []).map((s, i) => (
                   <p key={i} style={{ fontSize: 12, color: "#e2e8f0", margin: "0 0 6px", display: "flex", alignItems: "flex-start", gap: 6 }}>
@@ -845,7 +868,7 @@ function ResumeSection({ initialData, onSaved }) {
                   </p>
                 ))}
               </div>
-              <div style={{ padding: 14, background: `${COLORS.amber}0D`, border: `1px solid ${COLORS.amber}22`, borderRadius: 12 }}>
+              <div style={{ padding: 14, background: `rgba(245,158,11,0.07)`, border: `1px solid rgba(245,158,11,0.2)`, backdropFilter: "blur(8px)", borderRadius: 12 }}>
                 <p style={{ fontSize: 10, color: COLORS.amber, fontFamily: "'Space Mono',monospace", letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Improvements</p>
                 {(analysis.improvements || []).map((item, i) => (
                   <div key={i} style={{ marginBottom: 8 }}>
@@ -858,7 +881,7 @@ function ResumeSection({ initialData, onSaved }) {
               </div>
             </div>
             {(analysis.atsTips || []).length > 0 && (
-              <div style={{ marginBottom: 20, padding: 14, background: `${COLORS.cardDark}88`, border: `1px solid ${COLORS.midPurple}`, borderRadius: 12 }}>
+              <div style={{ marginBottom: 20, padding: 14, background: `rgba(255,255,255,0.03)`, backdropFilter: "blur(8px)", border: `1px solid rgba(108,99,255,0.2)`, borderRadius: 12 }}>
                 <p style={{ fontSize: 10, color: COLORS.accent, fontFamily: "'Space Mono',monospace", letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>ATS Optimisation Tips</p>
                 {analysis.atsTips.map((tip, i) => (
                   <p key={i} style={{ fontSize: 12, color: COLORS.grayMuted, margin: "0 0 6px", display: "flex", alignItems: "flex-start", gap: 6 }}>
@@ -872,7 +895,7 @@ function ResumeSection({ initialData, onSaved }) {
                 <p style={{ fontSize: 10, color: COLORS.accent, fontFamily: "'Space Mono',monospace", letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Suggested Keywords to Add</p>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                   {analysis.missingKeywords.map((kw, i) => (
-                    <span key={i} style={{ background: `${COLORS.accent}15`, color: COLORS.accent, fontFamily: "'Space Mono',monospace", fontSize: 11, padding: "4px 12px", borderRadius: 99, border: `1px solid ${COLORS.accent}33` }}>+ {kw}</span>
+                    <span key={i} style={{ background: `rgba(108,99,255,0.12)`, backdropFilter: "blur(6px)", color: COLORS.accent, fontFamily: "'Space Mono',monospace", fontSize: 11, padding: "4px 12px", borderRadius: 99, border: `1px solid rgba(108,99,255,0.25)` }}>+ {kw}</span>
                   ))}
                 </div>
               </div>
@@ -897,7 +920,7 @@ function KycDocWidget({ label, docData, fieldName, editing, uploading, onUpload 
         {label} Document <span style={{ fontSize: 9, textTransform: "none", letterSpacing: 0, color: COLORS.grayMuted }}>(JPG, PNG, PDF)</span>
       </label>
       {hasDoc ? (
-        <div style={{ display: "flex", alignItems: "center", gap: 10, background: `${COLORS.green}0D`, border: `1px solid ${COLORS.green}33`, borderRadius: 10, padding: "9px 14px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, background: `rgba(34,197,94,0.07)`, backdropFilter: "blur(8px)", border: `1px solid rgba(34,197,94,0.25)`, borderRadius: 10, padding: "9px 14px" }}>
           <span style={{ display: "flex", flexShrink: 0 }}>
             {isImage ? <ImageIcon size={16} color={COLORS.green} /> : <FileIcon size={16} color={COLORS.green} />}
           </span>
@@ -905,14 +928,9 @@ function KycDocWidget({ label, docData, fieldName, editing, uploading, onUpload 
             <p style={{ fontFamily: "'Space Mono',monospace", fontSize: 11, color: COLORS.green, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{docData.name}</p>
             {docData.size && <p style={{ fontSize: 10, color: COLORS.grayMuted, margin: "2px 0 0" }}>{docData.size}</p>}
           </div>
-          <button
-            onClick={() => setPreviewDoc(docData)}
-            style={{ fontSize: 10, color: COLORS.accent, fontFamily: "'Space Mono',monospace", border: `1px solid ${COLORS.accent}44`, padding: "3px 10px", borderRadius: 6, background: "none", cursor: "pointer", flexShrink: 0 }}
-          >
-            Preview
-          </button>
+          <button onClick={() => setPreviewDoc(docData)} style={{ fontSize: 10, color: COLORS.accent, fontFamily: "'Space Mono',monospace", border: `1px solid rgba(108,99,255,0.3)`, padding: "3px 10px", borderRadius: 6, background: "rgba(108,99,255,0.1)", cursor: "pointer", flexShrink: 0 }}>Preview</button>
           {editing && (
-            <label style={{ fontSize: 11, color: COLORS.accent, fontFamily: "'Space Mono',monospace", border: `1px solid ${COLORS.accent}44`, padding: "4px 10px", borderRadius: 7, cursor: uploading === fieldName ? "not-allowed" : "pointer", flexShrink: 0 }}>
+            <label style={{ fontSize: 11, color: COLORS.accent, fontFamily: "'Space Mono',monospace", border: `1px solid rgba(108,99,255,0.3)`, padding: "4px 10px", borderRadius: 7, background: "rgba(108,99,255,0.1)", cursor: uploading === fieldName ? "not-allowed" : "pointer", flexShrink: 0 }}>
               {uploading === fieldName ? <Spinner /> : "Replace"}
               <input type="file" style={{ display: "none" }} accept=".jpg,.jpeg,.png,.pdf" onChange={e => onUpload(fieldName, e)} disabled={uploading === fieldName} />
             </label>
@@ -920,7 +938,7 @@ function KycDocWidget({ label, docData, fieldName, editing, uploading, onUpload 
         </div>
       ) : (
         editing ? (
-          <label style={{ display: "flex", alignItems: "center", gap: 8, border: `2px dashed ${uploading === fieldName ? COLORS.accent : `${COLORS.accent}55`}`, borderRadius: 10, padding: "10px 14px", cursor: uploading === fieldName ? "not-allowed" : "pointer", opacity: uploading === fieldName ? 0.7 : 1, transition: "all 0.2s" }}>
+          <label style={{ display: "flex", alignItems: "center", gap: 8, border: `2px dashed ${uploading === fieldName ? COLORS.accent : `rgba(108,99,255,0.4)`}`, borderRadius: 10, padding: "10px 14px", cursor: uploading === fieldName ? "not-allowed" : "pointer", opacity: uploading === fieldName ? 0.7 : 1, transition: "all 0.2s", background: "rgba(108,99,255,0.06)", backdropFilter: "blur(6px)" }}>
             {uploading === fieldName
               ? <><Spinner /><span style={{ fontSize: 11, color: COLORS.accent, fontFamily: "'Space Mono',monospace" }}>Uploading...</span></>
               : <><UploadIcon size={16} color={COLORS.accent} /><span style={{ fontSize: 11, color: COLORS.accent, fontFamily: "'Space Mono',monospace" }}>Upload {label} Document</span><span style={{ marginLeft: "auto", fontSize: 10, color: COLORS.grayMuted }}>JPG, PNG, PDF</span></>
@@ -928,7 +946,7 @@ function KycDocWidget({ label, docData, fieldName, editing, uploading, onUpload 
             <input type="file" style={{ display: "none" }} accept=".jpg,.jpeg,.png,.pdf" onChange={e => onUpload(fieldName, e)} disabled={uploading === fieldName} />
           </label>
         ) : (
-          <div style={{ border: `1px dashed ${COLORS.midPurple}`, borderRadius: 10, padding: "10px 14px", display: "flex", alignItems: "center", gap: 8 }}>
+          <div style={{ border: `1px dashed rgba(108,99,255,0.2)`, borderRadius: 10, padding: "10px 14px", display: "flex", alignItems: "center", gap: 8, background: "rgba(255,255,255,0.02)" }}>
             <FolderOpenIcon size={16} color={COLORS.grayMuted} />
             <span style={{ fontSize: 12, color: COLORS.grayMuted }}>No document uploaded yet</span>
           </div>
@@ -1013,12 +1031,7 @@ function KycSection({ initialData, onSaved }) {
       });
       const json = await res.json();
       if (!json.success) throw new Error(json.message);
-      const docInfo = {
-        name: json.doc.name,
-        size: json.doc.size,
-        path: json.doc.path,
-        url: json.doc.url
-      };
+      const docInfo = { name: json.doc.name, size: json.doc.size, path: json.doc.path, url: json.doc.url };
       if (field === "aadhaar") setAadhaarDoc(docInfo);
       if (field === "pan") setPanDoc(docInfo);
       setToast({ msg: `${field === "aadhaar" ? "Aadhaar" : "PAN"} document uploaded!`, type: "success" });
@@ -1036,6 +1049,17 @@ function KycSection({ initialData, onSaved }) {
     return "•".repeat(val.length - 4) + val.slice(-4);
   };
 
+  const inputStyle = (isEditing) => ({
+    width: "100%", borderRadius: 10, padding: "9px 12px", fontSize: 13,
+    fontFamily: "'DM Sans',sans-serif", outline: "none", transition: "all 0.2s",
+    boxSizing: "border-box",
+    color: isEditing ? "#fff" : "#e2e8f0",
+    background: isEditing ? "rgba(108,99,255,0.15)" : "rgba(255,255,255,0.03)",
+    border: isEditing ? `1.5px solid rgba(108,99,255,0.55)` : "1.5px solid rgba(255,255,255,0.06)",
+    boxShadow: isEditing ? `0 0 0 3px rgba(108,99,255,0.1)` : "none",
+    backdropFilter: "blur(6px)",
+  });
+
   return (
     <>
       <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
@@ -1050,7 +1074,7 @@ function KycSection({ initialData, onSaved }) {
             <EditableInput label="Nationality" value={data.nationality} editing={editing} onChange={set("nationality")} />
           </div>
 
-          <div style={{ borderTop: `1px solid ${COLORS.midPurple}55`, paddingTop: 20, marginBottom: 20 }}>
+          <div style={{ borderTop: `1px solid rgba(108,99,255,0.18)`, paddingTop: 20, marginBottom: 20 }}>
             <p style={{ fontSize: 10, color: COLORS.accent, fontFamily: "'Space Mono',monospace", letterSpacing: 1, textTransform: "uppercase", marginBottom: 12, marginTop: 0 }}>Residential Address</p>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 16px" }}>
               <EditableInput label="State" value={data.state} editing={editing} onChange={set("state")} />
@@ -1063,7 +1087,7 @@ function KycSection({ initialData, onSaved }) {
             </div>
           </div>
 
-          <div style={{ borderTop: `1px solid ${COLORS.midPurple}55`, paddingTop: 20, marginBottom: 20 }}>
+          <div style={{ borderTop: `1px solid rgba(108,99,255,0.18)`, paddingTop: 20, marginBottom: 20 }}>
             <p style={{ fontSize: 10, color: COLORS.accent, fontFamily: "'Space Mono',monospace", letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, marginTop: 0 }}>KYC Numbers</p>
             <p style={{ fontSize: 11, color: COLORS.grayMuted, marginBottom: 14, marginTop: 0 }}>Sensitive fields are masked when not in edit mode.</p>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 16px" }}>
@@ -1072,7 +1096,7 @@ function KycSection({ initialData, onSaved }) {
                   Aadhaar Number {editing && <span style={{ opacity: 0.6, fontSize: 9 }}>✎</span>}
                 </label>
                 <input
-                  style={{ width: "100%", borderRadius: 10, padding: "9px 12px", fontSize: 13, fontFamily: "'DM Sans',sans-serif", outline: "none", transition: "all 0.2s", boxSizing: "border-box", color: editing ? "#fff" : "#e2e8f0", background: editing ? `${COLORS.midPurple}55` : "transparent", border: editing ? `1.5px solid ${COLORS.accent}88` : "1.5px solid transparent", boxShadow: editing ? `0 0 0 3px ${COLORS.accent}18` : "none", letterSpacing: editing ? "normal" : "2px" }}
+                  style={{ ...inputStyle(editing), letterSpacing: editing ? "normal" : "2px" }}
                   value={editing ? data.aadhaarNumber : maskNumber(data.aadhaarNumber)}
                   readOnly={!editing}
                   onChange={e => set("aadhaarNumber")(e.target.value)}
@@ -1085,7 +1109,7 @@ function KycSection({ initialData, onSaved }) {
                   PAN Number {editing && <span style={{ opacity: 0.6, fontSize: 9 }}>✎</span>}
                 </label>
                 <input
-                  style={{ width: "100%", borderRadius: 10, padding: "9px 12px", fontSize: 13, fontFamily: "'DM Sans',sans-serif", outline: "none", transition: "all 0.2s", boxSizing: "border-box", color: editing ? "#fff" : "#e2e8f0", background: editing ? `${COLORS.midPurple}55` : "transparent", border: editing ? `1.5px solid ${COLORS.accent}88` : "1.5px solid transparent", boxShadow: editing ? `0 0 0 3px ${COLORS.accent}18` : "none", letterSpacing: editing ? "normal" : "2px", textTransform: "uppercase" }}
+                  style={{ ...inputStyle(editing), letterSpacing: editing ? "normal" : "2px", textTransform: "uppercase" }}
                   value={editing ? data.panNumber : maskNumber(data.panNumber)}
                   readOnly={!editing}
                   onChange={e => set("panNumber")(e.target.value.toUpperCase())}
@@ -1096,7 +1120,7 @@ function KycSection({ initialData, onSaved }) {
             </div>
           </div>
 
-          <div style={{ borderTop: `1px solid ${COLORS.midPurple}55`, paddingTop: 20 }}>
+          <div style={{ borderTop: `1px solid rgba(108,99,255,0.18)`, paddingTop: 20 }}>
             <p style={{ fontSize: 10, color: COLORS.accent, fontFamily: "'Space Mono',monospace", letterSpacing: 1, textTransform: "uppercase", marginBottom: 14, marginTop: 0 }}>KYC Documents</p>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
               <KycDocWidget label="Aadhaar" docData={aadhaarDoc} fieldName="aadhaar" editing={editing} uploading={uploadingDoc} onUpload={handleDocUpload} />
@@ -1200,7 +1224,6 @@ export default function ProfilePage() {
   const profilePct = calcCompletion(profile);
   const pctColor = profilePct >= 80 ? COLORS.green : profilePct >= 50 ? COLORS.accent : COLORS.amber;
 
-
   const photoSrc = profile?.picture
     ? profile.picture.startsWith("http")
       ? profile.picture
@@ -1221,7 +1244,9 @@ export default function ProfilePage() {
 
   return (
     <>
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+      `}</style>
       <SoftBackdropNew />
       <div className="relative z-10" style={{ minHeight: "100vh", color: "#fff", fontFamily: "'DM Sans',sans-serif" }}>
         <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
@@ -1233,7 +1258,11 @@ export default function ProfilePage() {
           <aside style={{ width: 240, flexShrink: 0, display: "flex", flexDirection: "column", gap: 16 }}>
 
             {/* Photo Card */}
-            <div style={{ background: `linear-gradient(135deg, ${COLORS.cardDark} 60%, ${COLORS.darkPurple} 100%)`, borderRadius: 18, padding: 24, boxShadow: "0 0 24px 2px rgba(108,99,255,0.10)", border: `1px solid ${COLORS.midPurple}55`, display: "flex", flexDirection: "column", alignItems: "center", gap: 14 }}>
+            <div style={{
+              ...glass({ active: false }),
+              padding: 24,
+              display: "flex", flexDirection: "column", alignItems: "center", gap: 14,
+            }}>
               <div style={{ position: "relative" }}>
                 <div style={{ width: 100, height: 100, borderRadius: "50%", overflow: "hidden", boxShadow: `0 0 0 3px ${COLORS.accent}, 0 0 24px 4px rgba(108,99,255,0.25)`, opacity: photoUploading ? 0.6 : 1, transition: "opacity 0.2s" }}>
                   {photoSrc
@@ -1241,7 +1270,7 @@ export default function ProfilePage() {
                     : <div style={{ width: "100%", height: "100%", background: `linear-gradient(135deg, ${COLORS.midPurple}, ${COLORS.accent})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, fontFamily: "'Space Mono',monospace", fontWeight: 700 }}>{initials}</div>
                   }
                 </div>
-                <label style={{ position: "absolute", inset: 0, borderRadius: "50%", background: "rgba(0,0,0,0.65)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", cursor: "pointer", opacity: 0, transition: "opacity 0.2s" }}
+                <label style={{ position: "absolute", inset: 0, borderRadius: "50%", background: "rgba(0,0,0,0.65)", backdropFilter: "blur(4px)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", cursor: "pointer", opacity: 0, transition: "opacity 0.2s" }}
                   onMouseEnter={e => e.currentTarget.style.opacity = 1}
                   onMouseLeave={e => e.currentTarget.style.opacity = 0}>
                   {photoUploading
@@ -1260,26 +1289,26 @@ export default function ProfilePage() {
                 <div style={{ fontSize: 11, color: COLORS.grayMuted, marginTop: 2 }}>{profile?.email}</div>
 
                 {isProfileComplete ? (
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 5, marginTop: 8, background: `${COLORS.green}22`, color: COLORS.green, fontSize: 9, fontFamily: "'Space Mono',monospace", padding: "3px 10px", borderRadius: 99, border: `1px solid ${COLORS.green}44` }}>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 5, marginTop: 8, background: `rgba(34,197,94,0.15)`, backdropFilter: "blur(6px)", color: COLORS.green, fontSize: 9, fontFamily: "'Space Mono',monospace", padding: "3px 10px", borderRadius: 99, border: `1px solid rgba(34,197,94,0.3)` }}>
                     <CircleCheckIcon size={9} color={COLORS.green} /> Profile Complete
                   </span>
                 ) : (
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 5, marginTop: 8, background: `${COLORS.amber}18`, color: COLORS.amber, fontSize: 9, fontFamily: "'Space Mono',monospace", padding: "3px 10px", borderRadius: 99, border: `1px solid ${COLORS.amber}44` }}>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 5, marginTop: 8, background: `rgba(245,158,11,0.12)`, backdropFilter: "blur(6px)", color: COLORS.amber, fontSize: 9, fontFamily: "'Space Mono',monospace", padding: "3px 10px", borderRadius: 99, border: `1px solid rgba(245,158,11,0.3)` }}>
                     <CircleHalfIcon size={9} color={COLORS.amber} /> Setup Incomplete
                   </span>
                 )}
 
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 5, marginTop: 6, background: `${COLORS.green}22`, color: COLORS.green, fontSize: 9, fontFamily: "'Space Mono',monospace", padding: "3px 10px", borderRadius: 99, border: `1px solid ${COLORS.green}44` }}>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 5, marginTop: 6, background: `rgba(34,197,94,0.12)`, backdropFilter: "blur(6px)", color: COLORS.green, fontSize: 9, fontFamily: "'Space Mono',monospace", padding: "3px 10px", borderRadius: 99, border: `1px solid rgba(34,197,94,0.25)` }}>
                   <CircleDotIcon size={6} color={COLORS.green} /> Available for Interviews
                 </span>
               </div>
 
-              <div style={{ width: "100%", borderTop: `1px solid ${COLORS.midPurple}55`, paddingTop: 14 }}>
+              <div style={{ width: "100%", borderTop: `1px solid rgba(108,99,255,0.18)`, paddingTop: 14 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, marginBottom: 6 }}>
                   <span style={{ color: COLORS.grayMuted, fontFamily: "'Space Mono',monospace" }}>Profile</span>
                   <span style={{ color: pctColor, fontFamily: "'Space Mono',monospace", fontWeight: 700, transition: "color 0.4s" }}>{profilePct}%</span>
                 </div>
-                <div style={{ height: 5, borderRadius: 99, background: COLORS.midPurple, overflow: "hidden" }}>
+                <div style={{ height: 5, borderRadius: 99, background: "rgba(42,20,84,0.8)", overflow: "hidden" }}>
                   <div style={{ width: `${profilePct}%`, height: "100%", background: `linear-gradient(90deg, ${COLORS.accent}, ${pctColor})`, borderRadius: 99, transition: "width 0.5s ease" }} />
                 </div>
                 <p style={{ fontSize: 10, color: COLORS.grayMuted, marginTop: 6 }}>
@@ -1289,16 +1318,31 @@ export default function ProfilePage() {
             </div>
 
             {/* Nav Tabs */}
-            <div style={{ background: `linear-gradient(135deg, ${COLORS.cardDark} 60%, ${COLORS.darkPurple} 100%)`, borderRadius: 18, padding: 10, border: `1px solid ${COLORS.midPurple}55` }}>
+            <div style={{
+              ...glass({ active: false }),
+              padding: 10,
+            }}>
               {tabs.map(({ id, label, Icon }) => (
-                <button key={id} onClick={() => setActiveTab(id)} style={{ width: "100%", textAlign: "left", padding: "10px 14px", borderRadius: 10, display: "flex", alignItems: "center", gap: 10, fontSize: 13, fontWeight: 500, cursor: "pointer", border: "none", marginBottom: 2, background: activeTab === id ? `linear-gradient(90deg, ${COLORS.accent}18, transparent)` : "transparent", color: activeTab === id ? COLORS.accent : COLORS.grayMuted, borderLeft: activeTab === id ? `3px solid ${COLORS.accent}` : "3px solid transparent", transition: "all 0.15s" }}>
+                <button key={id} onClick={() => setActiveTab(id)} style={{
+                  width: "100%", textAlign: "left", padding: "10px 14px", borderRadius: 10,
+                  display: "flex", alignItems: "center", gap: 10, fontSize: 13, fontWeight: 500,
+                  cursor: "pointer", border: "none", marginBottom: 2,
+                  background: activeTab === id ? `rgba(108,99,255,0.15)` : "transparent",
+                  backdropFilter: activeTab === id ? "blur(6px)" : "none",
+                  color: activeTab === id ? COLORS.accent : COLORS.grayMuted,
+                  borderLeft: activeTab === id ? `3px solid ${COLORS.accent}` : "3px solid transparent",
+                  transition: "all 0.15s",
+                }}>
                   <Icon size={15} color={activeTab === id ? COLORS.accent : COLORS.grayMuted} /> {label}
                 </button>
               ))}
             </div>
 
             {/* Quick Stats */}
-            <div style={{ background: `linear-gradient(135deg, ${COLORS.cardDark} 60%, ${COLORS.darkPurple} 100%)`, borderRadius: 18, padding: 20, border: `1px solid ${COLORS.midPurple}55` }}>
+            <div style={{
+              ...glass({ active: false }),
+              padding: 20,
+            }}>
               <p style={{ fontSize: 10, color: COLORS.grayMuted, fontFamily: "'Space Mono',monospace", letterSpacing: 2, textTransform: "uppercase", marginBottom: 12, marginTop: 0 }}>Profile Completion</p>
               {[
                 ["Personal Info",  profile?.bio ? "✓" : "–",                                          profile?.bio ? COLORS.green : COLORS.grayMuted],
