@@ -67,10 +67,12 @@ const InstructionsModal = ({ isOpen, onClose, onConfirm, drive }) => {
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
             className="relative w-full max-w-3xl bg-[#0f1117]/95 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] p-8 md:p-10 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
           >
-
             <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-red-600 via-orange-500 to-red-600" />
 
-            <div className="flex-1 overflow-y-auto pr-2 scrollbar-thin" data-lenis-prevent="true">
+            <div
+              className="flex-1 overflow-y-auto pr-2 scrollbar-thin"
+              data-lenis-prevent="true"
+            >
               <div className="space-y-6">
                 <div>
                   <h3 className="text-2xl font-bold tracking-tight text-white mb-1">
@@ -87,53 +89,75 @@ const InstructionsModal = ({ isOpen, onClose, onConfirm, drive }) => {
                     Strict AI Proctoring is Enabled
                   </p>
                   <p>
-                    This assessment is monitored in real-time. Violating any of the
-                    following rules multiple times will result in automatic termination of your
-                    session.
+                    This assessment is monitored in real-time. Violating any of
+                    the following rules multiple times will result in automatic
+                    termination of your session.
                   </p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-300">
                   <div className="flex flex-col gap-1.5 bg-white/5 p-4 rounded-2xl border border-white/5 hover:bg-white/10 transition-colors">
                     <strong className="text-white flex items-center gap-2">
-                      <span className="text-indigo-400 text-lg">👤</span> Face Visibility
+                      Face Visibility
                     </strong>
-                    <p className="text-xs text-gray-400 leading-relaxed">Your full face must remain in frame. Looking away repeatedly or wearing masks/face coverings is strictly prohibited.</p>
+                    <p className="text-xs text-gray-400 leading-relaxed">
+                      Your full face must remain in frame. Looking away
+                      repeatedly or wearing masks/face coverings is strictly
+                      prohibited.
+                    </p>
                   </div>
 
                   <div className="flex flex-col gap-1.5 bg-white/5 p-4 rounded-2xl border border-white/5 hover:bg-white/10 transition-colors">
                     <strong className="text-white flex items-center gap-2">
-                      <span className="text-indigo-400 text-lg">👥</span> Solo Environment
+                      Solo Environment
                     </strong>
-                    <p className="text-xs text-gray-400 leading-relaxed">You must be completely alone. Detection of multiple faces in the camera frame will trigger an immediate violation.</p>
+                    <p className="text-xs text-gray-400 leading-relaxed">
+                      You must be completely alone. Detection of multiple faces
+                      in the camera frame will trigger an immediate violation.
+                    </p>
                   </div>
 
                   <div className="flex flex-col gap-1.5 bg-white/5 p-4 rounded-2xl border border-white/5 hover:bg-white/10 transition-colors">
                     <strong className="text-white flex items-center gap-2">
-                      <span className="text-indigo-400 text-lg">💡</span> Adequate Lighting
+                      Adequate Lighting
                     </strong>
-                    <p className="text-xs text-gray-400 leading-relaxed">Ensure your room is well-lit. Environments that are too dark for the AI to properly track your face will cause termination.</p>
+                    <p className="text-xs text-gray-400 leading-relaxed">
+                      Ensure your room is well-lit. Environments that are too
+                      dark for the AI to properly track your face will cause
+                      termination.
+                    </p>
                   </div>
 
                   <div className="flex flex-col gap-1.5 bg-white/5 p-4 rounded-2xl border border-white/5 hover:bg-white/10 transition-colors">
                     <strong className="text-white flex items-center gap-2">
-                      <span className="text-indigo-400 text-lg">🎙️</span> Audio Monitoring
+                      Audio Monitoring
                     </strong>
-                    <p className="text-xs text-gray-400 leading-relaxed">Continuous conversation, background speech, or suspicious audio frequency energy will be flagged by the microphone.</p>
+                    <p className="text-xs text-gray-400 leading-relaxed">
+                      Continuous conversation, background speech, or suspicious
+                      audio frequency energy will be flagged by the microphone.
+                    </p>
                   </div>
 
                   <div className="flex flex-col gap-1.5 bg-white/5 p-4 rounded-2xl border border-white/5 hover:bg-white/10 transition-colors">
                     <strong className="text-white flex items-center gap-2">
-                      <span className="text-indigo-400 text-lg">📱</span> Device Restriction
+                      Device Restriction
                     </strong>
-                    <p className="text-xs text-gray-400 leading-relaxed">Cell phones and other electronic devices are actively detected via AI object detection. Visible usage is prohibited.</p>
+                    <p className="text-xs text-gray-400 leading-relaxed">
+                      Cell phones and other electronic devices are actively
+                      detected via AI object detection. Visible usage is
+                      prohibited.
+                    </p>
                   </div>
 
                   <div className="flex flex-col gap-1.5 bg-white/5 p-4 rounded-2xl border border-white/5 hover:bg-white/10 transition-colors">
                     <strong className="text-white flex items-center gap-2">
-                      <span className="text-indigo-400 text-lg">🔒</span> Browser Security
+                      Browser Security
                     </strong>
-                    <p className="text-xs text-gray-400 leading-relaxed">Forced Full-Screen. Exiting full-screen, switching tabs, clicking outside, or using shortcuts (Copy/Paste, Alt+Tab, F12) are blocked.</p>
+                    <p className="text-xs text-gray-400 leading-relaxed">
+                      Forced Full-Screen. Exiting full-screen, switching tabs,
+                      clicking outside, or using shortcuts (Copy/Paste, Alt+Tab,
+                      F12) are blocked.
+                    </p>
                   </div>
                 </div>
               </div>
@@ -171,6 +195,8 @@ const DrivePreview = () => {
   const [userResults, setUserResults] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const [activeTab, setActiveTab] = useState("upcoming");
+
   const [currentTime, setCurrentTime] = useState(Date.now());
 
   const [modalConfig, setModalConfig] = useState({
@@ -204,63 +230,43 @@ const DrivePreview = () => {
           },
         });
 
-        const resultRes = await fetch(
-          `${API_URL}/interview/my-results`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+        const resultRes = await fetch(`${API_URL}/interview/my-results`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
           },
-        );
+        });
 
         const resultData = await resultRes.json();
-
         const drivesData = await drivesRes.json();
 
-        const interviewRes = await fetch(
-          `${API_URL}/drives/my-interviews`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+        const interviewRes = await fetch(`${API_URL}/drives/my-interviews`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
           },
-        );
+        });
 
         const interviewData = await interviewRes.json();
-
         const assessmentDrives = drivesData.drives || [];
 
         const interviewDrives = (interviewData.interviews || []).map(
           (interview) => ({
             _id: interview._id,
-
             interviewId: interview._id,
-
             driveMongoId: interview.drive?._id,
-
             driveId: interview.drive?.driveId || "",
-
             hiringPositionName:
               interview.drive?.hiringPositionName || "Interview",
-
             driveType: "Interview",
-
             assessmentStartDate: interview.startDate,
-
             assessmentEndDate: interview.endDate,
-
             timeDurationInMin: interview.drive?.timeDurationInMin || 0,
-
             difficulty: interview.drive?.difficulty || "Intermediate",
-
             status: interview.status,
-
             isInterview: true,
           }),
         );
 
         setAssignedDrives([...assessmentDrives, ...interviewDrives]);
-
         setUserResults([
           ...(drivesData.results || []),
           ...(resultData.results || []),
@@ -309,16 +315,13 @@ const DrivePreview = () => {
       const startTime = new Date(
         drive.assessmentStartDate || drive.startDate,
       ).getTime();
-
       const endTime = new Date(
         drive.assessmentEndDate || drive.endDate,
       ).getTime();
 
       const hasInterviewResult = userResults.find((r) => {
         const resultInterviewId = String(r.interviewId?._id || r.interviewId);
-
         const currentInterviewId = String(drive.interviewId);
-
         return resultInterviewId === currentInterviewId;
       });
 
@@ -350,11 +353,8 @@ const DrivePreview = () => {
       };
     }
 
-
     const startTime = new Date(drive.assessmentStartDate).getTime();
-
     const durationMs = drive.timeDurationInMin * 60 * 1000;
-
     const endTime = startTime + durationMs;
 
     const hasResult = userResults.find(
@@ -400,10 +400,8 @@ const DrivePreview = () => {
   const handleAction = (statusInfo, drive) => {
     if (statusInfo.state === "upcoming") {
       const isInterview = drive.driveType === "Interview";
-
       openInfoModal(
         isInterview ? "Interview Not Started" : "Assessment Not Started",
-
         `${
           isInterview ? "This interview" : "This assessment"
         } will be enabled at ${new Date(
@@ -414,10 +412,8 @@ const DrivePreview = () => {
       setInstructionsModal({ isOpen: true, drive });
     } else if (statusInfo.state === "missed") {
       const isInterview = drive.driveType === "Interview";
-
       openInfoModal(
         isInterview ? "Interview Not Attempted" : "Assessment Not Attempted",
-
         `${
           isInterview
             ? "You did not attempt this interview."
@@ -426,15 +422,44 @@ const DrivePreview = () => {
       );
     } else if (statusInfo.state === "completed") {
       const type = drive.driveType === "Interview" ? "interview" : "assessment";
-
       const id = drive.driveMongoId || drive._id;
-
       navigate(`/drive/result/${id}/${type}`);
     }
   };
 
+  const processedDrives = assignedDrives.map((drive) => {
+    return { ...drive, statusInfo: getDriveStatus(drive) };
+  });
+
+  const currentDrives = processedDrives.filter((drive) => {
+    if (activeTab === "upcoming") {
+      return (
+        drive.statusInfo.state === "upcoming" ||
+        drive.statusInfo.state === "active"
+      );
+    } else {
+      return (
+        drive.statusInfo.state === "completed" ||
+        drive.statusInfo.state === "missed"
+      );
+    }
+  });
+
   return (
     <>
+      <style>{`
+        .custom-drive-scroll::-webkit-scrollbar {
+          width: 6px;
+        }
+        .custom-drive-scroll::-webkit-scrollbar-thumb {
+          background-color: #6366f1; 
+          border-radius: 10px;
+        }
+        .custom-drive-scroll::-webkit-scrollbar-track {
+          background: transparent;
+        }
+      `}</style>
+
       <SoftBackdrop />
       <LenisScroll />
       <Header />
@@ -456,88 +481,126 @@ const DrivePreview = () => {
       >
         <DateTime />
 
-        <h1 className="text-3xl font-bold mb-6 bg-gradient-to-r from-indigo-500 via-indigo-400 to-indigo-300 bg-clip-text text-transparent">
+        <h1 className="text-3xl font-bold mb-10 bg-gradient-to-r from-indigo-500 via-indigo-400 to-indigo-300 bg-clip-text text-transparent">
           Welcome, {fullName}
         </h1>
 
-        <div className="text-gray-300 text-sm font-medium mb-4 uppercase tracking-widest">
-          Drives
-        </div>
 
-        {loading ? (
-          <div className="text-indigo-400 animate-pulse text-center py-10 font-bold">
-            Loading your drives...
+  
+        <div className="relative z-10 h-[500px] flex flex-col">
+          <div className="flex justify-around items-center mb-4 pb-3 shrink-0">
+            <h2
+              className={`cursor-pointer pb-2 relative font-bold text-lg transition-colors duration-300 ${
+                activeTab === "upcoming"
+                  ? "text-indigo-400"
+                  : "text-gray-400 hover:text-gray-300"
+              }`}
+              onClick={() => setActiveTab("upcoming")}
+            >
+              UPCOMING DRIVES
+            </h2>
+            <h2
+              className={`cursor-pointer pb-2 relative font-bold text-lg transition-colors duration-300 ${
+                activeTab === "history"
+                  ? "text-indigo-400"
+                  : "text-gray-400 hover:text-gray-300"
+              }`}
+              onClick={() => setActiveTab("history")}
+            >
+              PAST DRIVES
+            </h2>
           </div>
-        ) : assignedDrives.length === 0 ? (
-          <div className="text-gray-400 text-center py-10 border border-white/10 rounded-2xl bg-white/5">
-            You currently have no drives.
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {assignedDrives.map((drive, index) => {
-              if (!drive) return null;
 
-              const statusInfo = getDriveStatus(drive);
-
-              let btnClass =
-                "px-6 py-2.5 rounded-xl font-bold text-sm transition-all ";
-              if (statusInfo.state === "upcoming") {
-                btnClass +=
-                  "bg-gray-600/50 text-gray-400 cursor-pointer hover:bg-gray-600/70 border border-gray-500/30";
-              } else if (statusInfo.state === "active") {
-                btnClass +=
-                  "bg-indigo-600 hover:bg-indigo-500 text-white shadow-[0_0_15px_rgba(99,102,241,0.4)]";
-              } else if (statusInfo.state === "missed") {
-                btnClass +=
-                  "bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30 cursor-pointer";
-              } else if (statusInfo.state === "completed") {
-                btnClass +=
-                  "bg-green-500/20 text-green-400 border border-green-500/30 hover:bg-green-500/30";
-              }
-
-              return (
+          {loading ? (
+            <div className="text-indigo-400 animate-pulse flex items-center justify-center flex-1 font-bold">
+              Loading your drives...
+            </div>
+          ) : currentDrives.length === 0 ? (
+            <div className="text-gray-400 flex items-center justify-center flex-1 border border-white/10 rounded-2xl bg-white/5">
+              No {activeTab === "upcoming" ? "upcoming" : "historical"} drives
+              found.
+            </div>
+          ) : (
+            <div
+              className="overflow-y-auto pr-3 custom-drive-scroll flex-1"
+              data-lenis-prevent="true"
+            >
+              <AnimatePresence mode="wait">
                 <motion.div
-                  key={drive._id}
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.15 }}
-                  className="bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 hover:bg-white/10 transition-colors backdrop-blur-sm"
+                  key={activeTab}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 10 }}
+                  transition={{ duration: 0.2 }}
+                  className="space-y-4"
                 >
-                  <div className="flex-1">
-                    <div className="text-xs text-indigo-400 font-mono font-bold mb-2">
-                      ID: {drive.driveId}
-                    </div>
-                    <h3 className="text-xl font-bold text-white mb-3">
-                      {drive.hiringPositionName}
-                    </h3>
-                    <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-300">
-                      <span className="flex items-center gap-1.5">
-                        {new Date(
-                          drive.assessmentStartDate || drive.startDate,
-                        ).toLocaleString()}
-                      </span>
-                      <span className="flex items-center gap-1.5">
-                        ⏱ {drive.timeDurationInMin} mins
-                      </span>
-                      <span className="flex items-center gap-1.5 uppercase text-xs font-bold text-indigo-300">
-                        <span>{drive.driveType}</span>
-                      </span>
-                    </div>
-                  </div>
+                  {currentDrives.map((drive, index) => {
+                    if (!drive) return null;
 
-                  <div className="w-full md:w-auto flex justify-end">
-                    <button
-                      onClick={() => handleAction(statusInfo, drive)}
-                      className={btnClass}
-                    >
-                      {statusInfo.text}
-                    </button>
-                  </div>
+                    const statusInfo = drive.statusInfo;
+
+                    let btnClass =
+                      "px-6 py-2.5 rounded-xl font-bold text-sm transition-all ";
+                    if (statusInfo.state === "upcoming") {
+                      btnClass +=
+                        "bg-gray-600/50 text-gray-400 cursor-pointer hover:bg-gray-600/70 border border-gray-500/30";
+                    } else if (statusInfo.state === "active") {
+                      btnClass +=
+                        "bg-indigo-600 hover:bg-indigo-500 text-white shadow-[0_0_15px_rgba(99,102,241,0.4)]";
+                    } else if (statusInfo.state === "missed") {
+                      btnClass +=
+                        "bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30 cursor-pointer";
+                    } else if (statusInfo.state === "completed") {
+                      btnClass +=
+                        "bg-green-500/20 text-green-400 border border-green-500/30 hover:bg-green-500/30";
+                    }
+
+                    return (
+                      <motion.div
+                        key={drive._id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.05 }}
+                        className="bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 hover:bg-white/10 transition-colors backdrop-blur-sm"
+                      >
+                        <div className="flex-1">
+                          <div className="text-xs text-indigo-400 font-mono font-bold mb-2">
+                            ID: {drive.driveId}
+                          </div>
+                          <h3 className="text-xl font-bold text-white mb-3">
+                            {drive.hiringPositionName}
+                          </h3>
+                          <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-300">
+                            <span className="flex items-center gap-1.5">
+                              {new Date(
+                                drive.assessmentStartDate || drive.startDate,
+                              ).toLocaleString()}
+                            </span>
+                            <span className="flex items-center gap-1.5">
+                              ⏱ {drive.timeDurationInMin} mins
+                            </span>
+                            <span className="flex items-center gap-1.5 uppercase text-xs font-bold text-indigo-300">
+                              <span>{drive.driveType}</span>
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="w-full md:w-auto flex justify-end">
+                          <button
+                            onClick={() => handleAction(statusInfo, drive)}
+                            className={btnClass}
+                          >
+                            {statusInfo.text}
+                          </button>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
                 </motion.div>
-              );
-            })}
-          </div>
-        )}
+              </AnimatePresence>
+            </div>
+          )}
+        </div>
       </motion.div>
     </>
   );
