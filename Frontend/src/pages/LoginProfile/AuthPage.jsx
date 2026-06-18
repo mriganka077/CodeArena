@@ -581,14 +581,20 @@ export default function AuthPage() {
           {/* Logo */}
           <div className="text-center mb-8">
             <div className="inline-flex items-center gap-2.5 mb-2">
-              <div className="w-9 h-9 rounded-[10px] flex items-center justify-center"
-                style={{ background: "linear-gradient(135deg, #6C63FF, #2A1454)" }}>
-                <LogoIcon />
-              </div>
-              <h1 className="text-[22px] font-extrabold tracking-tight text-white"
-                style={{ fontFamily: "'Syne', sans-serif" }}>
-                CodeArena
-              </h1>
+              <a
+                href="/"
+                className="
+                  text-4xl
+                  font-black
+                  tracking-[-0.03em]
+                  text-slate-200
+                  transition-all duration-300
+                  cursor-pointer
+                  select-none
+                "
+              >
+                Code<span className="text-violet-400">Arena</span>
+              </a>
             </div>
             <p className="text-zinc-400 text-[13px]">Your secure gateway to everything</p>
           </div>

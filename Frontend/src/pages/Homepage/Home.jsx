@@ -56,7 +56,7 @@ export default function Home() {
             <LenisScroll />
             <Navbar />
 
-            <h2 style={{ textAlign: "center" }}>{msg}</h2>
+            {/* <h2 style={{ textAlign: "center" }}>{msg}</h2> */}
 
             <Hero />
             <Features />
