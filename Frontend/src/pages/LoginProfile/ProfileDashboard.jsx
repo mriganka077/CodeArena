@@ -23,101 +23,101 @@ const COLORS = {
 
 // ── Global Styles ─────────────────────────────────────────────────────────────
 const GLOBAL_STYLES = `
-  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap');
 
-  @keyframes spin { to { transform: rotate(360deg); } }
+@keyframes spin { to { transform: rotate(360deg); } }
 
-  @keyframes fadeSlideUp {
-    from { opacity: 0; transform: translateY(14px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
 
-  @keyframes pulse-ring {
-    0%   { box-shadow: 0 0 0 0 rgba(108,99,255,0.55), 0 0 28px 4px rgba(108,99,255,0.22); }
-    70%  { box-shadow: 0 0 0 8px rgba(108,99,255,0),  0 0 28px 4px rgba(108,99,255,0.22); }
-    100% { box-shadow: 0 0 0 0 rgba(108,99,255,0),    0 0 28px 4px rgba(108,99,255,0.22); }
-  }
+@keyframes pulse-ring {
+  0%   { box-shadow: 0 0 0 0 rgba(108,99,255,0.55), 0 0 28px 4px rgba(108,99,255,0.22); }
+  70%  { box-shadow: 0 0 0 8px rgba(108,99,255,0),  0 0 28px 4px rgba(108,99,255,0.22); }
+  100% { box-shadow: 0 0 0 0 rgba(108,99,255,0),    0 0 28px 4px rgba(108,99,255,0.22); }
+}
 
-  @keyframes orb-drift {
-    0%,100% { transform: translate(0,0) scale(1); }
-    33%      { transform: translate(18px,-12px) scale(1.06); }
-    66%      { transform: translate(-10px,16px) scale(0.96); }
-  }
+@keyframes orb-drift {
+  0%,100% { transform: translate(0,0) scale(1); }
+  33%      { transform: translate(18px,-12px) scale(1.06); }
+  66%      { transform: translate(-10px,16px) scale(0.96); }
+}
 
-  @keyframes shimmer {
-    0%   { background-position: -400px 0; }
-    100% { background-position: 400px 0; }
-  }
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
 
-  @keyframes tab-slide {
-    from { opacity: 0; transform: translateX(-6px); }
-    to   { opacity: 1; transform: translateX(0); }
-  }
+@keyframes tab-slide {
+  from { opacity: 0; transform: translateX(-6px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
 
-  @keyframes toast-in {
-    from { opacity: 0; transform: translateY(12px) scale(0.96); }
-    to   { opacity: 1; transform: translateY(0) scale(1); }
-  }
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
 
-  @keyframes bar-grow {
-    from { width: 0%; }
-  }
+@keyframes bar-grow {
+  from { width: 0%; }
+}
 
-  @keyframes glow-pulse {
-    0%,100% { opacity: 0.6; }
-    50%      { opacity: 1; }
-  }
+@keyframes glow-pulse {
+  0%,100% { opacity: 0.6; }
+  50%      { opacity: 1; }
+}
 
-  .profile-card-hover {
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-  }
-  .profile-card-hover:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 12px 48px rgba(108,99,255,0.22) !important;
-  }
+.profile-card-hover {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.profile-card-hover:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 48px rgba(108,99,255,0.22) !important;
+}
 
-  .nav-btn-hover {
-    transition: all 0.18s ease;
-  }
-  .nav-btn-hover:hover {
-    background: rgba(108,99,255,0.12) !important;
-    color: #8B85FF !important;
-  }
+.nav-btn-hover {
+  transition: all 0.18s ease;
+}
+.nav-btn-hover:hover {
+  background: rgba(108,99,255,0.12) !important;
+  color: #8B85FF !important;
+}
 
-  .action-btn-hover {
-    transition: all 0.18s ease;
-  }
-  .action-btn-hover:hover {
-    filter: brightness(1.15);
-    transform: translateY(-1px);
-  }
+.action-btn-hover {
+  transition: all 0.18s ease;
+}
+.action-btn-hover:hover {
+  filter: brightness(1.15);
+  transform: translateY(-1px);
+}
 
-  .input-field:focus {
-    outline: none;
-    border-color: rgba(108,99,255,0.7) !important;
-    box-shadow: 0 0 0 3px rgba(108,99,255,0.18), 0 0 12px rgba(108,99,255,0.12) !important;
-  }
+.input-field:focus {
+  outline: none;
+  border-color: rgba(108,99,255,0.7) !important;
+  box-shadow: 0 0 0 3px rgba(108,99,255,0.18), 0 0 12px rgba(108,99,255,0.12) !important;
+}
 
-  .skill-chip-hover:hover {
-    background: rgba(108,99,255,0.25) !important;
-    border-color: rgba(108,99,255,0.5) !important;
-    transform: translateY(-1px);
-    transition: all 0.18s;
-  }
+.skill-chip-hover:hover {
+  background: rgba(108,99,255,0.25) !important;
+  border-color: rgba(108,99,255,0.5) !important;
+  transform: translateY(-1px);
+  transition: all 0.18s;
+}
 
-  .section-animate {
-    animation: fadeSlideUp 0.32s ease both;
-  }
+.section-animate {
+  animation: fadeSlideUp 0.32s ease both;
+}
 `;
 
 // ── Glassmorphism helper ──────────────────────────────────────────────────────
 const glass = (opts = {}) => ({
   background: `linear-gradient(
-    135deg,
-    rgba(36, 20, 70, 0.11) 0%,
-    rgba(28, 18, 60, 0.11) 50%,
-    rgba(22, 16, 48, 0) 100%
-  )`,
+  135deg,
+  rgba(36, 20, 70, 0.11) 0%,
+  rgba(28, 18, 60, 0.11) 50%,
+  rgba(22, 16, 48, 0) 100%
+)`,
   backdropFilter: "blur(24px)",
   WebkitBackdropFilter: "blur(24px)",
   border: opts.active
@@ -241,7 +241,7 @@ const ExternalLinkIcon = ({ size = 12, color = "currentColor" }) => (
 );
 const SparkleIcon = ({ size = 14, color = "currentColor" }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill={color}>
-    <path d="M12 2l2.4 7.2H22l-6.2 4.5 2.4 7.3L12 16.5l-6.2 4.5 2.4-7.3L2 9.2h7.6z"/>
+    <path d="M12 2l2.4 7.2H22l-6.2 4.5 2.4 7.3L12 16.5l-6.2 4.5 2.4-7.3L2 9.2h7.6z" />
   </svg>
 );
 
@@ -338,7 +338,7 @@ function DocPreviewModal({ doc, onClose }) {
 function Toast({ message, type = "success", onDone }) {
   useEffect(() => { const t = setTimeout(onDone, 2800); return () => clearTimeout(t); }, []);
   const color = type === "error" ? COLORS.red : COLORS.green;
-  const bg    = type === "error" ? "rgba(248,113,113,0.1)" : "rgba(34,197,94,0.1)";
+  const bg = type === "error" ? "rgba(248,113,113,0.1)" : "rgba(34,197,94,0.1)";
   return (
     <div style={{
       position: "fixed", bottom: 28, right: 28, zIndex: 9999,
@@ -376,9 +376,9 @@ function SectionCard({ children, editing, style }) {
         border: "1px solid rgba(255,255,255,0.08)",
 
         boxShadow: `
-          0 8px 40px rgba(0,0,0,0.4),
-          inset 0 1px 0 rgba(255,255,255,0.04)
-        `,
+        0 8px 40px rgba(0,0,0,0.4),
+        inset 0 1px 0 rgba(255,255,255,0.04)
+      `,
 
         ...style,
       }}
@@ -599,7 +599,7 @@ function PersonalSection({ initialData, onSaved }) {
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px 18px" }}>
           <EditableInput label="First Name" value={data.firstName} editing={editing} onChange={set("firstName")} />
           <EditableInput label="Last Name" value={data.lastName} editing={editing} onChange={set("lastName")} />
-          <EditableInput label="Email Address" value={data.email} editing={false} onChange={() => {}} readOnly />
+          <EditableInput label="Email Address" value={data.email} editing={false} onChange={() => { }} readOnly />
           <EditableInput label="Phone Number" value={data.phone} editing={editing} onChange={set("phone")} />
           <EditableInput label="Location" value={data.location} editing={editing} onChange={set("location")} />
           <EditableInput label="LinkedIn" value={data.linkedin} editing={editing} onChange={set("linkedin")} />
@@ -744,7 +744,7 @@ function EducationSection({ initialData, onSaved }) {
   const handleRemoveDoc = async (eduId, docId, docIndex) => {
     const edu = eduList.find(ed => String(ed._id) === eduId || ed.tempId === eduId);
     if (edu._id && docId) {
-      try { await fetch(`${API}/profile/education/${edu._id}/doc/${docId}`, { method: "DELETE", headers: authHeader() }); } catch {}
+      try { await fetch(`${API}/profile/education/${edu._id}/doc/${docId}`, { method: "DELETE", headers: authHeader() }); } catch { }
     }
     setEduList(prev => prev.map(ed => (String(ed._id) === eduId || ed.tempId === eduId) ? { ...ed, docs: ed.docs.filter((_, i) => i !== docIndex) } : ed));
   };
@@ -820,7 +820,7 @@ function ResumeSection({ initialData, onSaved }) {
   };
 
   const handleDelete = async () => {
-    try { await fetch(`${API}/profile/resume`, { method: "DELETE", headers: authHeader() }); setResume(null); setAnalysis(null); onSaved && onSaved(); } catch {}
+    try { await fetch(`${API}/profile/resume`, { method: "DELETE", headers: authHeader() }); setResume(null); setAnalysis(null); onSaved && onSaved(); } catch { }
   };
 
   const handleAnalyze = async () => {
@@ -843,10 +843,10 @@ function ResumeSection({ initialData, onSaved }) {
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
         <div style={{ position: "relative" }}>
           <svg width={size} height={size} style={{ filter: `drop-shadow(0 0 8px ${color}44)` }}>
-            <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={`${color}18`} strokeWidth={6} />
-            <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth={6}
+            <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={`${color}18`} strokeWidth={6} />
+            <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth={6}
               strokeDasharray={`${dash} ${circ}`} strokeLinecap="round"
-              transform={`rotate(-90 ${size/2} ${size/2})`}
+              transform={`rotate(-90 ${size / 2} ${size / 2})`}
               style={{ transition: "stroke-dasharray 0.6s ease" }} />
             <text x="50%" y="50%" dominantBaseline="central" textAnchor="middle"
               fill={color} fontSize={size * 0.22} fontFamily="'Space Mono',monospace" fontWeight="700">{score}</text>
@@ -862,7 +862,7 @@ function ResumeSection({ initialData, onSaved }) {
       <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         <SectionCard>
           <SectionHeader title="Resume" subtitle="Upload your latest resume for interviewers to review"
-            editing={false} saving={false} onToggle={() => {}}
+            editing={false} saving={false} onToggle={() => { }}
             icon={<FileIcon size={16} color={COLORS.accent} />} />
 
           {!resume ? (
@@ -1240,14 +1240,14 @@ export default function ProfilePage() {
       const res = await fetch(`${API}/profile`, { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } });
       const json = await res.json();
       if (json.success) setProfile(json.user);
-    } catch {}
+    } catch { }
   };
 
   const tabs = [
-    { id: "personal",  label: "Personal",  Icon: UserIcon },
-    { id: "education", label: "Education",  Icon: GraduationCapIcon },
-    { id: "resume",    label: "Resume",     Icon: FileIcon },
-    { id: "kyc",       label: "KYC",        Icon: IdCardIcon },
+    { id: "personal", label: "Personal", Icon: UserIcon },
+    { id: "education", label: "Education", Icon: GraduationCapIcon },
+    { id: "resume", label: "Resume", Icon: FileIcon },
+    { id: "kyc", label: "KYC", Icon: IdCardIcon },
   ];
 
   const profilePct = calcCompletion(profile);
@@ -1258,12 +1258,12 @@ export default function ProfilePage() {
   const isProfileComplete = profile?.profileComplete === true;
 
   const completionItems = [
-    ["Personal Info",  !!profile?.bio,                                              "Personal"],
-    ["Education",      (profile?.education?.length > 0),                           "Education"],
-    ["Resume",         !!profile?.resumeUrl,                                       "Resume"],
-    ["KYC Numbers",    !!(profile?.aadhaarNumber && profile?.panNumber),           "KYC"],
-    ["KYC Docs",       !!(profile?.aadhaarDoc?.name && profile?.panDoc?.name),    "KYC"],
-    ["Address",        !!profile?.address?.state,                                  "KYC"],
+    ["Personal Info", !!profile?.bio, "Personal"],
+    ["Education", (profile?.education?.length > 0), "Education"],
+    ["Resume", !!profile?.resumeUrl, "Resume"],
+    ["KYC Numbers", !!(profile?.aadhaarNumber && profile?.panNumber), "KYC"],
+    ["KYC Docs", !!(profile?.aadhaarDoc?.name && profile?.panDoc?.name), "KYC"],
+    ["Address", !!profile?.address?.state, "KYC"],
   ];
 
   if (loading) return (
@@ -1417,10 +1417,10 @@ export default function ProfilePage() {
 
           {/* ── Main Content ── */}
           <main style={{ flex: 1, minWidth: 0 }} key={activeTab}>
-            {activeTab === "personal"  && <PersonalSection  initialData={profile} onSaved={refreshProfile} />}
+            {activeTab === "personal" && <PersonalSection initialData={profile} onSaved={refreshProfile} />}
             {activeTab === "education" && <EducationSection initialData={profile} onSaved={refreshProfile} />}
-            {activeTab === "resume"    && <ResumeSection    initialData={profile} onSaved={refreshProfile} />}
-            {activeTab === "kyc"       && <KycSection       initialData={profile} onSaved={refreshProfile} />}
+            {activeTab === "resume" && <ResumeSection initialData={profile} onSaved={refreshProfile} />}
+            {activeTab === "kyc" && <KycSection initialData={profile} onSaved={refreshProfile} />}
           </main>
         </div>
       </div>

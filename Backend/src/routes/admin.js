@@ -170,7 +170,9 @@ router.put(
         });
       }
 
-      admin.photo = `/uploads/admin/${req.file.filename}`;
+      console.log(req.file);
+
+      admin.photo = req.file.location;
 
       await admin.save();
 

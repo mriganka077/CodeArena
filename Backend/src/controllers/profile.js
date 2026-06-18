@@ -5,6 +5,7 @@ import mongoose from "mongoose";
 // In analyzeResume, replace the static import with:
 import pdfParse from "pdf-parse/lib/pdf-parse.js";
 import Groq from "groq-sdk";
+import axios from "axios";
 
 
 // ── GET /api/profile ──────────────────────────────────────────────────────────
@@ -48,15 +49,7 @@ export const uploadPhoto = async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ success: false, message: "No file uploaded" });
 
-    const user = await User.findById(req.user._id);
-
-    // Delete old photo only if it was a local upload (not a Google URL)
-    if (user.picture && user.picture.startsWith("/uploads/")) {
-      const oldPath = path.join("uploads", "photos", path.basename(user.picture));
-      if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
-    }
-
-    const photoUrl = `/uploads/photos/${req.file.filename}`;
+    const photoUrl = req.file.location;
     await User.findByIdAndUpdate(req.user._id, { picture: photoUrl });
 
     res.status(200).json({ success: true, photoUrl });
@@ -71,15 +64,7 @@ export const uploadResume = async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ success: false, message: "No file uploaded" });
 
-    const user = await User.findById(req.user._id);
-
-    // Delete old resume file
-    if (user.resumeUrl) {
-      const oldPath = path.join("uploads", "resumes", path.basename(user.resumeUrl));
-      if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
-    }
-
-    const resumeUrl = `/uploads/resumes/${req.file.filename}`;
+    const resumeUrl = req.file.location;
     await User.findByIdAndUpdate(req.user._id, {
       resumeUrl,
       resumeOriginalName: req.file.originalname,
@@ -100,15 +85,19 @@ export const uploadResume = async (req, res) => {
 // ── DELETE /api/profile/resume ────────────────────────────────────────────────
 export const deleteResume = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id);
-    if (user.resumeUrl) {
-      const oldPath = path.join("uploads", "resumes", path.basename(user.resumeUrl));
-      if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
-    }
-    await User.findByIdAndUpdate(req.user._id, { resumeUrl: "", resumeOriginalName: "" });
-    res.status(200).json({ success: true });
+    await User.findByIdAndUpdate(req.user._id, {
+      resumeUrl: "",
+      resumeOriginalName: "",
+    });
+
+    res.status(200).json({
+      success: true,
+    });
   } catch (err) {
-    res.status(500).json({ success: false, message: "Server error" });
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
   }
 };
 
@@ -154,7 +143,7 @@ export const uploadEduDoc = async (req, res) => {
 
     edu.docs.push({
       name: req.file.originalname,
-      path: `/uploads/edu-docs/${req.file.filename}`,
+      path: req.file.location,
       size: `${Math.round(req.file.size / 1024)} KB`,
     });
 
@@ -179,8 +168,6 @@ export const deleteEduDoc = async (req, res) => {
 
     const doc = edu.docs.id(docId);
     if (doc) {
-      const filePath = path.join("uploads", "edu-docs", path.basename(doc.path));
-      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
       doc.deleteOne();
     }
 
@@ -263,17 +250,20 @@ export const analyzeResume = async (req, res) => {
     if (!user.resumeUrl)
       return res.status(400).json({ success: false, message: "No resume uploaded yet" });
 
-    const resumePath = path.join(process.cwd(), user.resumeUrl);
-    if (!fs.existsSync(resumePath))
-      return res.status(404).json({ success: false, message: "Resume file not found on disk" });
+    const ext = path.extname(user.resumeUrl.split("?")[0]).toLowerCase();
 
-    // Only PDF supported for text extraction
-    const ext = path.extname(resumePath).toLowerCase();
-    if (ext !== ".pdf")
-      return res.status(422).json({ success: false, message: "Only PDF resumes can be analyzed. Please upload a PDF." });
+if (ext !== ".pdf")
+  return res.status(422).json({
+    success: false,
+    message: "Only PDF resumes can be analyzed. Please upload a PDF.",
+  });
 
-    const dataBuffer = fs.readFileSync(resumePath);
-    const pdfData = await pdfParse(dataBuffer);
+const response = await axios.get(user.resumeUrl, {
+  responseType: "arraybuffer",
+});
+
+const dataBuffer = Buffer.from(response.data);
+const pdfData = await pdfParse(dataBuffer);
     const resumeText = pdfData.text?.trim();
 
     if (!resumeText || resumeText.length < 50)
@@ -392,7 +382,7 @@ export const completeSetup = async (req, res) => {
       const f = req.files.aadhaar[0];
       user.aadhaarDoc = {
         name: f.originalname,
-        path: `/uploads/kyc/${f.filename}`,
+        path: f.location,
         size: `${Math.round(f.size / 1024)} KB`,
       };
     }
@@ -401,7 +391,7 @@ export const completeSetup = async (req, res) => {
       const f = req.files.pan[0];
       user.panDoc = {
         name: f.originalname,
-        path: `/uploads/kyc/${f.filename}`,
+        path: f.location,
         size: `${Math.round(f.size / 1024)} KB`,
       };
     }

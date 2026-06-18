@@ -151,7 +151,11 @@ const Header = ({ now }) => {
                 >
                     {admin?.photo ? (
                         <img
-                            src={`${import.meta.env.VITE_API_URL.replace("/api", "")}${admin.photo}`}
+                            src={
+                                admin.photo?.startsWith("http")
+                                    ? admin.photo
+                                    : `${import.meta.env.VITE_API_URL.replace("/api", "")}${admin.photo}`
+                            }
                             alt="admin"
                             className="w-full h-full object-cover"
                         />

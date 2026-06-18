@@ -197,8 +197,8 @@ const AdminProfile = () => {
     
                 setAdmin((prev) => ({
                     ...prev,
-                    photo: `${BASE_URL}${res.data.photo}`,
-                }));
+                    photo: res.data.photo,
+                  }));
     
                 showToast("Photo uploaded successfully");
     
@@ -387,7 +387,11 @@ const AdminProfile = () => {
                                             <img
                                                 src={
                                                     avatarPreview ||
-                                                    `${BASE_URL}${admin?.photo}`
+                                                    (
+                                                        admin?.photo?.startsWith("http")
+                                                            ? admin.photo
+                                                            : `${BASE_URL}${admin.photo}`
+                                                    )
                                                 }
                                                 alt="avatar"
                                                 className="w-full h-full object-cover"
