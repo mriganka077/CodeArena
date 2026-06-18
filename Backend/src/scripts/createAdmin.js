@@ -15,9 +15,9 @@ if (existing) {
   console.log("Admin already exists.");
 } else {
   await Admin.create({
-    email: "mrigankaadhikary01@gmail.com",
+    email: "adhiphalder8585@gmail.com",
     password: "12345678",
-    name: "Super Admin",
+    name: "Adhip Admin",
   });
   console.log("✅ Admin created successfully.");
 }
