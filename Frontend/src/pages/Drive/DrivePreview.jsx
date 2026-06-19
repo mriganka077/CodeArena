@@ -6,6 +6,19 @@ import DateTime from "../../components/DateTime";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import {
+  Clock3,
+  CalendarDays,
+  Briefcase,
+  User,
+  Users,
+  Camera,
+  Sun,
+  Mic,
+  Smartphone,
+  ShieldCheck,
+  AlertTriangle,
+} from "lucide-react";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -85,7 +98,7 @@ const InstructionsModal = ({ isOpen, onClose, onConfirm, drive }) => {
 
                 <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 text-sm text-red-200 shadow-inner">
                   <p className="font-bold text-red-400 mb-1 flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
+                    <AlertTriangle size={16} className="text-red-400" />
                     Strict AI Proctoring is Enabled
                   </p>
                   <p>
@@ -98,6 +111,7 @@ const InstructionsModal = ({ isOpen, onClose, onConfirm, drive }) => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-300">
                   <div className="flex flex-col gap-1.5 bg-white/5 p-4 rounded-2xl border border-white/5 hover:bg-white/10 transition-colors">
                     <strong className="text-white flex items-center gap-2">
+                      <User size={16} className="text-indigo-400" />
                       Face Visibility
                     </strong>
                     <p className="text-xs text-gray-400 leading-relaxed">
@@ -109,6 +123,7 @@ const InstructionsModal = ({ isOpen, onClose, onConfirm, drive }) => {
 
                   <div className="flex flex-col gap-1.5 bg-white/5 p-4 rounded-2xl border border-white/5 hover:bg-white/10 transition-colors">
                     <strong className="text-white flex items-center gap-2">
+                      <Users size={16} className="text-indigo-400" />
                       Solo Environment
                     </strong>
                     <p className="text-xs text-gray-400 leading-relaxed">
@@ -119,6 +134,7 @@ const InstructionsModal = ({ isOpen, onClose, onConfirm, drive }) => {
 
                   <div className="flex flex-col gap-1.5 bg-white/5 p-4 rounded-2xl border border-white/5 hover:bg-white/10 transition-colors">
                     <strong className="text-white flex items-center gap-2">
+                      <Sun size={16} className="text-indigo-400" />
                       Adequate Lighting
                     </strong>
                     <p className="text-xs text-gray-400 leading-relaxed">
@@ -130,6 +146,7 @@ const InstructionsModal = ({ isOpen, onClose, onConfirm, drive }) => {
 
                   <div className="flex flex-col gap-1.5 bg-white/5 p-4 rounded-2xl border border-white/5 hover:bg-white/10 transition-colors">
                     <strong className="text-white flex items-center gap-2">
+                      <Mic size={16} className="text-indigo-400" />
                       Audio Monitoring
                     </strong>
                     <p className="text-xs text-gray-400 leading-relaxed">
@@ -140,6 +157,7 @@ const InstructionsModal = ({ isOpen, onClose, onConfirm, drive }) => {
 
                   <div className="flex flex-col gap-1.5 bg-white/5 p-4 rounded-2xl border border-white/5 hover:bg-white/10 transition-colors">
                     <strong className="text-white flex items-center gap-2">
+                      <Smartphone size={16} className="text-indigo-400" />
                       Device Restriction
                     </strong>
                     <p className="text-xs text-gray-400 leading-relaxed">
@@ -151,6 +169,7 @@ const InstructionsModal = ({ isOpen, onClose, onConfirm, drive }) => {
 
                   <div className="flex flex-col gap-1.5 bg-white/5 p-4 rounded-2xl border border-white/5 hover:bg-white/10 transition-colors">
                     <strong className="text-white flex items-center gap-2">
+                      <ShieldCheck size={16} className="text-indigo-400" />
                       Browser Security
                     </strong>
                     <p className="text-xs text-gray-400 leading-relaxed">
@@ -402,8 +421,7 @@ const DrivePreview = () => {
       const isInterview = drive.driveType === "Interview";
       openInfoModal(
         isInterview ? "Interview Not Started" : "Assessment Not Started",
-        `${
-          isInterview ? "This interview" : "This assessment"
+        `${isInterview ? "This interview" : "This assessment"
         } will be enabled at ${new Date(
           drive.assessmentStartDate || drive.startDate,
         ).toLocaleString()}. Please return at the scheduled time.`,
@@ -414,10 +432,9 @@ const DrivePreview = () => {
       const isInterview = drive.driveType === "Interview";
       openInfoModal(
         isInterview ? "Interview Not Attempted" : "Assessment Not Attempted",
-        `${
-          isInterview
-            ? "You did not attempt this interview."
-            : "You did not attempt this assessment."
+        `${isInterview
+          ? "You did not attempt this interview."
+          : "You did not attempt this assessment."
         } The scheduled time window has passed.`,
       );
     } else if (statusInfo.state === "completed") {
@@ -486,25 +503,23 @@ const DrivePreview = () => {
         </h1>
 
 
-  
+
         <div className="relative z-10 h-[500px] flex flex-col">
           <div className="flex justify-around items-center mb-4 pb-3 shrink-0">
             <h2
-              className={`cursor-pointer pb-2 relative font-bold text-lg transition-colors duration-300 ${
-                activeTab === "upcoming"
+              className={`cursor-pointer pb-2 relative font-bold text-lg transition-colors duration-300 ${activeTab === "upcoming"
                   ? "text-indigo-400"
                   : "text-gray-400 hover:text-gray-300"
-              }`}
+                }`}
               onClick={() => setActiveTab("upcoming")}
             >
               UPCOMING DRIVES
             </h2>
             <h2
-              className={`cursor-pointer pb-2 relative font-bold text-lg transition-colors duration-300 ${
-                activeTab === "history"
+              className={`cursor-pointer pb-2 relative font-bold text-lg transition-colors duration-300 ${activeTab === "history"
                   ? "text-indigo-400"
                   : "text-gray-400 hover:text-gray-300"
-              }`}
+                }`}
               onClick={() => setActiveTab("history")}
             >
               PAST DRIVES
@@ -572,14 +587,17 @@ const DrivePreview = () => {
                           </h3>
                           <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-300">
                             <span className="flex items-center gap-1.5">
+                              <CalendarDays size={14} className="text-indigo-400" />
                               {new Date(
                                 drive.assessmentStartDate || drive.startDate,
                               ).toLocaleString()}
                             </span>
                             <span className="flex items-center gap-1.5">
-                              ⏱ {drive.timeDurationInMin} mins
+                              <Clock3 size={14} className="text-indigo-400" />
+                              {drive.timeDurationInMin} mins
                             </span>
                             <span className="flex items-center gap-1.5 uppercase text-xs font-bold text-indigo-300">
+                              <Briefcase size={14} className="text-indigo-400" />
                               <span>{drive.driveType}</span>
                             </span>
                           </div>

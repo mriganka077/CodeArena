@@ -5,7 +5,7 @@ import * as monaco from "monaco-editor";
 import LanguageDropdown from "./LanguageDropdown";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-// import { useAuth } from '../context/AuthContext'; // adjust path if needed
+import { Play, CheckCircle, Bot  } from "lucide-react";
 
 const CodeEditor = ({
   currentQuestion,
@@ -481,17 +481,19 @@ const CodeEditor = ({
           </button>
           <button
             onClick={runCode}
-            disabled={status === 'running'}
-            className="rounded-xl bg-[#6C63FF] px-4 py-2 text-sm font-semibold text-white hover:bg-[#7b73ff] transition-all shadow-[0_0_0_1px_rgba(108,99,255,0.16),_0_10px_30px_rgba(0,0,0,0.28)] disabled:opacity-50"
+            disabled={status === "running"}
+            className="rounded-xl bg-[#6C63FF] px-4 py-2 text-sm font-semibold text-white hover:bg-[#7b73ff] transition-all flex items-center gap-2"
           >
-            ▶ Run
+            <Play size={16} />
+            Run
           </button>
           <button
             onClick={submitSolution}
-            disabled={submitState === 'loading' || status === 'running'}
-            className="rounded-xl bg-[#22C55E] px-4 py-2 text-sm font-semibold text-white hover:bg-[#16a34a] transition-all shadow-[0_0_0_1px_rgba(34,197,94,0.16),_0_10px_30px_rgba(0,0,0,0.28)] disabled:opacity-50"
+            disabled={submitState === "loading" || status === "running"}
+            className="rounded-xl bg-[#22C55E] px-4 py-2 text-sm font-semibold text-white hover:bg-[#16a34a] transition-all flex items-center gap-2"
           >
-            {submitState === 'loading' ? 'Submitting...' : '✓ Submit'}
+            <CheckCircle size={16} />
+            {submitState === "loading" ? "Submitting..." : "Submit"}
           </button>
         </div>
       </div>
@@ -619,8 +621,9 @@ const CodeEditor = ({
           {aiReview && (
             <div className="flex-1 overflow-auto mt-2 ml-4 mb-4 pr-4 scrollbar-thin">
 
-              <h3 className="text-xs text-[#6C63FF] font-semibold mb-3">
-                🐇 AI Review
+              <h3 className="text-xs text-[#6C63FF] font-semibold mb-3 flex items-center gap-2">
+                <Bot size={16} />
+                AI Review
               </h3>
 
               <div className="prose prose-invert max-w-none prose-headings:text-white prose-p:text-slate-300 prose-strong:text-white text-sm leading-7">

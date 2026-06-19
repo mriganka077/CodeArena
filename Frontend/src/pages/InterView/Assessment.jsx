@@ -1081,8 +1081,73 @@ const Assessment = () => {
 
   if (loadingQuestions) {
     return (
-      <div className="h-screen w-screen flex items-center justify-center bg-[#050816] text-white text-xl font-semibold overflow-hidden">
-        Generating AI Assessment Questions...
+      <div className="h-screen w-screen bg-[#050816] overflow-hidden relative">
+        {/* Background */}
+        <div className="absolute inset-0 z-0 opacity-70 pointer-events-none">
+          <SoftBackdrop />
+        </div>
+  
+        {/* Loader */}
+        <div className="relative z-10 h-full flex items-center justify-center">
+          <div className="text-center px-8">
+            <div className="relative mx-auto mb-7 w-16 h-16">
+              <div className="absolute inset-0 rounded-full border border-[#6366f1]/15" />
+  
+              <div
+                className="absolute inset-0 rounded-full border border-t-[#6366f1] border-r-[#8b5cf6]/50"
+                style={{ animation: "spin 1.1s linear infinite" }}
+              />
+  
+              <div
+                className="absolute inset-[6px] rounded-full border border-t-[#a855f7]/60"
+                style={{ animation: "spin 0.75s linear infinite reverse" }}
+              />
+  
+              <div
+                className="absolute inset-[12px] rounded-full border border-[#c084fc]/25"
+                style={{ animation: "pulse 2s ease-in-out infinite" }}
+              />
+            </div>
+  
+            <p className="text-[13px] font-semibold text-white/75 tracking-wide mb-2">
+              Generating Questions
+            </p>
+  
+            <div className="flex items-center justify-center gap-2">
+              <span
+                className="px-3 py-1 rounded-full text-[10px] font-semibold"
+                style={{
+                  color: "#a5b4fc",
+                  background: "rgba(99,102,241,0.10)",
+                  border: "1px solid rgba(99,102,241,0.20)",
+                }}
+              >
+                {drive?.difficulty || "Intermediate"}
+              </span>
+  
+              <span className="text-[10px] text-white/30 font-mono">
+                {drive?.hiringPositionName || "Assessment"}
+              </span>
+            </div>
+          </div>
+        </div>
+  
+        <style>{`
+          @keyframes spin {
+            to {
+              transform: rotate(360deg);
+            }
+          }
+  
+          @keyframes pulse {
+            0%, 100% {
+              opacity: 0.3;
+            }
+            50% {
+              opacity: 0.8;
+            }
+          }
+        `}</style>
       </div>
     );
   }
