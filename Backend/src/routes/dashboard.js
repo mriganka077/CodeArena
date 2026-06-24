@@ -3,10 +3,12 @@ import mongoose from "mongoose";
 import User from "../models/User.js";
 import Drive from "../models/Drive.js";
 import AssessmentResult from "../models/AssessmentResult.js";
+import InterviewResult from "../models/InterviewResult.js";
 import PracticeSubmission from "../models/PracticeSubmission.js";
+import MockInterview from "../models/MockInterview.js";
 import Domain from "../models/Domain.js";
 import UserDomain from "../models/UserDomain.js";
-import { protect } from "../middleware/auth.js"; // ✅ REQUIRED for user-specific data
+import { protect } from "../middleware/auth.js"; // REQUIRED for user-specific data
 
 const router = express.Router();
 
@@ -310,6 +312,160 @@ router.get("/activity", protect, async (req, res) => {
     return res.json({ success: true, data: graphData });
   } catch (err) {
     console.error("Activity error:", err);
+    return res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════
+// ROUTE: GET /api/dashboard/assessment-results
+// Returns all assessment results for the logged-in user
+// ═══════════════════════════════════════════════════════════════
+router.get("/assessment-results", protect, async (req, res) => {
+  try {
+    const userId = req.user._id || req.user.id;
+    const userObjectId = new mongoose.Types.ObjectId(userId);
+
+    const results = await AssessmentResult.find({ userId: userObjectId })
+      .populate("driveId", "hiringPositionName driveType totalMarks timeDurationInMin driveId")
+      .sort({ createdAt: -1 });
+
+    const formatted = results.map((r) => ({
+      id: r._id,
+      drive: r.driveId
+        ? {
+            name: r.driveId.hiringPositionName,
+            type: r.driveId.driveType,
+            totalMarks: r.driveId.totalMarks,
+            driveId: r.driveId.driveId,
+          }
+        : null,
+      score: r.score,
+      percentage: r.percentage,
+      timeTaken: r.timeTaken,
+      isPass: r.isPass,
+      status: r.status,
+      terminationReason: r.terminationReason,
+      createdAt: r.createdAt,
+    }));
+
+    return res.json({ success: true, data: formatted });
+  } catch (err) {
+    console.error("Assessment results error:", err);
+    return res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════
+// ROUTE: GET /api/dashboard/interview-results
+// Returns all interview results for the logged-in user
+// ═══════════════════════════════════════════════════════════════
+router.get("/interview-results", protect, async (req, res) => {
+  try {
+    const userId = req.user._id || req.user.id;
+    const userObjectId = new mongoose.Types.ObjectId(userId);
+
+    const results = await InterviewResult.find({ userId: userObjectId })
+      .populate("driveId", "hiringPositionName driveType driveId")
+      .populate("interviewId", "interviewType difficulty focusAreas")
+      .sort({ createdAt: -1 });
+
+    const formatted = results.map((r) => ({
+      id: r._id,
+      drive: r.driveId
+        ? {
+            name: r.driveId.hiringPositionName,
+            type: r.driveId.driveType,
+            driveId: r.driveId.driveId,
+          }
+        : null,
+      interview: r.interviewId
+        ? {
+            type: r.interviewId.interviewType,
+            difficulty: r.interviewId.difficulty,
+            focusAreas: r.interviewId.focusAreas,
+          }
+        : null,
+      status: r.status,
+      timeTaken: r.timeTaken,
+      score: r.score,
+      recommendation: r.recommendation,
+      feedback: r.feedback,
+      technicalKnowledge: r.technicalKnowledge,
+      communication: r.communication,
+      problemSolving: r.problemSolving,
+      confidence: r.confidence,
+      createdAt: r.createdAt,
+    }));
+
+    return res.json({ success: true, data: formatted });
+  } catch (err) {
+    console.error("Interview results error:", err);
+    return res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════
+// ROUTE: GET /api/dashboard/practice-submissions
+// Returns all practice submissions for the logged-in user
+// ═══════════════════════════════════════════════════════════════
+router.get("/practice-submissions", protect, async (req, res) => {
+  try {
+    const userId = req.user._id || req.user.id;
+    const userObjectId = new mongoose.Types.ObjectId(userId);
+
+    const submissions = await PracticeSubmission.find({ user: userObjectId })
+      .select("-attempts -aiReview") // exclude heavy fields
+      .sort({ submittedAt: -1 });
+
+    const formatted = submissions.map((s) => ({
+      id: s._id,
+      domain: s.domain,
+      difficulty: s.difficulty,
+      totalQuestions: s.totalQuestions,
+      correctMCQ: s.correctMCQ,
+      attemptedMCQ: s.attemptedMCQ,
+      attemptedCoding: s.attemptedCoding,
+      correctCoding: s.correctCoding,
+      submittedAt: s.submittedAt,
+    }));
+
+    return res.json({ success: true, data: formatted });
+  } catch (err) {
+    console.error("Practice submissions error:", err);
+    return res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════
+// ROUTE: GET /api/dashboard/mock-submissions
+// Returns mock interview sessions for the logged-in user
+// Only returns feedback and timeTaken as required
+// ═══════════════════════════════════════════════════════════════
+router.get("/mock-submissions", protect, async (req, res) => {
+  try {
+    const userId = req.user._id || req.user.id;
+    const userObjectId = new mongoose.Types.ObjectId(userId);
+
+    const sessions = await MockInterview.find({
+      userId: userObjectId,
+      status: { $in: ["completed", "abandoned"] },
+    })
+      .select("domain category timeTaken feedback status createdAt")
+      .sort({ createdAt: -1 });
+
+    const formatted = sessions.map((s) => ({
+      id: s._id,
+      domain: s.domain,
+      category: s.category,
+      timeTaken: s.timeTaken,
+      feedback: s.feedback,
+      status: s.status,
+      createdAt: s.createdAt,
+    }));
+
+    return res.json({ success: true, data: formatted });
+  } catch (err) {
+    console.error("Mock submissions error:", err);
     return res.status(500).json({ success: false, message: err.message });
   }
 });
