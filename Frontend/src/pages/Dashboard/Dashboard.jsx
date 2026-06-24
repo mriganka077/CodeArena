@@ -184,33 +184,30 @@ const Dashboard = () => {
   const navigate = useNavigate(); 
 
   // ─── Dropdown State ───
-  const [analyticsOpen, setAnalyticsOpen] = useState(true);
   const [categoriesOpen, setCategoriesOpen] = useState(true);
+  const [driveResultsOpen, setDriveResultsOpen] = useState(true);
+  const [mockOpen, setMockOpen] = useState(true);
+  const [practiceOpen, setPracticeOpen] = useState(true);
 
   // ─── State for backend integration ───
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [statsData, setStatsData] = useState({
-    completed: 65,
-    inProgress: 25,
-    notStarted: 10,
-  });
-  const [progressData, setProgressData] = useState([
-    { label: "DSA", value: 75, level: "high" },
-    { label: "System Design", value: 45, level: "medium" },
-    { label: "Aptitude", value: 90, level: "high" },
-    { label: "Core Subjects", value: 60, level: "medium" },
-  ]);
-  const [graphData, setGraphData] = useState([
-    { day: "Mon", value: 30 },
-    { day: "Tue", value: 45 },
-    { day: "Wed", value: 60 },
-    { day: "Thu", value: 40 },
-    { day: "Fri", value: 80 },
-    { day: "Sat", value: 65 },
-    { day: "Sun", value: 55 },
-  ]);
-  const [graphPeriod, setGraphPeriod] = useState("W");
+
+  // ─── Results State ───
+  const [assessmentResults, setAssessmentResults] = useState([]);
+  const [assessmentLoading, setAssessmentLoading] = useState(false);
+  const [interviewResults, setInterviewResults] = useState([]);
+  const [interviewLoading, setInterviewLoading] = useState(false);
+  const [mockSubmissions, setMockSubmissions] = useState([]);
+  const [mockLoading, setMockLoading] = useState(false);
+  const [practiceSubmissions, setPracticeSubmissions] = useState([]);
+  const [practiceLoading, setPracticeLoading] = useState(false);
+  // ─── Modal Selection State ───
+  const [selectedAssessment, setSelectedAssessment] = useState(null);
+  const [selectedInterview, setSelectedInterview] = useState(null);
+  const [selectedMock, setSelectedMock] = useState(null);
+  const [selectedPractice, setSelectedPractice] = useState(null);
+
   const [categoryData, setCategoryData] = useState([
     {
       id: "drive",
@@ -257,10 +254,10 @@ const Dashboard = () => {
     setLoading(true);
     setError(null);
     try {
-      const token = localStorage.getItem("token"); // optional auth
+      const token = localStorage.getItem("token");
 
       const res = await fetch(
-        `${API_BASE}/dashboard/summary?period=${graphPeriod}`,
+        `${API_BASE}/dashboard/summary`,
         {
           method: "GET",
           headers: {
@@ -279,20 +276,7 @@ const Dashboard = () => {
       const json = await res.json();
 
       if (json.success && json.data) {
-        const {
-          stats,
-          progressData: pd,
-          graphData: gd,
-          categories,
-        } = json.data;
-
-        setStatsData({
-          completed: stats.completed,
-          inProgress: stats.inProgress,
-          notStarted: stats.notStarted,
-        });
-        setProgressData(pd);
-        setGraphData(gd);
+        const { categories } = json.data;
         setCategoryData(categories);
       }
     } catch (err) {
@@ -301,48 +285,106 @@ const Dashboard = () => {
     } finally {
       setLoading(false);
     }
-  }, [graphPeriod]);
+  }, [API_BASE]);
 
-  const fetchGraphData = useCallback(async (period) => {
-    try {
-      setGraphPeriod(period);
-      const token = localStorage.getItem("token");
 
-      const res = await fetch(
-        `${API_BASE}/dashboard/activity?period=${period}`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            ...(token && { Authorization: `Bearer ${token}` }),
-          },
-          credentials: "include",
-        },
-      );
-
-      if (!res.ok) throw new Error("Failed to fetch activity data");
-      const json = await res.json();
-      if (json.success) setGraphData(json.data);
-    } catch (err) {
-      console.error("Graph fetch error:", err);
-    }
-  }, []);
 
   useEffect(() => {
     fetchDashboardData();
   }, [fetchDashboardData]);
 
-  // ─── Scroll refs for animated counters ───
-  const [pieRef, pieVisible] = useScrollReveal({ threshold: 0.3 });
-  const completedCount = useCounter(statsData.completed, pieVisible);
-  const totalProgress =
-    progressData.length > 0
-      ? progressData.reduce((a, b) => a + b.value, 0) / progressData.length
-      : 0;
-  const [totalRef, totalVisible] = useScrollReveal({ threshold: 0.3 });
-  const totalCount = useCounter(totalProgress, totalVisible);
-  const avgPerDay =
-    graphData.reduce((a, b) => a + b.value, 0) / graphData.length;
-  const totalWeek = graphData.reduce((a, b) => a + b.value, 0);
+  // ─── Fetch Assessment Results ───
+  const fetchAssessmentResults = useCallback(async () => {
+    setAssessmentLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_BASE}/dashboard/assessment-results`, {
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        credentials: "include",
+      });
+      const json = await res.json();
+      if (json.success) setAssessmentResults(json.data);
+    } catch (err) {
+      console.error("Assessment results fetch error:", err);
+    } finally {
+      setAssessmentLoading(false);
+    }
+  }, [API_BASE]);
+
+  // ─── Fetch Interview Results ───
+  const fetchInterviewResults = useCallback(async () => {
+    setInterviewLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_BASE}/dashboard/interview-results`, {
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        credentials: "include",
+      });
+      const json = await res.json();
+      if (json.success) setInterviewResults(json.data);
+    } catch (err) {
+      console.error("Interview results fetch error:", err);
+    } finally {
+      setInterviewLoading(false);
+    }
+  }, [API_BASE]);
+
+  // ─── Fetch Mock Interview Submissions ───
+  const fetchMockSubmissions = useCallback(async () => {
+    setMockLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_BASE}/dashboard/mock-submissions`, {
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        credentials: "include",
+      });
+      const json = await res.json();
+      if (json.success) setMockSubmissions(json.data);
+    } catch (err) {
+      console.error("Mock submissions fetch error:", err);
+    } finally {
+      setMockLoading(false);
+    }
+  }, [API_BASE]);
+
+  // ─── Fetch Practice Submissions ───
+  const fetchPracticeSubmissions = useCallback(async () => {
+    setPracticeLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_BASE}/dashboard/practice-submissions`, {
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        credentials: "include",
+      });
+      const json = await res.json();
+      if (json.success) setPracticeSubmissions(json.data);
+    } catch (err) {
+      console.error("Practice submissions fetch error:", err);
+    } finally {
+      setPracticeLoading(false);
+    }
+  }, [API_BASE]);
+
+  useEffect(() => {
+    fetchAssessmentResults();
+    fetchInterviewResults();
+    fetchMockSubmissions();
+    fetchPracticeSubmissions();
+  }, [fetchAssessmentResults, fetchInterviewResults, fetchMockSubmissions, fetchPracticeSubmissions]);
+
+
 
   // ─── Helper Functions ───
   const getProgressWidth = (value) => `${Math.min(Math.max(value, 0), 100)}%`;
@@ -772,580 +814,6 @@ const Dashboard = () => {
             </header>
           </ScrollReveal>
 
-          {/* ═══════ Analytics Section ═══════ */}
-          <ScrollReveal direction="left" delay={100}>
-            <div className="mb-6">
-              <SectionHeader
-                isOpen={analyticsOpen}
-                onToggle={() => setAnalyticsOpen((prev) => !prev)}
-                icon={
-                  <svg
-                    className="w-5 h-5 text-indigo-400"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
-                    <path d="M21.21 15.89A10 10 0 1 1 8 2.83" />
-                    <path d="M22 12A10 10 0 0 0 12 2v10z" />
-                  </svg>
-                }
-                title="Analytics & Statistics"
-                gradientFrom="bg-indigo-500/15"
-                gradientTo="border-indigo-500/25"
-                lineColor="from-indigo-500/40"
-              />
-            </div>
-          </ScrollReveal>
-
-          {/* Analytics collapsed preview bar */}
-          {!analyticsOpen && (
-            <div
-              className="section-preview mb-8 flex items-center gap-3 px-5 py-3.5 rounded-2xl bg-white/[0.03] border border-white/[0.06] cursor-pointer hover:bg-white/[0.06] transition-all duration-300"
-              onClick={() => setAnalyticsOpen(true)}
-            >
-              <div className="flex gap-2">
-                {[
-                  {
-                    color: "bg-emerald-400",
-                    label: `${statsData.completed}% Done`,
-                  },
-                  {
-                    color: "bg-amber-400",
-                    label: `${statsData.inProgress}% Active`,
-                  },
-                  {
-                    color: "bg-red-400",
-                    label: `${statsData.notStarted}% Pending`,
-                  },
-                ].map((item) => (
-                  <div key={item.label} className="flex items-center gap-1.5">
-                    <span className={`w-2 h-2 rounded-full ${item.color}`} />
-                    <span className="text-slate-500 text-xs">{item.label}</span>
-                  </div>
-                ))}
-              </div>
-              <div className="flex-1" />
-              <span className="text-indigo-400 text-xs font-semibold">
-                Click to expand
-              </span>
-              <svg
-                className="w-4 h-4 text-indigo-400"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <polyline points="6 9 12 15 18 9" />
-              </svg>
-            </div>
-          )}
-
-          {/* ─── Collapsible Analytics Content ─── */}
-          <CollapsibleSection isOpen={analyticsOpen} className="mb-8">
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 sm:gap-8 mb-14 pt-2">
-              {/* ──── Box 1: Pie Chart ──── */}
-              <ScrollReveal direction="up" delay={100}>
-                <div className="box-card group relative rounded-3xl overflow-hidden bg-gradient-to-br from-white/[0.07] to-white/[0.02] border border-white/[0.08] backdrop-blur-md">
-                  <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/25 to-transparent" />
-                  <div className="glow-overlay absolute -inset-1/2 w-[200%] h-[200%] opacity-0 transition-opacity duration-500 pointer-events-none bg-[radial-gradient(circle,rgba(99,102,241,0.08)_0%,transparent_50%)]" />
-                  <div className="relative p-6 sm:p-8 z-10">
-                    <div className="flex items-center gap-4 mb-7">
-                      <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg shadow-indigo-500/40">
-                        <svg
-                          className="w-6 h-6 text-white"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                        >
-                          <circle cx="12" cy="12" r="10" />
-                          <path d="M12 2a10 10 0 0 1 10 10" />
-                        </svg>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-white text-lg font-bold truncate">
-                          Overall Stats
-                        </h3>
-                        <span className="text-slate-500 text-sm">
-                          Performance overview
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[0.7rem] font-semibold uppercase tracking-wider text-emerald-400 bg-emerald-500/15 border border-emerald-500/25 shrink-0">
-                        <span className="dot-pulse w-1.5 h-1.5 bg-emerald-400 rounded-full" />
-                        Live
-                      </div>
-                    </div>
-                    <div
-                      ref={pieRef}
-                      className="flex flex-col items-center gap-8"
-                    >
-                      <div className="relative">
-                        <div className="relative w-48 h-48 sm:w-52 sm:h-52">
-                          <svg
-                            viewBox="0 0 100 100"
-                            className="w-full h-full -rotate-90"
-                          >
-                            <defs>
-                              <linearGradient
-                                id="completedGrad"
-                                x1="0%"
-                                y1="0%"
-                                x2="100%"
-                                y2="100%"
-                              >
-                                <stop offset="0%" stopColor="#34d399" />
-                                <stop offset="100%" stopColor="#14b8a6" />
-                              </linearGradient>
-                              <linearGradient
-                                id="progressGrad"
-                                x1="0%"
-                                y1="0%"
-                                x2="100%"
-                                y2="100%"
-                              >
-                                <stop offset="0%" stopColor="#fbbf24" />
-                                <stop offset="100%" stopColor="#f59e0b" />
-                              </linearGradient>
-                              <linearGradient
-                                id="notStartedGrad"
-                                x1="0%"
-                                y1="0%"
-                                x2="100%"
-                                y2="100%"
-                              >
-                                <stop offset="0%" stopColor="#f87171" />
-                                <stop offset="100%" stopColor="#ef4444" />
-                              </linearGradient>
-                              <filter id="glow">
-                                <feGaussianBlur
-                                  stdDeviation="2"
-                                  result="coloredBlur"
-                                />
-                                <feMerge>
-                                  <feMergeNode in="coloredBlur" />
-                                  <feMergeNode in="SourceGraphic" />
-                                </feMerge>
-                              </filter>
-                            </defs>
-                            <circle
-                              cx="50"
-                              cy="50"
-                              r="40"
-                              fill="none"
-                              stroke="rgba(255,255,255,0.05)"
-                              strokeWidth="12"
-                            />
-                            <circle
-                              cx="50"
-                              cy="50"
-                              r="40"
-                              fill="none"
-                              strokeWidth="12"
-                              strokeLinecap="round"
-                              className="seg-completed"
-                              filter="url(#glow)"
-                            />
-                            <circle
-                              cx="50"
-                              cy="50"
-                              r="40"
-                              fill="none"
-                              strokeWidth="12"
-                              strokeLinecap="round"
-                              className="seg-progress"
-                            />
-                            <circle
-                              cx="50"
-                              cy="50"
-                              r="40"
-                              fill="none"
-                              strokeWidth="12"
-                              strokeLinecap="round"
-                              className="seg-not-started"
-                            />
-                          </svg>
-                          <div className="absolute inset-0 flex flex-col items-center justify-center">
-                            <div className="flex items-baseline">
-                              <span className="text-4xl sm:text-5xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-teal-400">
-                                {completedCount}
-                              </span>
-                              <span className="text-xl font-bold text-emerald-400">
-                                %
-                              </span>
-                            </div>
-                            <span className="text-slate-500 text-sm mt-1">
-                              Completed
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex flex-col gap-3 w-full">
-                        {[
-                          {
-                            label: "Completed",
-                            value: statsData.completed,
-                            dot: "from-emerald-400 to-teal-400 shadow-[0_0_12px_rgba(16,185,129,0.5)]",
-                          },
-                          {
-                            label: "In Progress",
-                            value: statsData.inProgress,
-                            dot: "from-amber-400 to-orange-400 shadow-[0_0_12px_rgba(245,158,11,0.5)]",
-                          },
-                          {
-                            label: "Not Started",
-                            value: statsData.notStarted,
-                            dot: "from-red-400 to-rose-500 shadow-[0_0_12px_rgba(239,68,68,0.5)]",
-                          },
-                        ].map((leg) => (
-                          <div
-                            key={leg.label}
-                            className="legend-row flex items-center gap-3 px-4 py-3 bg-white/[0.03] rounded-xl transition-all duration-300 cursor-default"
-                          >
-                            <div
-                              className={`relative w-3.5 h-3.5 rounded-full bg-gradient-to-br ${leg.dot}`}
-                            >
-                              <span
-                                className={`legend-pulse-anim absolute inset-0 rounded-full bg-gradient-to-br ${leg.dot}`}
-                              />
-                            </div>
-                            <span className="text-slate-300 text-sm flex-1">
-                              {leg.label}
-                            </span>
-                            <span className="text-white font-bold text-sm">
-                              {leg.value}%
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="absolute top-4 left-4 w-5 h-5 border-t-2 border-l-2 border-indigo-500/25 rounded-tl-md pointer-events-none" />
-                  <div className="absolute bottom-4 right-4 w-5 h-5 border-b-2 border-r-2 border-indigo-500/25 rounded-br-md pointer-events-none" />
-                </div>
-              </ScrollReveal>
-
-              {/* ──── Box 2: Learning Progress ──── */}
-              <ScrollReveal direction="up" delay={200}>
-                <div className="box-card group relative rounded-3xl overflow-hidden bg-gradient-to-br from-white/[0.07] to-white/[0.02] border border-white/[0.08] backdrop-blur-md">
-                  <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/25 to-transparent" />
-                  <div className="glow-overlay absolute -inset-1/2 w-[200%] h-[200%] opacity-0 transition-opacity duration-500 pointer-events-none bg-[radial-gradient(circle,rgba(236,72,153,0.08)_0%,transparent_50%)]" />
-                  <div className="relative p-6 sm:p-8 z-10">
-                    <div className="flex items-center gap-4 mb-7">
-                      <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br from-pink-500 to-rose-500 shadow-lg shadow-pink-500/40">
-                        <svg
-                          className="w-6 h-6 text-white"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                        >
-                          <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
-                        </svg>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-white text-lg font-bold truncate">
-                          Learning Progress
-                        </h3>
-                        <span className="text-slate-500 text-sm">
-                          Skills development
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[0.7rem] font-semibold text-amber-400 bg-amber-500/15 border border-amber-500/25 shrink-0">
-                        <svg
-                          className="w-3.5 h-3.5"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                        >
-                          <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
-                          <polyline points="17 6 23 6 23 12" />
-                        </svg>
-                        +12%
-                      </div>
-                    </div>
-                    <div className="flex flex-col gap-5">
-                      {progressData.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-                          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-pink-500/20 to-rose-500/20 flex items-center justify-center mb-4 border border-pink-500/30">
-                            <svg
-                              className="w-8 h-8 text-pink-400"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                            >
-                              <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                            </svg>
-                          </div>
-                          <h4 className="text-white text-base font-bold mb-2">
-                            No Courses Selected
-                          </h4>
-                          <p className="text-slate-400 text-sm mb-5 max-w-xs">
-                            Pick your courses to start tracking your learning
-                            progress
-                          </p>
-                          <button
-                            onClick={() => {
-                              window.scrollTo({ top: 0, behavior: "instant" });
-                              navigate('/domainselector');
-                            }}
-                            className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-pink-500 to-rose-500 shadow-lg shadow-pink-500/30 hover:shadow-pink-500/50 transition-all duration-300 hover:-translate-y-0.5"
-                          >
-                            Browse Courses
-                          </button>
-                        </div>
-                      ) : (
-                        progressData.map((item, index) => {
-                          const lc = getLevelClasses(item.level);
-                          return (
-                            <div
-                              key={item.domainId || item.label || index}
-                              className="group/prog"
-                            >
-                              <div className="flex justify-between items-center mb-2.5">
-                                <div className="flex items-center gap-3">
-                                  <span className="text-slate-600 text-xs font-semibold font-mono">
-                                    {String(index + 1).padStart(2, "0")}
-                                  </span>
-                                  <span className="text-slate-200 text-sm font-medium">
-                                    {item.label}
-                                  </span>
-                                </div>
-                                <div className="flex items-center gap-3">
-                                  <span
-                                    className={`px-2.5 py-0.5 rounded-full text-[0.65rem] font-semibold uppercase tracking-wider ${lc.status}`}
-                                  >
-                                    {item.level}
-                                  </span>
-                                  <span className="text-white text-sm font-bold min-w-[36px] text-right">
-                                    {item.value}%
-                                  </span>
-                                </div>
-                              </div>
-                              <div className="relative h-2.5 bg-white/5 rounded-full overflow-hidden">
-                                <div
-                                  className={`relative h-full rounded-full overflow-hidden bg-gradient-to-r ${lc.fill} ${lc.shadow} transition-all duration-1000 ease-out`}
-                                  style={{
-                                    width: getProgressWidth(item.value),
-                                  }}
-                                >
-                                  <div className="absolute top-0 right-0 w-8 h-full bg-gradient-to-r from-transparent to-white/50 rounded-r-full" />
-                                  <div className="shine-anim absolute top-0 left-[-100%] w-full h-full bg-gradient-to-r from-transparent via-white/25 to-transparent" />
-                                </div>
-                                <div className="absolute inset-0 flex justify-between px-[25%]">
-                                  {[0, 1, 2, 3].map((i) => (
-                                    <span
-                                      key={i}
-                                      className="w-px h-full bg-white/[0.06]"
-                                    />
-                                  ))}
-                                </div>
-                              </div>
-                              {item.attempted > 0 && (
-                                <div className="flex gap-3 mt-1.5 text-[0.65rem] text-slate-500">
-                                  <span>{item.passed} passed</span>
-                                  <span>•</span>
-                                  <span>{item.attempted} attempted</span>
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })
-                      )}
-                    </div>
-                    {progressData.length > 0 && (
-                      <div
-                        ref={totalRef}
-                        className="flex justify-between items-center mt-7 p-5 rounded-2xl bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/20"
-                      >
-                        <div className="flex items-center gap-3 text-slate-300 font-semibold text-sm">
-                          <svg
-                            className="w-5 h-5 text-indigo-400"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                          >
-                            <path d="M12 20V10" />
-                            <path d="M18 20V4" />
-                            <path d="M6 20v-4" />
-                          </svg>
-                          Total Progress
-                        </div>
-                        <div className="flex items-baseline">
-                          <span className="text-3xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-500">
-                            {totalCount}
-                          </span>
-                          <span className="text-lg font-bold text-indigo-400 ml-0.5">
-                            %
-                          </span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  <div className="absolute top-4 left-4 w-5 h-5 border-t-2 border-l-2 border-indigo-500/25 rounded-tl-md pointer-events-none" />
-                  <div className="absolute bottom-4 right-4 w-5 h-5 border-b-2 border-r-2 border-indigo-500/25 rounded-br-md pointer-events-none" />
-                </div>
-              </ScrollReveal>
-
-              {/* ──── Box 3: Weekly Activity ──── */}
-              <ScrollReveal direction="up" delay={300}>
-                <div className="box-card group relative rounded-3xl overflow-hidden bg-gradient-to-br from-white/[0.07] to-white/[0.02] border border-white/[0.08] backdrop-blur-md lg:col-span-2 xl:col-span-1">
-                  <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/25 to-transparent" />
-                  <div className="glow-overlay absolute -inset-1/2 w-[200%] h-[200%] opacity-0 transition-opacity duration-500 pointer-events-none bg-[radial-gradient(circle,rgba(56,189,248,0.08)_0%,transparent_50%)]" />
-                  <div className="relative p-6 sm:p-8 z-10">
-                    <div className="flex items-center gap-4 mb-7">
-                      <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br from-sky-400 to-cyan-400 shadow-lg shadow-sky-500/40">
-                        <svg
-                          className="w-6 h-6 text-white"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                        >
-                          <line x1="18" y1="20" x2="18" y2="10" />
-                          <line x1="12" y1="20" x2="12" y2="4" />
-                          <line x1="6" y1="20" x2="6" y2="14" />
-                        </svg>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-white text-lg font-bold truncate">
-                          Weekly Activity
-                        </h3>
-                        <span className="text-slate-500 text-sm">
-                          Hours spent learning
-                        </span>
-                      </div>
-                      <div className="flex gap-1 p-1 bg-white/5 rounded-xl shrink-0">
-                        {["W", "M", "Y"].map((t) => (
-                          <button
-                            key={t}
-                            onClick={() => fetchGraphData(t)}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-300 cursor-pointer ${graphPeriod === t ? "bg-gradient-to-r from-sky-400 to-cyan-400 text-white shadow-md shadow-sky-500/40" : "text-slate-500 hover:text-white"}`}
-                          >
-                            {t}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="flex gap-3 sm:gap-4 mb-6">
-                      <div className="flex flex-col justify-between py-2 text-slate-600 text-[0.65rem] font-medium text-right min-w-[22px]">
-                        {["80", "60", "40", "20", "0"].map((v) => (
-                          <span key={v}>{v}</span>
-                        ))}
-                      </div>
-                      <div className="flex-1 relative h-44 sm:h-48">
-                        <div className="absolute inset-0 flex flex-col justify-between">
-                          {[0, 1, 2, 3].map((i) => (
-                            <div key={i} className="w-full h-px bg-white/5" />
-                          ))}
-                        </div>
-                        <div className="relative flex justify-around items-end h-full pt-2">
-                          {graphData.map((item, index) => (
-                            <div
-                              key={item.day || index}
-                              className="flex flex-col items-center gap-2 flex-1"
-                            >
-                              <div className="h-36 sm:h-40 flex items-end justify-center w-full">
-                                <div
-                                  className="bar-col relative rounded-t-lg rounded-b transition-all duration-[400ms] cursor-pointer"
-                                  style={{
-                                    width: "clamp(20px, 5vw, 35px)",
-                                    height: getBarHeight(item.value),
-                                  }}
-                                >
-                                  <div className="absolute inset-0 rounded-[inherit] overflow-hidden bg-gradient-to-t from-sky-500 to-cyan-400">
-                                    <div className="absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-white/25 to-transparent" />
-                                  </div>
-                                  <span className="bar-tip absolute bottom-[calc(100%+10px)] left-1/2 -translate-x-1/2 scale-[0.8] bg-slate-900/95 border border-white/10 px-3 py-2 rounded-xl flex flex-col items-center opacity-0 transition-all duration-300 pointer-events-none whitespace-nowrap backdrop-blur-sm z-20">
-                                    <span className="text-sky-400 text-base font-bold">
-                                      {item.value}
-                                    </span>
-                                    <span className="text-slate-500 text-[0.65rem]">
-                                      hours
-                                    </span>
-                                  </span>
-                                </div>
-                              </div>
-                              <span className="text-slate-500 text-[0.7rem] font-medium">
-                                {item.day}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-3 gap-3">
-                      {[
-                        {
-                          value: avgPerDay.toFixed(1),
-                          label: "Avg/Day",
-                          bg: "bg-sky-500/15",
-                          color: "text-sky-400",
-                          icon: (
-                            <>
-                              <circle cx="12" cy="12" r="10" />
-                              <polyline points="12 6 12 12 16 14" />
-                            </>
-                          ),
-                        },
-                        {
-                          value: totalWeek,
-                          label: "This Week",
-                          bg: "bg-purple-500/15",
-                          color: "text-purple-400",
-                          icon: (
-                            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-                          ),
-                        },
-                        {
-                          value: "+18%",
-                          label: "vs Last Week",
-                          bg: "bg-emerald-500/15",
-                          color: "text-emerald-400",
-                          icon: (
-                            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
-                          ),
-                        },
-                      ].map((stat) => (
-                        <div
-                          key={stat.label}
-                          className="stat-card-mini flex items-center gap-2.5 p-3 sm:p-4 bg-white/[0.03] rounded-xl transition-all duration-300"
-                        >
-                          <div
-                            className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${stat.bg}`}
-                          >
-                            <svg
-                              className={`w-4 h-4 ${stat.color}`}
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                            >
-                              {stat.icon}
-                            </svg>
-                          </div>
-                          <div className="flex flex-col min-w-0">
-                            <span className="text-white text-sm sm:text-lg font-bold truncate">
-                              {stat.value}
-                            </span>
-                            <span className="text-slate-500 text-[0.65rem] truncate">
-                              {stat.label}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="absolute top-4 left-4 w-5 h-5 border-t-2 border-l-2 border-indigo-500/25 rounded-tl-md pointer-events-none" />
-                  <div className="absolute bottom-4 right-4 w-5 h-5 border-b-2 border-r-2 border-indigo-500/25 rounded-br-md pointer-events-none" />
-                </div>
-              </ScrollReveal>
-            </div>
-          </CollapsibleSection>
-
           {/* ═══════ Learning Categories Section ═══════ */}
           <ScrollReveal direction="left" delay={100}>
             <div className="mb-6">
@@ -1469,38 +937,7 @@ const Dashboard = () => {
                         <p className="text-slate-400 text-sm sm:text-[0.95rem] leading-relaxed mb-6">
                           {card.description}
                         </p>
-                        <div className="flex gap-4 sm:gap-5 mb-6 p-4 sm:p-5 bg-black/20 rounded-2xl backdrop-blur-sm flex-wrap">
-                          {card.stats.map((s) => (
-                            <div
-                              key={s.text}
-                              className="flex items-center gap-2.5 flex-1 min-w-[80px]"
-                            >
-                              <div
-                                className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${conf.statIcon}`}
-                              >
-                                <svg
-                                  className="w-4 h-4"
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  strokeWidth="2"
-                                >
-                                  {statIcons[s.text] || (
-                                    <circle cx="12" cy="12" r="10" />
-                                  )}
-                                </svg>
-                              </div>
-                              <div className="flex flex-col min-w-0">
-                                <span className="text-white text-lg sm:text-xl font-extrabold leading-tight">
-                                  {s.num}
-                                </span>
-                                <span className="text-slate-500 text-[0.7rem] uppercase tracking-wider truncate">
-                                  {s.text}
-                                </span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
+                        {/* Stats block removed */}
                         <button
                           onClick={() => {
                             if (card.id === "drive") {
@@ -1541,6 +978,683 @@ const Dashboard = () => {
               })}
             </div>
           </CollapsibleSection>
+
+          {/* ════════════════════════════════════════════════════════
+              DRIVE RESULTS — Table
+          ════════════════════════════════════════════════════════ */}
+          {(() => {
+            const rawResults = [
+              ...assessmentResults.map(r => ({ ...r, __type: 'Assessment' })),
+              ...interviewResults.map(r => ({ ...r, __type: 'Interview' }))
+            ];
+            
+            const groups = {};
+            rawResults.forEach(r => {
+              const dId = r.drive?._id || r.driveId || r.drive?.name || r.id || 'unknown';
+              if (!groups[dId]) {
+                groups[dId] = {
+                  id: dId,
+                  latestDate: new Date(r.createdAt || Date.now()),
+                  items: []
+                };
+              }
+              groups[dId].items.push(r);
+              const dDate = new Date(r.createdAt || Date.now());
+              if (dDate > groups[dId].latestDate) {
+                groups[dId].latestDate = dDate;
+              }
+            });
+
+            const sortedGroups = Object.values(groups).sort((a, b) => b.latestDate - a.latestDate);
+            const combinedDriveResults = [];
+            sortedGroups.forEach((group, gIdx) => {
+              const sortedItems = group.items.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+              sortedItems.forEach((item, iIdx) => {
+                combinedDriveResults.push({
+                  ...item,
+                  _groupId: group.id,
+                  _isFirstInGroup: iIdx === 0,
+                  _isLastInGroup: iIdx === sortedItems.length - 1,
+                  _groupSize: sortedItems.length,
+                  _groupIndex: gIdx
+                });
+              });
+            });
+
+            return (
+              <>
+                <ScrollReveal direction="left" delay={100}>
+                  <div className="mb-6 mt-14">
+                    <SectionHeader
+                      isOpen={driveResultsOpen}
+                      onToggle={() => setDriveResultsOpen((prev) => !prev)}
+                icon={
+                  <svg className="w-5 h-5 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                    <line x1="16" y1="13" x2="8" y2="13" />
+                    <line x1="16" y1="17" x2="8" y2="17" />
+                  </svg>
+                }
+                title="Drive Results"
+                gradientFrom="bg-amber-500/15"
+                gradientTo="border-amber-500/25"
+                lineColor="from-amber-500/40"
+              />
+            </div>
+          </ScrollReveal>
+
+          {!driveResultsOpen && combinedDriveResults.length > 0 && (
+            <div className="section-preview mb-8 flex items-center gap-3 px-5 py-3.5 rounded-2xl bg-white/[0.03] border border-white/[0.06] cursor-pointer hover:bg-white/[0.06] transition-all duration-300" onClick={() => setDriveResultsOpen(true)}>
+              <span className="text-slate-400 text-xs">{combinedDriveResults.length} result{combinedDriveResults.length !== 1 ? 's' : ''}</span>
+              <div className="flex-1" />
+              <span className="text-amber-400 text-xs font-semibold">Click to expand</span>
+              <svg className="w-4 h-4 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9" /></svg>
+            </div>
+          )}
+
+          <CollapsibleSection isOpen={driveResultsOpen} className="mb-10">
+            {assessmentLoading || interviewLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="w-8 h-8 border-4 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" />
+              </div>
+            ) : combinedDriveResults.length === 0 ? (
+              <ScrollReveal direction="up" delay={100}>
+                <div className="flex flex-col items-center justify-center py-14 px-4 text-center rounded-2xl bg-white/[0.03] border border-white/[0.06] mb-8">
+                  <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-center mb-4">
+                    <svg className="w-8 h-8 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                      <polyline points="14 2 14 8 20 8" />
+                    </svg>
+                  </div>
+                  <h4 className="text-white text-base font-bold mb-1">No Drive Results Yet</h4>
+                  <p className="text-slate-500 text-sm">Complete a drive to see your results here.</p>
+                </div>
+              </ScrollReveal>
+            ) : (
+              <div className="rounded-2xl overflow-x-auto border border-white/[0.07] bg-white/[0.02] backdrop-blur-sm mb-8">
+                <table className="w-full min-w-[640px]">
+                  <thead>
+                    <tr className="border-b border-white/[0.06]">
+                      {['Drive', 'Type', 'Score', 'Result', 'Time Taken', 'Date', ''].map((h) => (
+                        <th key={h} className="text-left text-slate-500 text-[0.7rem] font-semibold uppercase tracking-wider px-5 py-3 bg-white/[0.02] whitespace-nowrap">{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {combinedDriveResults.map((result, idx) => {
+                      const isAssessment = result.__type === 'Assessment';
+                      let resultLabel = '';
+                      let resultColor = '';
+                      if (isAssessment) {
+                        resultLabel = result.status === 'Terminated' ? 'Terminated' : result.isPass ? 'Passed' : 'Failed';
+                        resultColor = result.status === 'Terminated' ? 'bg-red-500/15 border-red-500/25 text-red-400' : result.isPass ? 'bg-emerald-500/15 border-emerald-500/25 text-emerald-400' : 'bg-orange-500/15 border-orange-500/25 text-orange-400';
+                      } else {
+                        resultLabel = result.recommendation || 'Pending';
+                        resultColor = result.recommendation === 'Strong Hire' ? 'bg-emerald-500/15 border-emerald-500/25 text-emerald-400' : result.recommendation === 'Hire' ? 'bg-sky-500/15 border-sky-500/25 text-sky-400' : 'bg-red-500/15 border-red-500/25 text-red-400';
+                      }
+
+                      const isGrouped = result._groupSize > 1;
+                      const bgClass = isGrouped ? (result._groupIndex % 2 === 0 ? 'bg-indigo-500/[0.03]' : 'bg-fuchsia-500/[0.03]') : '';
+                      const borderClass = (!result._isLastInGroup || idx !== combinedDriveResults.length - 1) ? 'border-b border-white/[0.04]' : '';
+
+                      return (
+                        <tr
+                          key={`${result.__type}-${result.id || idx}`}
+                          onClick={() => isAssessment ? setSelectedAssessment(result) : setSelectedInterview(result)}
+                          className={`cursor-pointer transition-all duration-200 hover:bg-white/[0.08] group ${borderClass} ${bgClass}`}
+                        >
+                          <td className="px-5 py-4 relative">
+                            {isGrouped && (
+                              <div className={`absolute left-0 w-1 bg-indigo-500/50 ${result._isFirstInGroup ? 'top-1/2 bottom-0 rounded-tr-md' : result._isLastInGroup ? 'top-0 bottom-1/2 rounded-br-md' : 'top-0 bottom-0'}`} />
+                            )}
+                            <div className="flex flex-col">
+                              <div className="flex items-center gap-2">
+                                {!result._isFirstInGroup && isGrouped && (
+                                  <svg className="w-4 h-4 text-indigo-400/50 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M6 4v10a2 2 0 0 0 2 2h8" />
+                                    <polyline points="12 12 16 16 12 20" />
+                                  </svg>
+                                )}
+                                <p className={`text-sm font-semibold truncate max-w-[180px] ${result._isFirstInGroup ? 'text-white' : 'text-slate-300'}`}>
+                                  {result.drive?.name || result.__type}
+                                </p>
+                              </div>
+                              <p className={`text-slate-500 text-xs ${!result._isFirstInGroup && isGrouped ? 'ml-6' : ''}`}>
+                                {isAssessment ? (result.drive?.type || '—') : (result.interview?.type || '—')}
+                              </p>
+                            </div>
+                          </td>
+                          <td className="px-5 py-4">
+                            <span className="text-slate-300 text-xs font-semibold">{result.__type}</span>
+                          </td>
+                          <td className="px-5 py-4">
+                            <span className="text-white text-sm font-bold">{result.score}</span>
+                            {isAssessment ? (
+                              result.drive?.totalMarks && <span className="text-slate-500 text-xs"> /{result.drive.totalMarks}</span>
+                            ) : (
+                              <span className="text-slate-500 text-xs"> /100</span>
+                            )}
+                          </td>
+                          <td className="px-5 py-4">
+                            {resultLabel !== 'No Hire' ? (
+                              <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[0.65rem] font-bold uppercase tracking-wider border ${resultColor}`}>
+                                <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                                {resultLabel}
+                              </span>
+                            ) : (
+                              <span className="text-slate-500 text-xs font-semibold">—</span>
+                            )}
+                          </td>
+                          <td className="px-5 py-4 text-slate-300 text-sm">{result.timeTaken >= 60 ? `${Math.floor(result.timeTaken / 60)}m ${result.timeTaken % 60}s` : `${result.timeTaken}s`}</td>
+                          <td className="px-5 py-4 text-slate-500 text-xs whitespace-nowrap">{new Date(result.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
+                          <td className="px-5 py-4">
+                            <svg className="w-4 h-4 text-slate-600 group-hover:text-amber-400 transition-colors duration-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6" /></svg>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </CollapsibleSection>
+              </>
+            );
+          })()}
+
+          {/* ─── Assessment Detail Modal ─── */}
+          {selectedAssessment && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setSelectedAssessment(null)}>
+              <div className="absolute inset-0 bg-black/70 backdrop-blur-md" />
+              <div className="relative w-full max-w-lg rounded-3xl overflow-hidden bg-gradient-to-br from-[#1a1a2e] to-[#0f0f1a] border border-white/[0.10] shadow-2xl shadow-black/60 section-fade-in" onClick={(e) => e.stopPropagation()}>
+                <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-amber-400/50 to-transparent" />
+                <div className="p-6 sm:p-8">
+                  <div className="flex items-start justify-between mb-6">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="px-2.5 py-0.5 rounded-full text-[0.65rem] font-bold uppercase tracking-wider bg-amber-500/15 border border-amber-500/30 text-amber-400">Assessment</span>
+                        {selectedAssessment.drive?.type && <span className="px-2.5 py-0.5 rounded-full text-[0.65rem] font-bold uppercase tracking-wider bg-white/5 border border-white/10 text-slate-400">{selectedAssessment.drive.type}</span>}
+                      </div>
+                      <h3 className="text-white text-xl font-extrabold">{selectedAssessment.drive?.name || 'Assessment Result'}</h3>
+                      <p className="text-slate-500 text-sm mt-0.5">{new Date(selectedAssessment.createdAt).toLocaleDateString('en-GB', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })}</p>
+                    </div>
+                    <button onClick={() => setSelectedAssessment(null)} className="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center transition-all duration-200 shrink-0 ml-3">
+                      <svg className="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                    </button>
+                  </div>
+                  <div className="flex items-center gap-6 mb-6 p-5 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
+                    <div className="relative w-24 h-24 shrink-0">
+                      <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
+                        <circle cx="18" cy="18" r="15" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="3" />
+                        <circle cx="18" cy="18" r="15" fill="none"
+                          stroke={selectedAssessment.isPass ? '#34d399' : selectedAssessment.status === 'Terminated' ? '#ef4444' : '#f59e0b'}
+                          strokeWidth="3" strokeLinecap="round"
+                          strokeDasharray={`${(selectedAssessment.percentage / 100) * 94.2} 94.2`}
+                        />
+                      </svg>
+                      <div className="absolute inset-0 flex flex-col items-center justify-center">
+                        <span className={`text-xl font-extrabold leading-none ${selectedAssessment.isPass ? 'text-emerald-400' : selectedAssessment.status === 'Terminated' ? 'text-red-400' : 'text-amber-400'}`}>{selectedAssessment.percentage}%</span>
+                        <span className="text-slate-500 text-[0.6rem] mt-0.5">Score</span>
+                      </div>
+                    </div>
+                    <div className="flex-1 grid grid-cols-2 gap-3">
+                      {[
+                        { label: 'Score', value: `${selectedAssessment.score}${selectedAssessment.drive?.totalMarks ? ` / ${selectedAssessment.drive.totalMarks}` : ''}` },
+                        { label: 'Percentage', value: `${selectedAssessment.percentage}%` },
+                        { label: 'Time Taken', value: selectedAssessment.timeTaken >= 60 ? `${Math.floor(selectedAssessment.timeTaken / 60)}m ${selectedAssessment.timeTaken % 60}s` : `${selectedAssessment.timeTaken}s` },
+                        { label: 'Result', value: selectedAssessment.status === 'Terminated' ? 'Terminated' : selectedAssessment.isPass ? 'Passed' : 'Failed' },
+                      ].map((item) => (
+                        <div key={item.label} className="flex flex-col gap-0.5">
+                          <span className="text-slate-500 text-[0.65rem] uppercase tracking-wider">{item.label}</span>
+                          <span className="text-white text-sm font-bold">{item.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="mb-5">
+                    <div className="flex justify-between text-xs text-slate-500 mb-2"><span>Score Progress</span><span>{selectedAssessment.percentage}%</span></div>
+                    <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                      <div className={`h-full rounded-full transition-all duration-1000 ${selectedAssessment.isPass ? 'bg-gradient-to-r from-emerald-400 to-teal-400' : selectedAssessment.status === 'Terminated' ? 'bg-gradient-to-r from-red-500 to-rose-400' : 'bg-gradient-to-r from-amber-400 to-orange-400'}`} style={{ width: `${selectedAssessment.percentage}%` }} />
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold border ${selectedAssessment.status === 'Terminated' ? 'bg-red-500/15 border-red-500/30 text-red-400' : selectedAssessment.isPass ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-400' : 'bg-orange-500/15 border-orange-500/30 text-orange-400'}`}>
+                      <span className="w-2 h-2 rounded-full bg-current badge-pulse-anim" />
+                      {selectedAssessment.status === 'Terminated' ? 'Terminated' : selectedAssessment.isPass ? 'Passed ✓' : 'Failed'}
+                    </span>
+                    {selectedAssessment.status === 'Terminated' && selectedAssessment.terminationReason && (
+                      <span className="text-red-400/70 text-xs">⚠ {selectedAssessment.terminationReason}</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+
+
+
+          {/* ─── Interview Detail Modal ─── */}
+          {selectedInterview && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setSelectedInterview(null)}>
+              <div className="absolute inset-0 bg-black/70 backdrop-blur-md" />
+              <div className="relative w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-3xl bg-gradient-to-br from-[#1a1a2e] to-[#0f0f1a] border border-white/[0.10] shadow-2xl shadow-black/60 section-fade-in" onClick={(e) => e.stopPropagation()}>
+                <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-violet-400/50 to-transparent" />
+                <div className="p-6 sm:p-8">
+                  <div className="flex items-start justify-between mb-6">
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2 mb-1">
+                        <span className="px-2.5 py-0.5 rounded-full text-[0.65rem] font-bold uppercase tracking-wider bg-violet-500/15 border border-violet-500/30 text-violet-400">Interview</span>
+                        {selectedInterview.interview?.type && <span className="px-2.5 py-0.5 rounded-full text-[0.65rem] font-bold uppercase tracking-wider bg-white/5 border border-white/10 text-slate-400">{selectedInterview.interview.type}</span>}
+                      </div>
+                      <h3 className="text-white text-xl font-extrabold">{selectedInterview.drive?.name || 'Interview Result'}</h3>
+                      <p className="text-slate-500 text-sm mt-0.5">{new Date(selectedInterview.createdAt).toLocaleDateString('en-GB', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })}</p>
+                    </div>
+                    <button onClick={() => setSelectedInterview(null)} className="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center transition-all duration-200 shrink-0 ml-3">
+                      <svg className="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                    </button>
+                  </div>
+                  <div className="flex items-center gap-4 mb-6 p-4 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
+                    <div className="text-center px-4 border-r border-white/[0.06]">
+                      <div className="text-4xl font-extrabold text-white">{selectedInterview.score}</div>
+                      <div className="text-slate-500 text-xs uppercase tracking-wider">/ 100</div>
+                    </div>
+                    <div className="flex-1">
+                      {selectedInterview.recommendation !== 'No Hire' && (
+                        <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold border mb-2 ${selectedInterview.recommendation === 'Strong Hire' ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-400' : selectedInterview.recommendation === 'Hire' ? 'bg-sky-500/15 border-sky-500/30 text-sky-400' : 'bg-red-500/15 border-red-500/30 text-red-400'}`}>
+                          <span className="w-2 h-2 rounded-full bg-current badge-pulse-anim" />
+                          {selectedInterview.recommendation}
+                        </div>
+                      )}
+                      <div className={`text-slate-400 text-xs ${selectedInterview.recommendation === 'No Hire' ? 'mt-2' : ''}`}>Time taken: <span className="text-white font-semibold">{selectedInterview.timeTaken >= 60 ? `${Math.floor(selectedInterview.timeTaken / 60)}m ${selectedInterview.timeTaken % 60}s` : `${selectedInterview.timeTaken}s`}</span></div>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
+                    {[
+                      { label: 'Technical Knowledge', value: selectedInterview.technicalKnowledge, color: 'from-violet-400 to-purple-500' },
+                      { label: 'Communication', value: selectedInterview.communication, color: 'from-sky-400 to-cyan-400' },
+                      { label: 'Problem Solving', value: selectedInterview.problemSolving, color: 'from-amber-400 to-orange-400' },
+                      { label: 'Confidence', value: selectedInterview.confidence, color: 'from-pink-400 to-rose-400' },
+                    ].map((skill) => (
+                      <div key={skill.label} className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.05]">
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-slate-400 text-xs">{skill.label}</span>
+                          <span className="text-white text-xs font-bold">{skill.value}/100</span>
+                        </div>
+                        <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+                          <div className={`h-full rounded-full bg-gradient-to-r ${skill.color}`} style={{ width: `${skill.value}%` }} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {selectedInterview.feedback && (
+                    <div className="p-4 rounded-2xl bg-violet-500/5 border border-violet-500/20 mb-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <svg className="w-4 h-4 text-violet-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
+                        <span className="text-violet-400 text-xs font-semibold uppercase tracking-wider">AI Feedback</span>
+                      </div>
+                      <p className="text-slate-300 text-sm leading-relaxed">{selectedInterview.feedback}</p>
+                    </div>
+                  )}
+                  {selectedInterview.interview?.focusAreas?.length > 0 && (
+                    <div>
+                      <p className="text-slate-500 text-xs uppercase tracking-wider mb-2">Focus Areas</p>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedInterview.interview.focusAreas.map((area) => (
+                          <span key={area} className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/[0.08] text-slate-300 text-xs">{area}</span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+
+          {/* ════════════════════════════════════════════════════════
+              MOCK INTERVIEW SUBMISSIONS — Table + Modal
+          ════════════════════════════════════════════════════════ */}
+          <ScrollReveal direction="left" delay={100}>
+            <div className="mb-6 mt-4">
+              <SectionHeader
+                isOpen={mockOpen}
+                onToggle={() => setMockOpen((prev) => !prev)}
+                icon={
+                  <svg className="w-5 h-5 text-orange-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                  </svg>
+                }
+                title="Mock Interview"
+                gradientFrom="bg-orange-500/15"
+                gradientTo="border-orange-500/25"
+                lineColor="from-orange-500/40"
+              />
+            </div>
+          </ScrollReveal>
+
+          {!mockOpen && mockSubmissions.length > 0 && (
+            <div className="section-preview mb-8 flex items-center gap-3 px-5 py-3.5 rounded-2xl bg-white/[0.03] border border-white/[0.06] cursor-pointer hover:bg-white/[0.06] transition-all duration-300" onClick={() => setMockOpen(true)}>
+              <span className="text-slate-400 text-xs">{mockSubmissions.length} session{mockSubmissions.length !== 1 ? 's' : ''} completed</span>
+              <div className="flex-1" />
+              <span className="text-orange-400 text-xs font-semibold">Click to expand</span>
+              <svg className="w-4 h-4 text-orange-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9" /></svg>
+            </div>
+          )}
+
+          <CollapsibleSection isOpen={mockOpen} className="mb-10">
+            {mockLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="w-8 h-8 border-4 border-orange-500/30 border-t-orange-500 rounded-full animate-spin" />
+              </div>
+            ) : mockSubmissions.length === 0 ? (
+              <ScrollReveal direction="up" delay={100}>
+                <div className="flex flex-col items-center justify-center py-14 px-4 text-center rounded-2xl bg-white/[0.03] border border-white/[0.06] mb-8">
+                  <div className="w-16 h-16 rounded-2xl bg-orange-500/10 border border-orange-500/25 flex items-center justify-center mb-4">
+                    <svg className="w-8 h-8 text-orange-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
+                    </svg>
+                  </div>
+                  <h4 className="text-white text-base font-bold mb-1">No Mock Interviews Yet</h4>
+                  <p className="text-slate-500 text-sm">Complete a mock interview to see your time and feedback here.</p>
+                </div>
+              </ScrollReveal>
+            ) : (
+              <div className="rounded-2xl overflow-x-auto border border-white/[0.07] bg-white/[0.02] backdrop-blur-sm mb-8">
+                <table className="w-full min-w-[480px]">
+                  <thead>
+                    <tr className="border-b border-white/[0.06]">
+                      {['Session', 'Time Taken', 'Feedback', 'Date', ''].map((h) => (
+                        <th key={h} className="text-left text-slate-500 text-[0.7rem] font-semibold uppercase tracking-wider px-5 py-3 bg-white/[0.02] whitespace-nowrap">{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {mockSubmissions.map((sub, idx) => (
+                      <tr
+                        key={sub.id || idx}
+                        onClick={() => setSelectedMock(sub)}
+                        className={`cursor-pointer transition-all duration-200 hover:bg-white/[0.05] group ${idx !== mockSubmissions.length - 1 ? 'border-b border-white/[0.04]' : ''}`}
+                      >
+                        <td className="px-5 py-4">
+                          <p className="text-white text-sm font-semibold">{sub.title || sub.domain || `Session ${idx + 1}`}</p>
+                          <p className="text-slate-500 text-xs">{sub.type || 'Mock Interview'}</p>
+                        </td>
+                        <td className="px-5 py-4">
+                          <div className="flex items-center gap-2">
+                            <svg className="w-3.5 h-3.5 text-orange-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+                            <span className="text-slate-300 text-sm">{sub.timeTaken >= 60 ? `${Math.floor(sub.timeTaken / 60)}m ${sub.timeTaken % 60}s` : `${sub.timeTaken}s`}</span>
+                          </div>
+                        </td>
+                        <td className="px-5 py-4 max-w-[280px]">
+                          <p className="text-slate-400 text-xs leading-relaxed line-clamp-2">{sub.feedback || '—'}</p>
+                        </td>
+                        <td className="px-5 py-4 text-slate-500 text-xs whitespace-nowrap">{new Date(sub.createdAt || sub.submittedAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
+                        <td className="px-5 py-4">
+                          <svg className="w-4 h-4 text-slate-600 group-hover:text-orange-400 transition-colors duration-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6" /></svg>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </CollapsibleSection>
+
+          {/* ─── Mock Interview Detail Modal ─── */}
+          {selectedMock && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setSelectedMock(null)}>
+              <div className="absolute inset-0 bg-black/70 backdrop-blur-md" />
+              <div className="relative w-full max-w-lg rounded-3xl bg-gradient-to-br from-[#1a1a2e] to-[#0f0f1a] border border-white/[0.10] shadow-2xl shadow-black/60 section-fade-in" onClick={(e) => e.stopPropagation()}>
+                <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-orange-400/50 to-transparent" />
+                <div className="p-6 sm:p-8">
+                  <div className="flex items-start justify-between mb-6">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="px-2.5 py-0.5 rounded-full text-[0.65rem] font-bold uppercase tracking-wider bg-orange-500/15 border border-orange-500/30 text-orange-400">Mock Interview</span>
+                        {selectedMock.type && <span className="px-2.5 py-0.5 rounded-full text-[0.65rem] font-bold uppercase tracking-wider bg-white/5 border border-white/10 text-slate-400">{selectedMock.type}</span>}
+                      </div>
+                      <h3 className="text-white text-xl font-extrabold">{selectedMock.title || selectedMock.domain || 'Mock Interview Session'}</h3>
+                      <p className="text-slate-500 text-sm mt-0.5">{new Date(selectedMock.createdAt || selectedMock.submittedAt).toLocaleDateString('en-GB', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })}</p>
+                    </div>
+                    <button onClick={() => setSelectedMock(null)} className="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center transition-all duration-200 shrink-0 ml-3">
+                      <svg className="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                    </button>
+                  </div>
+
+                  {/* Time Taken card */}
+                  <div className="flex items-center gap-4 p-5 rounded-2xl bg-orange-500/5 border border-orange-500/20 mb-5">
+                    <div className="w-14 h-14 rounded-2xl bg-orange-500/15 border border-orange-500/25 flex items-center justify-center shrink-0">
+                      <svg className="w-7 h-7 text-orange-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <polyline points="12 6 12 12 16 14" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-slate-500 text-[0.65rem] uppercase tracking-wider mb-0.5">Time Taken</p>
+                      <p className="text-white text-2xl font-extrabold">
+                        {selectedMock.timeTaken >= 60
+                          ? `${Math.floor(selectedMock.timeTaken / 60)}m ${selectedMock.timeTaken % 60}s`
+                          : `${selectedMock.timeTaken}s`}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Feedback card */}
+                  {selectedMock.feedback ? (
+                    <div className="p-5 rounded-2xl bg-white/[0.03] border border-white/[0.07]">
+                      <div className="flex items-center gap-2 mb-3">
+                        <svg className="w-4 h-4 text-orange-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                        </svg>
+                        <span className="text-orange-400 text-xs font-semibold uppercase tracking-wider">AI Feedback</span>
+                      </div>
+                      <p className="text-slate-300 text-sm leading-relaxed whitespace-pre-wrap">{selectedMock.feedback}</p>
+                    </div>
+                  ) : (
+                    <div className="p-5 rounded-2xl bg-white/[0.03] border border-white/[0.07] text-center">
+                      <p className="text-slate-500 text-sm">No feedback available for this session.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ════════════════════════════════════════════════════════
+              PRACTICE SUBMISSIONS — Table + Modal
+          ════════════════════════════════════════════════════════ */}
+          <ScrollReveal direction="left" delay={100}>
+            <div className="mb-6 mt-4">
+              <SectionHeader
+                isOpen={practiceOpen}
+                onToggle={() => setPracticeOpen((prev) => !prev)}
+                icon={
+                  <svg className="w-5 h-5 text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polyline points="9 11 12 14 22 4" />
+                    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+                  </svg>
+                }
+                title="Practice Submissions"
+                gradientFrom="bg-cyan-500/15"
+                gradientTo="border-cyan-500/25"
+                lineColor="from-cyan-500/40"
+              />
+            </div>
+          </ScrollReveal>
+
+          {!practiceOpen && practiceSubmissions.length > 0 && (
+            <div className="section-preview mb-8 flex items-center gap-3 px-5 py-3.5 rounded-2xl bg-white/[0.03] border border-white/[0.06] cursor-pointer hover:bg-white/[0.06] transition-all duration-300" onClick={() => setPracticeOpen(true)}>
+              <span className="text-slate-400 text-xs">{practiceSubmissions.length} session{practiceSubmissions.length !== 1 ? 's' : ''}</span>
+              <div className="flex-1" />
+              <span className="text-cyan-400 text-xs font-semibold">Click to expand</span>
+              <svg className="w-4 h-4 text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9" /></svg>
+            </div>
+          )}
+
+          <CollapsibleSection isOpen={practiceOpen} className="mb-14">
+            {practiceLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="w-8 h-8 border-4 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin" />
+              </div>
+            ) : practiceSubmissions.length === 0 ? (
+              <ScrollReveal direction="up" delay={100}>
+                <div className="flex flex-col items-center justify-center py-14 px-4 text-center rounded-2xl bg-white/[0.03] border border-white/[0.06] mb-8">
+                  <div className="w-16 h-16 rounded-2xl bg-cyan-500/10 border border-cyan-500/25 flex items-center justify-center mb-4">
+                    <svg className="w-8 h-8 text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <polyline points="9 11 12 14 22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+                    </svg>
+                  </div>
+                  <h4 className="text-white text-base font-bold mb-1">No Practice Sessions Yet</h4>
+                  <p className="text-slate-500 text-sm">Start a practice set to track your MCQ and coding performance here.</p>
+                </div>
+              </ScrollReveal>
+            ) : (
+              <div className="rounded-2xl overflow-x-auto border border-white/[0.07] bg-white/[0.02] backdrop-blur-sm mb-8">
+                <table className="w-full min-w-[660px]">
+                  <thead>
+                    <tr className="border-b border-white/[0.06]">
+                      {['Domain', 'Difficulty', 'Total Q', 'MCQ (correct/attempted)', 'Coding (correct/attempted)', 'Date', ''].map((h) => (
+                        <th key={h} className="text-left text-slate-500 text-[0.7rem] font-semibold uppercase tracking-wider px-5 py-3 bg-white/[0.02] whitespace-nowrap">{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {practiceSubmissions.map((sub, idx) => {
+                      const diffColor = sub.difficulty === 'easy' ? 'bg-emerald-500/15 border-emerald-500/25 text-emerald-400' : sub.difficulty === 'medium' ? 'bg-amber-500/15 border-amber-500/25 text-amber-400' : 'bg-red-500/15 border-red-500/25 text-red-400';
+                      const mcqAcc = sub.attemptedMCQ > 0 ? Math.round((sub.correctMCQ / sub.attemptedMCQ) * 100) : 0;
+                      const codingAcc = sub.attemptedCoding > 0 ? Math.round((sub.correctCoding / sub.attemptedCoding) * 100) : 0;
+                      return (
+                        <tr
+                          key={sub.id}
+                          onClick={() => setSelectedPractice(sub)}
+                          className={`cursor-pointer transition-all duration-200 hover:bg-white/[0.05] group ${idx !== practiceSubmissions.length - 1 ? 'border-b border-white/[0.04]' : ''}`}
+                        >
+                          <td className="px-5 py-4">
+                            <p className="text-white text-sm font-semibold capitalize">{sub.domain}</p>
+                          </td>
+                          <td className="px-5 py-4">
+                            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[0.65rem] font-bold uppercase tracking-wider border ${diffColor}`}>{sub.difficulty}</span>
+                          </td>
+                          <td className="px-5 py-4">
+                            <span className="text-white text-sm font-bold">{sub.totalQuestions}</span>
+                          </td>
+                          <td className="px-5 py-4">
+                            <div className="flex items-center gap-2">
+                              <span className="text-purple-400 text-sm font-semibold">{sub.correctMCQ}<span className="text-slate-500 text-xs font-normal">/{sub.attemptedMCQ}</span></span>
+                              <div className="w-12 h-1.5 bg-white/5 rounded-full overflow-hidden">
+                                <div className="h-full rounded-full bg-gradient-to-r from-purple-400 to-indigo-400" style={{ width: `${mcqAcc}%` }} />
+                              </div>
+                              <span className="text-slate-500 text-xs">{mcqAcc}%</span>
+                            </div>
+                          </td>
+                          <td className="px-5 py-4">
+                            <div className="flex items-center gap-2">
+                              <span className="text-cyan-400 text-sm font-semibold">{sub.correctCoding}<span className="text-slate-500 text-xs font-normal">/{sub.attemptedCoding}</span></span>
+                              <div className="w-12 h-1.5 bg-white/5 rounded-full overflow-hidden">
+                                <div className="h-full rounded-full bg-gradient-to-r from-cyan-400 to-sky-400" style={{ width: `${codingAcc}%` }} />
+                              </div>
+                              <span className="text-slate-500 text-xs">{codingAcc}%</span>
+                            </div>
+                          </td>
+                          <td className="px-5 py-4 text-slate-500 text-xs whitespace-nowrap">{new Date(sub.submittedAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
+                          <td className="px-5 py-4">
+                            <svg className="w-4 h-4 text-slate-600 group-hover:text-cyan-400 transition-colors duration-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6" /></svg>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </CollapsibleSection>
+
+          {/* ─── Practice Detail Modal ─── */}
+          {selectedPractice && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setSelectedPractice(null)}>
+              <div className="absolute inset-0 bg-black/70 backdrop-blur-md" />
+              <div className="relative w-full max-w-lg rounded-3xl bg-gradient-to-br from-[#1a1a2e] to-[#0f0f1a] border border-white/[0.10] shadow-2xl shadow-black/60 section-fade-in" onClick={(e) => e.stopPropagation()}>
+                <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-cyan-400/50 to-transparent" />
+                <div className="p-6 sm:p-8">
+                  <div className="flex items-start justify-between mb-6">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="px-2.5 py-0.5 rounded-full text-[0.65rem] font-bold uppercase tracking-wider bg-cyan-500/15 border border-cyan-500/30 text-cyan-400">Practice Set</span>
+                        <span className={`px-2.5 py-0.5 rounded-full text-[0.65rem] font-bold uppercase tracking-wider border ${selectedPractice.difficulty === 'easy' ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-400' : selectedPractice.difficulty === 'medium' ? 'bg-amber-500/15 border-amber-500/30 text-amber-400' : 'bg-red-500/15 border-red-500/30 text-red-400'}`}>{selectedPractice.difficulty}</span>
+                      </div>
+                      <h3 className="text-white text-xl font-extrabold capitalize">{selectedPractice.domain}</h3>
+                      <p className="text-slate-500 text-sm mt-0.5">{new Date(selectedPractice.submittedAt).toLocaleDateString('en-GB', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })}</p>
+                    </div>
+                    <button onClick={() => setSelectedPractice(null)} className="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center transition-all duration-200 shrink-0 ml-3">
+                      <svg className="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                    </button>
+                  </div>
+                  <div className="text-center py-5 mb-5 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
+                    <div className="text-5xl font-extrabold text-white mb-1">{selectedPractice.totalQuestions}</div>
+                    <div className="text-slate-500 text-sm uppercase tracking-wider">Total Questions</div>
+                  </div>
+                  <div className="p-4 rounded-2xl bg-purple-500/5 border border-purple-500/20 mb-3">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-lg bg-purple-500/20 flex items-center justify-center">
+                          <svg className="w-3.5 h-3.5 text-purple-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
+                        </div>
+                        <span className="text-white text-sm font-semibold">MCQ</span>
+                      </div>
+                      <span className="text-purple-400 text-sm font-bold">{selectedPractice.attemptedMCQ > 0 ? Math.round((selectedPractice.correctMCQ / selectedPractice.attemptedMCQ) * 100) : 0}% accuracy</span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-3 mb-3">
+                      {[
+                        { label: 'Attempted', value: selectedPractice.attemptedMCQ, color: 'text-slate-300' },
+                        { label: 'Correct', value: selectedPractice.correctMCQ, color: 'text-emerald-400' },
+                        { label: 'Wrong', value: selectedPractice.attemptedMCQ - selectedPractice.correctMCQ, color: 'text-red-400' },
+                      ].map((item) => (
+                        <div key={item.label} className="text-center p-2 rounded-lg bg-white/[0.04]">
+                          <div className={`text-xl font-extrabold ${item.color}`}>{item.value}</div>
+                          <div className="text-slate-500 text-[0.65rem] uppercase tracking-wider">{item.label}</div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+                      <div className="h-full rounded-full bg-gradient-to-r from-purple-400 to-indigo-400" style={{ width: `${selectedPractice.attemptedMCQ > 0 ? Math.round((selectedPractice.correctMCQ / selectedPractice.attemptedMCQ) * 100) : 0}%` }} />
+                    </div>
+                  </div>
+                  <div className="p-4 rounded-2xl bg-cyan-500/5 border border-cyan-500/20">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-lg bg-cyan-500/20 flex items-center justify-center">
+                          <svg className="w-3.5 h-3.5 text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" /></svg>
+                        </div>
+                        <span className="text-white text-sm font-semibold">Coding</span>
+                      </div>
+                      <span className="text-cyan-400 text-sm font-bold">{selectedPractice.attemptedCoding > 0 ? Math.round((selectedPractice.correctCoding / selectedPractice.attemptedCoding) * 100) : 0}% accuracy</span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-3 mb-3">
+                      {[
+                        { label: 'Attempted', value: selectedPractice.attemptedCoding, color: 'text-slate-300' },
+                        { label: 'Correct', value: selectedPractice.correctCoding, color: 'text-emerald-400' },
+                        { label: 'Wrong', value: selectedPractice.attemptedCoding - selectedPractice.correctCoding, color: 'text-red-400' },
+                      ].map((item) => (
+                        <div key={item.label} className="text-center p-2 rounded-lg bg-white/[0.04]">
+                          <div className={`text-xl font-extrabold ${item.color}`}>{item.value}</div>
+                          <div className="text-slate-500 text-[0.65rem] uppercase tracking-wider">{item.label}</div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+                      <div className="h-full rounded-full bg-gradient-to-r from-cyan-400 to-sky-400" style={{ width: `${selectedPractice.attemptedCoding > 0 ? Math.round((selectedPractice.correctCoding / selectedPractice.attemptedCoding) * 100) : 0}%` }} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
         </div>
       </div>
     </>
